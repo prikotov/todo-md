@@ -1,7 +1,6 @@
 {
     "name": "prikotov/todo-md",
     "description": "File-based kanban board for managing tasks in markdown files",
-    "version": "1.0.0",
     "license": "MIT",
     "keywords": ["todo", "kanban", "markdown", "task-management"],
     "authors": [
