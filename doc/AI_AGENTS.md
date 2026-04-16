@@ -10,4 +10,4 @@
 - `kilocode` — Kilo Code
 - `pi` — Pi Coding Agent
 
-*Список синхронизирован с `docs/git-workflow/pull-request.md`.*
+*Список синхронизирован с git-workflow pull-request rules.*

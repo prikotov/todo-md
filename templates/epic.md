@@ -2,12 +2,12 @@
 # Metadata (Метаданные)
 type: epic
 created: <YYYY-MM-DD>
-value: <V0|V1|V2|V3|V4>  # см. [VALUES.md](../docs/VALUES.md)
-complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../docs/COMPLEXITY.md)
-priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../docs/PRIORITIES.md)
-author: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../docs/AI_AGENTS.md)
-assignee: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../docs/AI_AGENTS.md)
-status: <todo|backlog|in_progress|paused|blocked|review|done|cancelled>  # см. [STATUSES.md](../docs/STATUSES.md)
+value: <V0|V1|V2|V3|V4>  # см. [VALUES.md](../doc/VALUES.md)
+complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../doc/COMPLEXITY.md)
+priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../doc/PRIORITIES.md)
+author: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../doc/AI_AGENTS.md)
+assignee: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../doc/AI_AGENTS.md)
+status: <todo|backlog|in_progress|paused|blocked|review|done|cancelled>  # см. [STATUSES.md](../doc/STATUSES.md)
 pr: <ссылка на PR>  # пусто при создании
 ---
 

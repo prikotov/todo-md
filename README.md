@@ -10,8 +10,8 @@ A set of conventions, templates and rules for managing project tasks as `.md` fi
 
 ```
 todo/
-├── AGENTS.md              ← rules for AI agents working with tasks
-├── docs/                  ← reference documents
+├── doc/                   ← reference documents (from this package)
+│   ├── AGENTS.md
 │   ├── AGENTS_TASK_WRITING_GUIDE.md
 │   ├── TYPES.md
 │   ├── STATUSES.md
@@ -20,7 +20,7 @@ todo/
 │   ├── PRIORITIES.md
 │   ├── AI_AGENTS.md
 │   └── GLOSSARY.md
-├── templates/             ← task and epic templates
+├── templates/             ← task and epic templates (from this package)
 │   ├── task.md
 │   └── epic.md
 ├── backlog/               ← backlog tasks (status: backlog)
@@ -35,9 +35,8 @@ todo/
 Copy the contents of this package into your project's `todo/` directory:
 
 ```bash
-cp -r vendor/prikotov/todo-md/docs/ todo/docs/
+cp -r vendor/prikotov/todo-md/doc/ todo/doc/
 cp -r vendor/prikotov/todo-md/templates/ todo/templates/
-cp vendor/prikotov/todo-md/AGENTS.md todo/AGENTS.md
 ```
 
 Create the working directories:
@@ -46,7 +45,7 @@ Create the working directories:
 mkdir -p todo/backlog todo/done todo/cancelled
 ```
 
-Reference `todo/AGENTS.md` from your project's root `AGENTS.md`.
+Reference `doc/AGENTS.md` from your project's root `AGENTS.md`.
 
 ## License
 
