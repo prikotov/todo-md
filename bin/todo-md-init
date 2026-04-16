@@ -102,9 +102,33 @@ foreach ($iterator as $item) {
 
 echo PHP_EOL;
 echo "Done. $copied file(s) copied, $skipped file(s) skipped." . PHP_EOL;
+
+// ── Update .gitignore ─────────────────────────────────────────────────────
+
+$gitignore  = $todoDir . '/.gitignore';
+$entry      = 'docs/';
+$written    = false;
+
+if (file_exists($gitignore)) {
+    $content = file_get_contents($gitignore);
+    if (str_contains($content, $entry)) {
+        $written = true;
+    } else {
+        $content = rtrim($content) . PHP_EOL . $entry . PHP_EOL;
+        file_put_contents($gitignore, $content);
+        $written = true;
+    }
+} else {
+    file_put_contents($gitignore, $entry . PHP_EOL);
+    $written = true;
+}
+
+if ($written) {
+    echo "  Updated todo/.gitignore (+ docs/)" . PHP_EOL;
+}
+
 echo PHP_EOL;
 echo "Next steps:" . PHP_EOL;
 echo "  1. Add this line to your project's AGENTS.md:" . PHP_EOL;
 echo "     * Регламент работы с задачами: [`todo/docs/AGENTS.md`](todo/docs/AGENTS.md)." . PHP_EOL;
 echo "  2. Create tasks using template: cp todo/docs/templates/task.md todo/TASK-<category>-<name>.todo.md" . PHP_EOL;
-echo "  3. Commit todo/ to your repository." . PHP_EOL;
