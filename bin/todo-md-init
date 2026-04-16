@@ -9,14 +9,15 @@ declare(strict_types=1);
  * Usage:
  *   php vendor/prikotov/todo-md/bin/todo-md-init [target-dir]
  *
- *   target-dir  — project root where todo/ will be created (default: current working directory).
+ *   target-dir  — project root (default: current working directory).
  *
  * What it does:
  *   1. Creates directory structure: todo/, todo/backlog/, todo/done/, todo/cancelled/
  *      (each with .gitkeep so empty dirs are tracked by git).
- *   2. Copies docs/ from the package into todo/docs/ (AGENTS.md, guides, references, templates).
+ *   2. Copies docs/ from the package into docs/todo-md/ (AGENTS.md, guides, references, templates).
  *      Existing files are NOT overwritten — the user is warned instead.
- *   3. Prints a short post-init instruction.
+ *   3. Writes docs/todo-md/ into docs/.gitignore so generated docs are not committed.
+ *   4. Prints a short post-init instruction.
  */
 
 // ── Resolve paths ──────────────────────────────────────────────────────────
@@ -54,14 +55,18 @@ foreach ($directories as $dir) {
     }
 }
 
-// ── 2. Copy docs ───────────────────────────────────────────────────────────
+// ── 2. Copy docs into docs/todo-md/ ────────────────────────────────────────
 
 $sourceDocs = $packageRoot . '/docs';
-$targetDocs = $todoDir . '/docs';
+$targetDocs = $targetDir . '/docs/todo-md';
 
 if (!is_dir($sourceDocs)) {
     fwrite(STDERR, "Error: package docs/ not found at $sourceDocs" . PHP_EOL);
     exit(1);
+}
+
+if (!is_dir($targetDocs)) {
+    mkdir($targetDocs, 0755, true);
 }
 
 $copied   = 0;
@@ -83,7 +88,7 @@ foreach ($iterator as $item) {
     }
 
     if (file_exists($targetPath)) {
-        echo "  Skip     todo/docs/$relativePath (already exists)" . PHP_EOL;
+        echo "  Skip     docs/todo-md/$relativePath (already exists)" . PHP_EOL;
         $skipped++;
         continue;
     }
@@ -94,19 +99,26 @@ foreach ($iterator as $item) {
     }
 
     copy($item->getPathname(), $targetPath);
-    echo "  Copied   todo/docs/$relativePath" . PHP_EOL;
+    echo "  Copied   docs/todo-md/$relativePath" . PHP_EOL;
     $copied++;
 }
 
-// ── 3. Summary ─────────────────────────────────────────────────────────────
+// ── 3. Copy AGENTS.md to todo/ (committed, not gitignored) ───────────────
 
-echo PHP_EOL;
-echo "Done. $copied file(s) copied, $skipped file(s) skipped." . PHP_EOL;
+$agentsSource = $sourceDocs . '/AGENTS.md';
+$agentsTarget = $todoDir . '/AGENTS.md';
 
-// ── Update .gitignore ─────────────────────────────────────────────────────
+if (file_exists($agentsSource) && !file_exists($agentsTarget)) {
+    copy($agentsSource, $agentsTarget);
+    echo "  Copied   todo/AGENTS.md" . PHP_EOL;
+} elseif (file_exists($agentsTarget)) {
+    echo "  Skip     todo/AGENTS.md (already exists)" . PHP_EOL;
+}
 
-$gitignore  = $todoDir . '/.gitignore';
-$entry      = 'docs/';
+// ── 4. Update docs/.gitignore ──────────────────────────────────────────────
+
+$gitignore  = $targetDir . '/docs/.gitignore';
+$entry      = 'todo-md/';
 $written    = false;
 
 if (file_exists($gitignore)) {
@@ -119,16 +131,23 @@ if (file_exists($gitignore)) {
         $written = true;
     }
 } else {
+    if (!is_dir(dirname($gitignore))) {
+        mkdir(dirname($gitignore), 0755, true);
+    }
     file_put_contents($gitignore, $entry . PHP_EOL);
     $written = true;
 }
 
 if ($written) {
-    echo "  Updated todo/.gitignore (+ docs/)" . PHP_EOL;
+    echo "  Updated docs/.gitignore (+ todo-md/)" . PHP_EOL;
 }
 
+// ── 5. Summary ─────────────────────────────────────────────────────────────
+
+echo PHP_EOL;
+echo "Done. $copied file(s) copied, $skipped file(s) skipped." . PHP_EOL;
 echo PHP_EOL;
 echo "Next steps:" . PHP_EOL;
 echo "  1. Add this line to your project's AGENTS.md:" . PHP_EOL;
-echo "     * Регламент работы с задачами: [`todo/docs/AGENTS.md`](todo/docs/AGENTS.md)." . PHP_EOL;
-echo "  2. Create tasks using template: cp todo/docs/templates/task.md todo/TASK-<category>-<name>.todo.md" . PHP_EOL;
+echo "     * Регламент работы с задачами: [`todo/AGENTS.md`](todo/AGENTS.md)." . PHP_EOL;
+echo "  2. Create tasks using template: cp docs/todo-md/templates/task.md todo/TASK-<category>-<name>.todo.md" . PHP_EOL;
