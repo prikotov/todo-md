@@ -1,0 +1,26 @@
+{
+    "name": "prikotov/todo-md",
+    "description": "File-based kanban board for managing tasks in markdown files",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["todo", "kanban", "markdown", "task-management"],
+    "authors": [
+        {
+            "name": "Dmitry Prikotov",
+            "email": "prikotov@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.4"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        }
+    }
+}
