@@ -9,6 +9,7 @@
             "email": "prikotov@gmail.com"
         }
     ],
+    "bin": ["bin/todo-md-init"],
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
@@ -21,5 +22,8 @@
         "branch-alias": {
             "dev-main": "1.0-dev"
         }
+    },
+    "archive": {
+        "include": ["/bin/"]
     }
 }

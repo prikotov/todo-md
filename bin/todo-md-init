@@ -1,0 +1,110 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * todo-md init — initialise a todo/ kanban board in the current project.
+ *
+ * Usage:
+ *   php vendor/prikotov/todo-md/bin/todo-md-init [target-dir]
+ *
+ *   target-dir  — project root where todo/ will be created (default: current working directory).
+ *
+ * What it does:
+ *   1. Creates directory structure: todo/, todo/backlog/, todo/done/, todo/cancelled/
+ *      (each with .gitkeep so empty dirs are tracked by git).
+ *   2. Copies docs/ from the package into todo/docs/ (AGENTS.md, guides, references, templates).
+ *      Existing files are NOT overwritten — the user is warned instead.
+ *   3. Prints a short post-init instruction.
+ */
+
+// ── Resolve paths ──────────────────────────────────────────────────────────
+
+$packageRoot = dirname(__DIR__);
+$targetDir   = isset($argv[1]) ? realpath($argv[1]) : getcwd();
+
+if ($targetDir === false || !is_dir($targetDir)) {
+    fwrite(STDERR, "Error: target directory does not exist: " . ($argv[1] ?? getcwd()) . PHP_EOL);
+    exit(1);
+}
+
+$todoDir = $targetDir . '/todo';
+
+// ── 1. Create directory structure ──────────────────────────────────────────
+
+$directories = [
+    $todoDir,
+    $todoDir . '/backlog',
+    $todoDir . '/done',
+    $todoDir . '/cancelled',
+];
+
+foreach ($directories as $dir) {
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+        echo "  Created  $dir/" . PHP_EOL;
+    } else {
+        echo "  Exists   $dir/" . PHP_EOL;
+    }
+
+    $gitkeep = $dir . '/.gitkeep';
+    if (!file_exists($gitkeep)) {
+        file_put_contents($gitkeep, '');
+    }
+}
+
+// ── 2. Copy docs ───────────────────────────────────────────────────────────
+
+$sourceDocs = $packageRoot . '/docs';
+$targetDocs = $todoDir . '/docs';
+
+if (!is_dir($sourceDocs)) {
+    fwrite(STDERR, "Error: package docs/ not found at $sourceDocs" . PHP_EOL);
+    exit(1);
+}
+
+$copied   = 0;
+$skipped  = 0;
+$iterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($sourceDocs, RecursiveDirectoryIterator::SKIP_DOTS),
+    RecursiveIteratorIterator::SELF_FIRST,
+);
+
+foreach ($iterator as $item) {
+    $relativePath = substr($item->getPathname(), strlen($sourceDocs) + 1);
+    $targetPath   = $targetDocs . '/' . $relativePath;
+
+    if ($item->isDir()) {
+        if (!is_dir($targetPath)) {
+            mkdir($targetPath, 0755, true);
+        }
+        continue;
+    }
+
+    if (file_exists($targetPath)) {
+        echo "  Skip     todo/docs/$relativePath (already exists)" . PHP_EOL;
+        $skipped++;
+        continue;
+    }
+
+    $targetDirForFile = dirname($targetPath);
+    if (!is_dir($targetDirForFile)) {
+        mkdir($targetDirForFile, 0755, true);
+    }
+
+    copy($item->getPathname(), $targetPath);
+    echo "  Copied   todo/docs/$relativePath" . PHP_EOL;
+    $copied++;
+}
+
+// ── 3. Summary ─────────────────────────────────────────────────────────────
+
+echo PHP_EOL;
+echo "Done. $copied file(s) copied, $skipped file(s) skipped." . PHP_EOL;
+echo PHP_EOL;
+echo "Next steps:" . PHP_EOL;
+echo "  1. Add this line to your project's AGENTS.md:" . PHP_EOL;
+echo "     * Регламент работы с задачами: [`todo/docs/AGENTS.md`](todo/docs/AGENTS.md)." . PHP_EOL;
+echo "  2. Create tasks using template: cp todo/docs/templates/task.md todo/TASK-<category>-<name>.todo.md" . PHP_EOL;
+echo "  3. Commit todo/ to your repository." . PHP_EOL;

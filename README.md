@@ -31,21 +31,41 @@ todo/
 └── EPIC-*.todo.md         ← active epics
 ```
 
-## Usage
+## Reference
 
-Copy the contents of this package into your project's `todo/` directory:
+After initialisation, your `todo/docs/` contains:
+
+- **AGENTS.md** — rules for working with tasks (for AI agents).
+- **AGENTS_TASK_WRITING_GUIDE.md** — how to write tasks.
+- **reference/** — TYPES, STATUSES, VALUES, COMPLEXITY, PRIORITIES, AI_AGENTS, GLOSSARY.
+- **templates/** — task.md, epic.md.
+
+## Installation
 
 ```bash
-cp -r vendor/prikotov/todo-md/docs/ todo/docs/
+composer require --dev prikotov/todo-md
 ```
 
-Create the working directories:
+## Initialisation
+
+After installing the package, run the init command in your project root:
 
 ```bash
-mkdir -p todo/backlog todo/done todo/cancelled
+php vendor/bin/todo-md-init
 ```
 
-Reference `docs/AGENTS.md` from your project's root `AGENTS.md`.
+Or specify a target directory:
+
+```bash
+php vendor/bin/todo-md-init /path/to/project
+```
+
+This will:
+1. Create `todo/`, `todo/backlog/`, `todo/done/`, `todo/cancelled/` (with `.gitkeep` files).
+2. Copy `docs/` from the package into `todo/docs/` (AGENTS.md, guides, references, templates).
+3. Print next steps.
+
+> **Note:** Existing files are never overwritten. Re-running the command is safe.
 
 ## License
 
