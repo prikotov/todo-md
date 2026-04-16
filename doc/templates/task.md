@@ -1,17 +1,17 @@
 ---
 # Metadata (Метаданные)
-type: <fix|feat|build|chore|ci|docs|style|refactor|perf|test|revert>  # см. [TYPES.md](../doc/reference/TYPES.md)
+type: <fix|feat|build|chore|ci|docs|style|refactor|perf|test|revert>  # см. [TYPES.md](../reference/TYPES.md)
 created: <YYYY-MM-DD>
-value: <V0|V1|V2|V3|V4>  # см. [VALUES.md](../doc/reference/VALUES.md)
-complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../doc/reference/COMPLEXITY.md)
-priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../doc/reference/PRIORITIES.md)
+value: <V0|V1|V2|V3|V4>  # см. [VALUES.md](../reference/VALUES.md)
+complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../reference/COMPLEXITY.md)
+priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../reference/PRIORITIES.md)
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID эпика; пусто, если нет эпика
-author: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../doc/reference/AI_AGENTS.md)
-assignee: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../doc/reference/AI_AGENTS.md)
+author: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
+assignee: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
 branch:  # пусто при создании; заполняется после фактического создания ветки
 pr: <ссылка на PR>  # пусто при создании
-status: <todo|in_progress|review|done|blocked|paused|cancelled>  # см. [STATUSES.md](../doc/reference/STATUSES.md)
+status: <todo|in_progress|review|done|blocked|paused|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)
 ---
 
 # TASK-<категория>-<название>: <краткое название задачи>

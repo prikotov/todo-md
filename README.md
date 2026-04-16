@@ -10,19 +10,20 @@ A set of conventions, templates and rules for managing project tasks as `.md` fi
 
 ```
 todo/
-├── doc/                   ← reference documents (from this package)
+├── doc/                   ← documentation (from this package)
 │   ├── AGENTS.md
 │   ├── AGENTS_TASK_WRITING_GUIDE.md
-│   ├── TYPES.md
-│   ├── STATUSES.md
-│   ├── VALUES.md
-│   ├── COMPLEXITY.md
-│   ├── PRIORITIES.md
-│   ├── AI_AGENTS.md
-│   └── GLOSSARY.md
-├── templates/             ← task and epic templates (from this package)
-│   ├── task.md
-│   └── epic.md
+│   ├── reference/        ← reference docs
+│   │   ├── TYPES.md
+│   │   ├── STATUSES.md
+│   │   ├── VALUES.md
+│   │   ├── COMPLEXITY.md
+│   │   ├── PRIORITIES.md
+│   │   ├── AI_AGENTS.md
+│   │   └── GLOSSARY.md
+│   └── templates/        ← task and epic templates
+│       ├── task.md
+│       └── epic.md
 ├── backlog/               ← backlog tasks (status: backlog)
 ├── done/                  ← completed tasks (status: done)
 ├── cancelled/             ← cancelled tasks (status: cancelled)
@@ -36,7 +37,6 @@ Copy the contents of this package into your project's `todo/` directory:
 
 ```bash
 cp -r vendor/prikotov/todo-md/doc/ todo/doc/
-cp -r vendor/prikotov/todo-md/templates/ todo/templates/
 ```
 
 Create the working directories:
