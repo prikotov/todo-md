@@ -10,7 +10,7 @@ A set of conventions, templates and rules for managing project tasks as `.md` fi
 
 ```
 todo/
-├── doc/                   ← documentation (from this package)
+├── docs/                   ← documentation (from this package)
 │   ├── AGENTS.md
 │   ├── AGENTS_TASK_WRITING_GUIDE.md
 │   ├── reference/        ← reference docs
@@ -36,7 +36,7 @@ todo/
 Copy the contents of this package into your project's `todo/` directory:
 
 ```bash
-cp -r vendor/prikotov/todo-md/doc/ todo/doc/
+cp -r vendor/prikotov/todo-md/docs/ todo/docs/
 ```
 
 Create the working directories:
@@ -45,7 +45,7 @@ Create the working directories:
 mkdir -p todo/backlog todo/done todo/cancelled
 ```
 
-Reference `doc/AGENTS.md` from your project's root `AGENTS.md`.
+Reference `docs/AGENTS.md` from your project's root `AGENTS.md`.
 
 ## License
 
