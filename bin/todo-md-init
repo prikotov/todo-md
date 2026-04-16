@@ -7,23 +7,34 @@ declare(strict_types=1);
  * todo-md init — initialise a todo/ kanban board in the current project.
  *
  * Usage:
- *   php vendor/bin/todo-md-init [target-dir] [--force]
+ *   php vendor/bin/todo-md-init [target-dir] [--docs-path=<path>] [--agents-path=<path>] [--force]
  *
- *   target-dir  — project root (default: current working directory).
- *   --force     — overwrite existing files with fresh copies from the package.
+ *   target-dir    — project root (default: current working directory).
+ *   --docs-path   — relative path where docs will be copied (default: docs/todo-md).
+ *   --agents-path — relative path where AGENTS.md will be copied (default: todo/AGENTS.md).
+ *   --force       — overwrite existing files with fresh copies from the package.
  */
 
 // ── Parse arguments ────────────────────────────────────────────────────────
 
-$force     = in_array('--force', $argv, true);
-$targetArg = null;
+$force      = false;
+$targetArg  = null;
+$docsPath   = null;
+$agentsPath = null;
 
 foreach ($argv as $i => $arg) {
-    if ($i === 0 || $arg === '--force') {
+    if ($i === 0) {
         continue;
     }
-    $targetArg = $arg;
-    break;
+    if ($arg === '--force') {
+        $force = true;
+    } elseif (str_starts_with($arg, '--docs-path=')) {
+        $docsPath = substr($arg, strlen('--docs-path='));
+    } elseif (str_starts_with($arg, '--agents-path=')) {
+        $agentsPath = substr($arg, strlen('--agents-path='));
+    } else {
+        $targetArg = $arg;
+    }
 }
 
 // ── Resolve paths ──────────────────────────────────────────────────────────
@@ -36,7 +47,15 @@ if ($targetDir === false || !is_dir($targetDir)) {
     exit(1);
 }
 
-$todoDir = $targetDir . '/todo';
+$sourceDocs = $packageRoot . '/docs';
+$docsPath   = $docsPath ?? 'docs/todo-md';
+$agentsPath = $agentsPath ?? 'todo/AGENTS.md';
+$todoDir    = $targetDir . '/todo';
+
+if (!is_dir($sourceDocs)) {
+    fwrite(STDERR, "Error: package docs/ not found at $sourceDocs" . PHP_EOL);
+    exit(1);
+}
 
 if ($force) {
     echo "  ⚠  --force: existing files will be overwritten." . PHP_EOL;
@@ -65,15 +84,9 @@ foreach ($directories as $dir) {
     }
 }
 
-// ── 2. Copy docs into docs/todo-md/ ────────────────────────────────────────
+// ── 2. Copy docs ───────────────────────────────────────────────────────────
 
-$sourceDocs = $packageRoot . '/docs';
-$targetDocs = $targetDir . '/docs/todo-md';
-
-if (!is_dir($sourceDocs)) {
-    fwrite(STDERR, "Error: package docs/ not found at $sourceDocs" . PHP_EOL);
-    exit(1);
-}
+$targetDocs = $targetDir . '/' . $docsPath;
 
 if (!is_dir($targetDocs)) {
     mkdir($targetDocs, 0755, true);
@@ -101,10 +114,10 @@ foreach ($iterator as $item) {
     if (file_exists($targetPath)) {
         if ($force) {
             copy($item->getPathname(), $targetPath);
-            echo "  Updated  docs/todo-md/$relativePath" . PHP_EOL;
+            echo "  Updated  $docsPath/$relativePath" . PHP_EOL;
             $updated++;
         } else {
-            echo "  Skip     docs/todo-md/$relativePath (already exists)" . PHP_EOL;
+            echo "  Skip     $docsPath/$relativePath (already exists)" . PHP_EOL;
             $skipped++;
         }
         continue;
@@ -116,75 +129,83 @@ foreach ($iterator as $item) {
     }
 
     copy($item->getPathname(), $targetPath);
-    echo "  Copied   docs/todo-md/$relativePath" . PHP_EOL;
+    echo "  Copied   $docsPath/$relativePath" . PHP_EOL;
     $copied++;
 }
 
-// ── 3. Copy AGENTS.md to todo/ ─────────────────────────────────────────────
+// ── 3. Copy AGENTS.md ──────────────────────────────────────────────────────
 
 $agentsSource = $sourceDocs . '/AGENTS.md';
-$agentsTarget = $todoDir . '/AGENTS.md';
+$agentsTarget = $targetDir . '/' . $agentsPath;
 
 if (file_exists($agentsSource)) {
     if (file_exists($agentsTarget)) {
         if ($force) {
             copy($agentsSource, $agentsTarget);
-            echo "  Updated  todo/AGENTS.md" . PHP_EOL;
+            echo "  Updated  $agentsPath" . PHP_EOL;
             $updated++;
         } else {
-            echo "  Skip     todo/AGENTS.md (already exists)" . PHP_EOL;
+            echo "  Skip     $agentsPath (already exists)" . PHP_EOL;
             $skipped++;
         }
     } else {
+        $agentsDir = dirname($agentsTarget);
+        if (!is_dir($agentsDir)) {
+            mkdir($agentsDir, 0755, true);
+        }
         copy($agentsSource, $agentsTarget);
-        echo "  Copied   todo/AGENTS.md" . PHP_EOL;
+        echo "  Copied   $agentsPath" . PHP_EOL;
         $copied++;
     }
 }
 
-// ── 4. Update todo/.gitignore (AGENTS.md) ──────────────────────────────────
+// ── 4. Update .gitignore ──────────────────────────────────────────────────
 
-$todoGitignore = $todoDir . '/.gitignore';
-$todoEntry     = 'AGENTS.md';
-
-if (file_exists($todoGitignore)) {
-    $content = file_get_contents($todoGitignore);
-    if (!str_contains($content, $todoEntry)) {
-        $content = rtrim($content) . PHP_EOL . $todoEntry . PHP_EOL;
-        file_put_contents($todoGitignore, $content);
-        echo "  Updated todo/.gitignore (+ AGENTS.md)" . PHP_EOL;
-    }
-} else {
-    file_put_contents($todoGitignore, $todoEntry . PHP_EOL);
-    echo "  Updated todo/.gitignore (+ AGENTS.md)" . PHP_EOL;
-}
-
-// ── 5. Update docs/.gitignore (todo-md/) ───────────────────────────────────
-
-$gitignore  = $targetDir . '/docs/.gitignore';
-$entry      = 'todo-md/';
+// 4a. docs/.gitignore — docs path
+$gitignore     = $targetDir . '/docs/.gitignore';
+$gitignoreDir  = dirname($docsPath) === 'docs' ? basename($docsPath) . '/' : $docsPath . '/';
+$entry         = $gitignoreDir;
 
 if (file_exists($gitignore)) {
     $content = file_get_contents($gitignore);
     if (!str_contains($content, $entry)) {
         $content = rtrim($content) . PHP_EOL . $entry . PHP_EOL;
         file_put_contents($gitignore, $content);
-        echo "  Updated docs/.gitignore (+ todo-md/)" . PHP_EOL;
+        echo "  Updated docs/.gitignore (+ $entry)" . PHP_EOL;
     }
 } else {
     if (!is_dir(dirname($gitignore))) {
         mkdir(dirname($gitignore), 0755, true);
     }
     file_put_contents($gitignore, $entry . PHP_EOL);
-    echo "  Updated docs/.gitignore (+ todo-md/)" . PHP_EOL;
+    echo "  Updated docs/.gitignore (+ $entry)" . PHP_EOL;
 }
 
-// ── 6. Summary ─────────────────────────────────────────────────────────────
+// 4b. agents path .gitignore — AGENTS.md
+$agentsGitignore = $targetDir . '/' . dirname($agentsPath) . '/.gitignore';
+$agentsEntry     = basename($agentsPath);
+
+if (file_exists($agentsGitignore)) {
+    $content = file_get_contents($agentsGitignore);
+    if (!str_contains($content, $agentsEntry)) {
+        $content = rtrim($content) . PHP_EOL . $agentsEntry . PHP_EOL;
+        file_put_contents($agentsGitignore, $content);
+        echo "  Updated " . dirname($agentsPath) . "/.gitignore (+ $agentsEntry)" . PHP_EOL;
+    }
+} else {
+    if (!is_dir(dirname($agentsGitignore))) {
+        mkdir(dirname($agentsGitignore), 0755, true);
+    }
+    file_put_contents($agentsGitignore, $agentsEntry . PHP_EOL);
+    echo "  Updated " . dirname($agentsPath) . "/.gitignore (+ $agentsEntry)" . PHP_EOL;
+}
+
+// ── 5. Summary ─────────────────────────────────────────────────────────────
 
 echo PHP_EOL;
 echo "Done. $copied copied, $updated updated, $skipped skipped." . PHP_EOL;
 echo PHP_EOL;
 echo "Next steps:" . PHP_EOL;
 echo "  1. Add this line to your project's AGENTS.md:" . PHP_EOL;
-echo "     * Регламент работы с задачами: [`todo/AGENTS.md`](todo/AGENTS.md)." . PHP_EOL;
-echo "  2. Create tasks using template: cp docs/todo-md/templates/task.md todo/TASK-<category>-<name>.todo.md" . PHP_EOL;
+echo "     * Регламент работы с задачами: [`$agentsPath`]($agentsPath)." . PHP_EOL;
+echo "  2. Create tasks using template: cp $docsPath/templates/task.md todo/TASK-<category>-<name>.todo.md" . PHP_EOL;
