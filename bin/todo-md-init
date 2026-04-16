@@ -103,7 +103,7 @@ foreach ($iterator as $item) {
     $copied++;
 }
 
-// ── 3. Copy AGENTS.md to todo/ (committed, not gitignored) ───────────────
+// ── 3. Copy AGENTS.md to todo/ (generated, gitignored) ───────────────────
 
 $agentsSource = $sourceDocs . '/AGENTS.md';
 $agentsTarget = $todoDir . '/AGENTS.md';
@@ -115,7 +115,24 @@ if (file_exists($agentsSource) && !file_exists($agentsTarget)) {
     echo "  Skip     todo/AGENTS.md (already exists)" . PHP_EOL;
 }
 
-// ── 4. Update docs/.gitignore ──────────────────────────────────────────────
+// ── 4. Update todo/.gitignore (AGENTS.md) ──────────────────────────────────
+
+$todoGitignore = $todoDir . '/.gitignore';
+$todoEntry     = 'AGENTS.md';
+
+if (file_exists($todoGitignore)) {
+    $content = file_get_contents($todoGitignore);
+    if (!str_contains($content, $todoEntry)) {
+        $content = rtrim($content) . PHP_EOL . $todoEntry . PHP_EOL;
+        file_put_contents($todoGitignore, $content);
+        echo "  Updated todo/.gitignore (+ AGENTS.md)" . PHP_EOL;
+    }
+} else {
+    file_put_contents($todoGitignore, $todoEntry . PHP_EOL);
+    echo "  Updated todo/.gitignore (+ AGENTS.md)" . PHP_EOL;
+}
+
+// ── 5. Update docs/.gitignore (todo-md/) ───────────────────────────────────
 
 $gitignore  = $targetDir . '/docs/.gitignore';
 $entry      = 'todo-md/';
