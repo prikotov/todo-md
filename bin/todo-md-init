@@ -47,7 +47,7 @@ if ($targetDir === false || !is_dir($targetDir)) {
     exit(1);
 }
 
-$sourceDocs = $packageRoot . '/docs';
+$sourceDocs = $packageRoot . '/docs/todo-md';
 $docsPath   = $docsPath ?? 'docs/todo-md';
 $agentsPath = $agentsPath ?? 'todo/AGENTS.md';
 $todoDir    = $targetDir . '/todo';
