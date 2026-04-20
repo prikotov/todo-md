@@ -111,6 +111,11 @@ foreach ($iterator as $item) {
         continue;
     }
 
+    // AGENTS.md is copied separately to $agentsPath (todo/AGENTS.md)
+    if ($relativePath === 'AGENTS.md') {
+        continue;
+    }
+
     if (file_exists($targetPath)) {
         if ($force) {
             copy($item->getPathname(), $targetPath);
