@@ -4,18 +4,18 @@
 
 Цель: задачи должны быть **точными, проверяемыми, ограниченными по объёму** и не допускать расползания scope.
 
-> 📌 **Примечание:** Процесс работы с задачами, управление выполненными задачами (done, backlog) описаны в [AGENTS.md](../AGENTS.md).
+> 📌 **Примечание:** Процесс работы с задачами, управление выполненными задачами (done, backlog) описаны в [AGENTS.md](./AGENTS.md).
 > 
 > **Быстрые ссылки:**
-> - [Шаблон задачи](../templates/task.md)
-> - [Шаблон эпика](../templates/epic.md)
+> - [Шаблон задачи](./templates/task.md)
+> - [Шаблон эпика](./templates/epic.md)
 > - **Справочники:**
->   - [Типы задач](TYPES.md)
->   - [Статусы и Workflow](STATUSES.md)
->   - [Ценность (Value)](VALUES.md)
->   - [Сложность (Complexity)](COMPLEXITY.md)
->   - [Приоритет (Priority)](PRIORITIES.md)
->   - [AI-агенты](AI_AGENTS.md)
+>   - [Типы задач](./reference/TYPES.md)
+>   - [Статусы и Workflow](./reference/STATUSES.md)
+>   - [Ценность (Value)](./reference/VALUES.md)
+>   - [Сложность (Complexity)](./reference/COMPLEXITY.md)
+>   - [Приоритет (Priority)](./reference/PRIORITIES.md)
+>   - [AI-агенты](./reference/AI_AGENTS.md)
 
 ---
 
@@ -45,9 +45,9 @@ status: <статус>
 ### Ценность (V), Сложность (C) и Приоритет (P)
 Для определения и использования этих метаданных см. соответствующие справочники:
 
-- **Ценность (V) — `value`**: бизнес-ценность решения, определяет Автор. См. [VALUES.md](VALUES.md)
-- **Сложность (C) — `complexity`**: техническая сложность реализации, определяет Автор, корректирует Исполнитель. См. [COMPLEXITY.md](COMPLEXITY.md)
-- **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](PRIORITIES.md)
+- **Ценность (V) — `value`**: бизнес-ценность решения, определяет Автор. См. [VALUES.md](./reference/VALUES.md)
+- **Сложность (C) — `complexity`**: техническая сложность реализации, определяет Автор, корректирует Исполнитель. См. [COMPLEXITY.md](./reference/COMPLEXITY.md)
+- **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](./reference/PRIORITIES.md)
 
 ---
 
@@ -127,16 +127,16 @@ ID должен быть уникальным.
 
 ## 4. Создание задач
 
-Используйте шаблон: [todo/templates/task.md](../templates/task.md).
+Используйте шаблон: [todo/templates/task.md](./templates/task.md).
 
 ### Процедура написания задачи
 
 0. **Шаг 0 — заполнить обязательные метаданные (YAML front matter)**
    В блоке front matter (между `---`) укажите:
-   - `type`: см. [TYPES.md](TYPES.md)
-   - `priority`: см. [PRIORITIES.md](PRIORITIES.md)
-   - `value`: см. [VALUES.md](VALUES.md)
-   - `complexity`: см. [COMPLEXITY.md](COMPLEXITY.md)
+   - `type`: см. [TYPES.md](./reference/TYPES.md)
+   - `priority`: см. [PRIORITIES.md](./reference/PRIORITIES.md)
+   - `value`: см. [VALUES.md](./reference/VALUES.md)
+   - `complexity`: см. [COMPLEXITY.md](./reference/COMPLEXITY.md)
    - `branch`: оставить пустым при создании задачи; заполнить после фактического создания рабочей ветки
    - `pr`: (пусто при создании)
    - Остальные поля: `author`, `assignee`, `created`, `status` и т.д.
@@ -195,7 +195,7 @@ ID должен быть уникальным.
 
 Эпик — это крупная единица работы, которая объединяет набор связанных задач в одну цель.
 
-Используйте шаблон: [todo/templates/epic.md](../templates/epic.md).
+Используйте шаблон: [todo/templates/epic.md](./templates/epic.md).
 
 ### Обязательные метаданные эпика
 Эпик также должен содержать поля **Ценность (V)** и **Сложность (C)** в YAML front matter, которые отражают общую ценность и сложность всего эпика.
@@ -250,10 +250,10 @@ ID должен быть уникальным.
 
 ## Справочники
 
-- [Типы задач](TYPES.md)
-- [Статусы и Workflow](STATUSES.md)
-- [Ценность (Value)](VALUES.md)
-- [Сложность (Complexity)](COMPLEXITY.md)
-- [Приоритет (Priority)](PRIORITIES.md)
-- [AI-агенты](AI_AGENTS.md)
-- [Глоссарий терминов](GLOSSARY.md)
+- [Типы задач](./reference/TYPES.md)
+- [Статусы и Workflow](./reference/STATUSES.md)
+- [Ценность (Value)](./reference/VALUES.md)
+- [Сложность (Complexity)](./reference/COMPLEXITY.md)
+- [Приоритет (Priority)](./reference/PRIORITIES.md)
+- [AI-агенты](./reference/AI_AGENTS.md)
+- [Глоссарий терминов](./reference/GLOSSARY.md)
