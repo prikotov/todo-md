@@ -3,30 +3,30 @@
 Этот документ определяет правила оформления и ведения задач в папке todo.
 
 > 📌 **Важно:**
-> * **Как писать задачи:** Подробное руководство по формулировкам, шаблоны и примеры см. в [AGENTS_TASK_WRITING_GUIDE](../docs/todo-md/AGENTS_TASK_WRITING_GUIDE.md).
+> * **Как писать задачи:** Подробное руководство по формулировкам, шаблоны и примеры см. в [AGENTS_TASK_WRITING_GUIDE](./AGENTS_TASK_WRITING_GUIDE.md).
 > * **Справочники:**
->   * [Типы задач](../docs/todo-md/reference/TYPES.md)
->   * [Статусы и папки](../docs/todo-md/reference/STATUSES.md)
->   * [Ценность (Value)](../docs/todo-md/reference/VALUES.md)
->   * [Сложность (Complexity)](../docs/todo-md/reference/COMPLEXITY.md)
->   * [Приоритет (Priority)](../docs/todo-md/reference/PRIORITIES.md)
->   * [AI-агенты](../docs/todo-md/reference/AI_AGENTS.md)
+>   * [Типы задач](./reference/TYPES.md)
+>   * [Статусы и папки](./reference/STATUSES.md)
+>   * [Ценность (Value)](./reference/VALUES.md)
+>   * [Сложность (Complexity)](./reference/COMPLEXITY.md)
+>   * [Приоритет (Priority)](./reference/PRIORITIES.md)
+>   * [AI-агенты](./reference/AI_AGENTS.md)
 > * **Шаблоны:**
->   * [Шаблон задачи](../docs/todo-md/templates/task.md)
->   * [Шаблон эпика](../docs/todo-md/templates/epic.md)
+>   * [Шаблон задачи](./templates/task.md)
+>   * [Шаблон эпика](./templates/epic.md)
 
 ## Постановка задач (Definition of Ready)
 
 Перед началом разработки убедись, что в задаче явно зафиксированы:
 - обязательные метаданные в YAML front matter (блок между `---` в начале файла):
-  - `type`: категория изменений (см. [TYPES.md](../docs/todo-md/reference/TYPES.md))
-  - `value`: бизнес-ценность (см. [VALUES.md](../docs/todo-md/reference/VALUES.md))
-  - `complexity`: техническая сложность (см. [COMPLEXITY.md](../docs/todo-md/reference/COMPLEXITY.md))
-  - `priority`: очередность выполнения (см. [PRIORITIES.md](../docs/todo-md/reference/PRIORITIES.md))
-  - `author`: имя создателя задачи (см. [AI_AGENTS.md](../docs/todo-md/reference/AI_AGENTS.md))
+  - `type`: категория изменений (см. [TYPES.md](./reference/TYPES.md))
+  - `value`: бизнес-ценность (см. [VALUES.md](./reference/VALUES.md))
+  - `complexity`: техническая сложность (см. [COMPLEXITY.md](./reference/COMPLEXITY.md))
+  - `priority`: очередность выполнения (см. [PRIORITIES.md](./reference/PRIORITIES.md))
+  - `author`: имя создателя задачи (см. [AI_AGENTS.md](./reference/AI_AGENTS.md))
   - `created`: дата создания в формате YYYY-MM-DD
   - `branch`: имя рабочей ветки; при создании задачи поле остаётся пустым и заполняется только после фактического создания ветки
-  - `status`: текущее состояние (см. [STATUSES.md](../docs/todo-md/reference/STATUSES.md))
+  - `status`: текущее состояние (см. [STATUSES.md](./reference/STATUSES.md))
 - проблема и ожидаемый результат (что изменится в системе или для пользователя);
 - контекст и ограничения (где делаем: application/module, ключевые точки входа, интеграции);
 - `scope` и `out of scope` (что делаем и что точно не делаем);
@@ -63,7 +63,7 @@ ID эпика следует формату: `EPIC-<категория>-<кра�
 ## Процесс работы с задачами
 
 1. **Создание задачи**:
-   - Создать файл `<ID>.todo.md` в папке `todo/` или `todo/backlog/` (используя [шаблон задачи](../docs/todo-md/templates/task.md)).
+   - Создать файл `<ID>.todo.md` в папке `todo/` или `todo/backlog/` (используя [шаблон задачи](./templates/task.md)).
    - Заполнить обязательные поля в YAML front matter (блок между `---`). **Поле `author` заполняется создателем задачи.**
    - Если задача входит в эпик, заполнить поле `epic` plain ID эпика (без md-ссылки) и обновить план эпика.
 
@@ -142,6 +142,6 @@ ID эпика следует формату: `EPIC-<категория>-<кра�
 
 ## Связанные документы
 
-- [Руководство по созданию эпиков и задач](../docs/todo-md/AGENTS_TASK_WRITING_GUIDE.md)
-- [Глоссарий терминов](../docs/todo-md/reference/GLOSSARY.md)
-- [Статусы и Workflow](../docs/todo-md/reference/STATUSES.md)
+- [Руководство по созданию эпиков и задач](./AGENTS_TASK_WRITING_GUIDE.md)
+- [Глоссарий терминов](./reference/GLOSSARY.md)
+- [Статусы и Workflow](./reference/STATUSES.md)
