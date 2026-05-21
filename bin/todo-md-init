@@ -211,3 +211,4 @@ echo "Next steps:" . PHP_EOL;
 echo "  1. Add this line to your project's AGENTS.md:" . PHP_EOL;
 echo "     * Регламент работы с задачами: [`$agentsPath`]($agentsPath)." . PHP_EOL;
 echo "  2. Create tasks using template: cp $docsPath/templates/task.md todo/TASK-<category>-<name>.todo.md" . PHP_EOL;
+echo "  3. Validate tasks: php vendor/bin/todo-md-validate" . PHP_EOL;
