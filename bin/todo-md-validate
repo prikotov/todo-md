@@ -190,6 +190,7 @@ function validateTodoFile(string $file): array
     validateTitle($body, $id, $errors);
     validateSections($body, $kind, $errors);
     validateFolderStatus($file, $frontMatter['status'] ?? '', $errors);
+    validateMarkdownLinks($file, $body, $errors);
     validateNoTemplatePlaceholders($content, $errors);
 
     return ['errors' => $errors, 'warnings' => $warnings];
@@ -468,6 +469,69 @@ function validateFolderStatus(string $file, string $status, array &$errors): voi
     if ($status !== '' && !in_array($status, ACTIVE_STATUSES, true)) {
         $errors[] = 'active todo/ files must have one of statuses: ' . implode(', ', ACTIVE_STATUSES);
     }
+}
+
+/**
+ * @param list<string> $errors
+ */
+function validateMarkdownLinks(string $file, string $body, array &$errors): void
+{
+    if (!preg_match_all('/!?\[[^\]\n]*]\(([^)\n]+)\)/', $body, $matches)) {
+        return;
+    }
+
+    foreach ($matches[1] as $rawTarget) {
+        $target = normalizeMarkdownLinkTarget($rawTarget);
+        if ($target === null || shouldSkipLinkTarget($target)) {
+            continue;
+        }
+
+        $path = stripLinkFragmentAndQuery($target);
+        if ($path === '') {
+            continue;
+        }
+
+        $decodedPath = rawurldecode($path);
+        $candidate = str_starts_with($decodedPath, '/')
+            ? $decodedPath
+            : dirname($file) . DIRECTORY_SEPARATOR . $decodedPath;
+
+        if (!file_exists($candidate)) {
+            $errors[] = sprintf('broken local markdown link `%s`', $target);
+        }
+    }
+}
+
+function normalizeMarkdownLinkTarget(string $rawTarget): ?string
+{
+    $target = trim($rawTarget);
+    if ($target === '') {
+        return null;
+    }
+
+    if (str_starts_with($target, '<') && str_contains($target, '>')) {
+        $target = substr($target, 1, strpos($target, '>') - 1);
+    } elseif (preg_match('/^(\S+)\s+["\'][^"\']*["\']$/', $target, $matches)) {
+        $target = $matches[1];
+    }
+
+    return trim($target);
+}
+
+function shouldSkipLinkTarget(string $target): bool
+{
+    if (str_starts_with($target, '#')) {
+        return true;
+    }
+
+    return preg_match('/^[a-z][a-z0-9+.-]*:/i', $target) === 1;
+}
+
+function stripLinkFragmentAndQuery(string $target): string
+{
+    $withoutFragment = explode('#', $target, 2)[0];
+
+    return explode('?', $withoutFragment, 2)[0];
 }
 
 /**

@@ -227,7 +227,7 @@ php vendor/bin/todo-md-validate
 php vendor/bin/todo-md-validate todo/TASK-example.todo.md
 ```
 
-Валидатор проверяет front matter, допустимые значения справочников, ID, обязательные секции, Human Brief и соответствие статуса папке.
+Валидатор проверяет front matter, допустимые значения справочников, ID, обязательные секции, Human Brief, локальные Markdown-ссылки и соответствие статуса папке.
 
 ---
 
