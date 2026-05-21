@@ -11,8 +11,8 @@ epic:
 author: Владелец проекта (codex-cli)
 assignee: Разработчик (codex-cli)
 branch: codex/cost-tracking-tokens
-pr:
-status: in_progress
+pr: https://github.com/prikotov/todo-md/pull/9
+status: review
 ---
 
 # TASK-todo-md-cost-tracking-in-tokens: Поля оценки стоимости в токенах для задач и эпиков
