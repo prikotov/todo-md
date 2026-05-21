@@ -342,6 +342,8 @@ function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, 
     validateEnum('complexity', $frontMatter['complexity'] ?? '', COMPLEXITIES, $errors);
     validateEnum('priority', $frontMatter['priority'] ?? '', PRIORITIES, $errors);
     validateEnum('status', $frontMatter['status'] ?? '', STATUSES, $errors);
+    validateOptionalInteger('cost_plan', $frontMatter['cost_plan'] ?? '', $errors);
+    validateOptionalInteger('cost_fact', $frontMatter['cost_fact'] ?? '', $errors);
 
     if (($frontMatter['depends_on'] ?? '') !== '') {
         foreach (explode(',', $frontMatter['depends_on']) as $dependency) {
@@ -384,6 +386,20 @@ function validateEnum(string $field, string $value, array $allowed, array &$erro
 {
     if (!in_array($value, $allowed, true)) {
         $errors[] = sprintf('`%s` must be one of: %s', $field, implode(', ', $allowed));
+    }
+}
+
+/**
+ * @param list<string> $errors
+ */
+function validateOptionalInteger(string $field, string $value, array &$errors): void
+{
+    if ($value === '') {
+        return;
+    }
+
+    if (!preg_match('/^\d+$/', $value)) {
+        $errors[] = sprintf('`%s` must be an integer token count or empty', $field);
     }
 }
 

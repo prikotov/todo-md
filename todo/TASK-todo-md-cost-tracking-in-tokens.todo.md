@@ -4,13 +4,15 @@ created: 2026-05-04
 value: V2
 complexity: C2
 priority: P2
+cost_plan:
+cost_fact:
 depends_on:
 epic:
 author: Владелец проекта (codex-cli)
-assignee:
-branch:
-pr:
-status: todo
+assignee: Разработчик (codex-cli)
+branch: codex/cost-tracking-tokens
+pr: https://github.com/prikotov/todo-md/pull/9
+status: review
 ---
 
 # TASK-todo-md-cost-tracking-in-tokens: Поля оценки стоимости в токенах для задач и эпиков
@@ -45,15 +47,15 @@ status: todo
 
 ## 3. Requirements (Требования, MoSCoW)
 ### 🔴 Must Have (Обязательно)
-- [ ] Поля в front matter task.md: `cost_plan` (оценка в токенах), `cost_fact` (факт в токенах).
-- [ ] Поля в front matter epic.md: `cost_plan` (суммарная оценка), `cost_fact` (суммарный факт).
-- [ ] Формат: число (integer), единица — токены.
-- [ ] Поля опциональные (пустые при создании).
-- [ ] Описание полей в справочнике (GLOSSARY или отдельный COST.md).
+- [x] Поля в front matter task.md: `cost_plan` (оценка в токенах), `cost_fact` (факт в токенах).
+- [x] Поля в front matter epic.md: `cost_plan` (суммарная оценка), `cost_fact` (суммарный факт).
+- [x] Формат: число (integer), единица — токены.
+- [x] Поля опциональные (пустые при создании).
+- [x] Описание полей в справочнике (GLOSSARY или отдельный COST.md).
 
 ### 🟡 Should Have (Желательно)
-- [ ] Комментарий в шаблоне: «заполняется по завершении, источник — billing/API usage dashboard».
-- [ ] Пример заполнения в шаблоне.
+- [x] Комментарий в шаблоне: «заполняется по завершении, источник — billing/API usage dashboard».
+- [x] Пример заполнения в шаблоне.
 
 ### 🟢 Could Have (Опционально)
 - [ ] Конвертация в рубли/доллары при указании модели и цены за 1M токенов (формула, не автоматика).
@@ -63,16 +65,16 @@ status: todo
 - [ ] Дашборд стоимости.
 
 ## 4. Implementation Plan (План реализации)
-1. [ ] Продумать naming (именование) и формат полей (cost_plan / cost_fact vs tokens_plan / tokens_fact).
-2. [ ] Обновить `templates/task.md` — добавить поля в front matter.
-3. [ ] Обновить `templates/epic.md` — добавить поля в front matter.
-4. [ ] Описать поля в справочнике.
-5. [ ] Проверить, не ломает ли существующие задачи (поля опциональные — не должно).
+1. [x] Продумать naming (именование) и формат полей (cost_plan / cost_fact vs tokens_plan / tokens_fact).
+2. [x] Обновить `templates/task.md` — добавить поля в front matter.
+3. [x] Обновить `templates/epic.md` — добавить поля в front matter.
+4. [x] Описать поля в справочнике.
+5. [x] Проверить, не ломает ли существующие задачи (поля опциональные — не должно).
 
 ## 5. Definition of Done (Критерии приёмки)
-- [ ] В шаблонах task и epic есть поля для plan/fact стоимости в токенах.
-- [ ] Поля описаны в справочнике.
-- [ ] Существующие задачи не ломаются.
+- [x] В шаблонах task и epic есть поля для plan/fact стоимости в токенах.
+- [x] Поля описаны в справочнике.
+- [x] Существующие задачи не ломаются.
 
 ## 6. Verification (Самопроверка)
 ```bash
@@ -80,8 +82,23 @@ composer validate --strict
 php bin/todo-md-validate .
 ```
 
+Результат:
+
+```bash
+composer validate --strict
+# ./composer.json is valid
+
+php bin/todo-md-validate .
+# Validated 1 file(s): 0 error(s), 0 warning(s).
+```
+
 ## 7. Risks and Dependencies (Риски и зависимости)
 - Агенты могут не заполнять поля автоматически — нужна дисциплина или отдельный инструмент.
 
 ## 8. Comments (Комментарии)
 Зачем в токенах, а не в деньгах: цена токена зависит от модели. Фиксируем в токенах → при смене модели пересчёт тривиален. В деньги переводим при фиксации модели и цены.
+
+## Change History (История изменений)
+| Дата | Автор (роль) | Изменение |
+| :--- | :--- | :--- |
+| 2026-05-21 | Разработчик (codex-cli) | Добавлены поля стоимости в токенах, справочник COST и валидация integer-формата |

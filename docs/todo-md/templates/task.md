@@ -5,6 +5,8 @@ created: <YYYY-MM-DD>
 value: <V0|V1|V2|V3|V4>  # см. [VALUES.md](../reference/VALUES.md)
 complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../reference/COMPLEXITY.md)
 priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../reference/PRIORITIES.md)
+cost_plan:  # плановая стоимость в токенах, integer; см. [COST.md](../reference/COST.md)
+cost_fact:  # фактическая стоимость в токенах, integer; заполняется по завершении, источник — billing/API usage dashboard
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID эпика; пусто, если нет эпика
 author: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
