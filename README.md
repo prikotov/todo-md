@@ -18,6 +18,7 @@
 - **Приоритеты** — `P0`, `P1`, `P2`, `P3`
 - **Сложность** — `C0`–`C5`
 - **Ценность** — `V0`–`V4`
+- **Стоимость** — `cost_plan`, `cost_fact` в токенах
 - **AI-агенты** — правила работы агентов с задачами
 
 Руководство по постановке задач: [`AGENTS_TASK_WRITING_GUIDE.md`](docs/todo-md/AGENTS_TASK_WRITING_GUIDE.md).
@@ -79,6 +80,7 @@ php vendor/bin/todo-md-validate
 
 - YAML front matter и обязательные поля;
 - допустимые значения `type`, `status`, `value`, `complexity`, `priority`;
+- формат опциональных полей стоимости `cost_plan`, `cost_fact`;
 - соответствие ID в имени файла и заголовке;
 - секцию `Простое описание (Human Brief)`;
 - обязательные разделы задачи и эпика;

@@ -10,6 +10,7 @@
 >   * [Ценность (Value)](../docs/todo-md/reference/VALUES.md)
 >   * [Сложность (Complexity)](../docs/todo-md/reference/COMPLEXITY.md)
 >   * [Приоритет (Priority)](../docs/todo-md/reference/PRIORITIES.md)
+>   * [Стоимость в токенах (Cost)](../docs/todo-md/reference/COST.md)
 >   * [AI-агенты](../docs/todo-md/reference/AI_AGENTS.md)
 > * **Шаблоны:**
 >   * [Шаблон задачи](../docs/todo-md/templates/task.md)
@@ -23,6 +24,7 @@
   - `value`: бизнес-ценность (см. [VALUES.md](../docs/todo-md/reference/VALUES.md))
   - `complexity`: техническая сложность (см. [COMPLEXITY.md](../docs/todo-md/reference/COMPLEXITY.md))
   - `priority`: очередность выполнения (см. [PRIORITIES.md](../docs/todo-md/reference/PRIORITIES.md))
+  - `cost_plan`, `cost_fact`: опциональная стоимость в токенах (см. [COST.md](../docs/todo-md/reference/COST.md))
   - `author`: имя создателя задачи (см. [AI_AGENTS.md](../docs/todo-md/reference/AI_AGENTS.md))
   - `created`: дата создания в формате YYYY-MM-DD
   - `branch`: имя рабочей ветки; при создании задачи поле остаётся пустым и заполняется только после фактического создания ветки

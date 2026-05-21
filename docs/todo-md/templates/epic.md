@@ -5,6 +5,8 @@ created: <YYYY-MM-DD>
 value: <V0|V1|V2|V3|V4>  # см. [VALUES.md](../reference/VALUES.md)
 complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../reference/COMPLEXITY.md)
 priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../reference/PRIORITIES.md)
+cost_plan:  # суммарная плановая стоимость задач эпика в токенах, integer; см. [COST.md](../reference/COST.md)
+cost_fact:  # суммарная фактическая стоимость задач эпика в токенах, integer; заполняется по завершении
 author: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
 assignee: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
 status: <todo|backlog|in_progress|paused|blocked|review|done|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)

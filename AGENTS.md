@@ -43,7 +43,7 @@ docs/
   todo-md/                   # Документация, копируемая в проект-потребитель
     AGENTS.md                # Правила работы с задачами (для AI-агентов потребителя)
     AGENTS_TASK_WRITING_GUIDE.md
-    reference/               # Справочники: TYPES, STATUSES, VALUES, COMPLEXITY, PRIORITIES, AI_AGENTS, GLOSSARY
+    reference/               # Справочники: TYPES, STATUSES, VALUES, COMPLEXITY, PRIORITIES, COST, AI_AGENTS, GLOSSARY
     templates/               # Шаблоны: task.md, epic.md
 todo/                        # Внутренние задачи по доработке пакета
 ```

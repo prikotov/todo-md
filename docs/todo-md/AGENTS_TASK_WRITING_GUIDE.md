@@ -15,6 +15,7 @@
 >   - [Ценность (Value)](./reference/VALUES.md)
 >   - [Сложность (Complexity)](./reference/COMPLEXITY.md)
 >   - [Приоритет (Priority)](./reference/PRIORITIES.md)
+>   - [Стоимость в токенах (Cost)](./reference/COST.md)
 >   - [AI-агенты](./reference/AI_AGENTS.md)
 
 ---
@@ -32,6 +33,8 @@ created: <YYYY-MM-DD>
 value: <V0-V4>
 complexity: <C0-C5>
 priority: <P0-P3>
+cost_plan:  # integer, токены; пусто, если нет оценки
+cost_fact:  # integer, токены; пусто, если факт ещё неизвестен
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет эпика
 author: <роль> (<агент>)
@@ -48,6 +51,7 @@ status: <статус>
 - **Ценность (V) — `value`**: бизнес-ценность решения, определяет Автор. См. [VALUES.md](./reference/VALUES.md)
 - **Сложность (C) — `complexity`**: техническая сложность реализации, определяет Автор, корректирует Исполнитель. См. [COMPLEXITY.md](./reference/COMPLEXITY.md)
 - **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](./reference/PRIORITIES.md)
+- **Стоимость в токенах — `cost_plan`, `cost_fact`**: плановый и фактический расход токенов. Поля опциональные. См. [COST.md](./reference/COST.md)
 
 ---
 
@@ -155,6 +159,7 @@ ID должен быть уникальным.
    - `priority`: см. [PRIORITIES.md](./reference/PRIORITIES.md)
    - `value`: см. [VALUES.md](./reference/VALUES.md)
    - `complexity`: см. [COMPLEXITY.md](./reference/COMPLEXITY.md)
+   - `cost_plan`, `cost_fact`: опциональные integer-поля стоимости в токенах, см. [COST.md](./reference/COST.md)
    - `branch`: оставить пустым при создании задачи; заполнить после фактического создания рабочей ветки
    - `pr`: (пусто при создании)
    - Остальные поля: `author`, `assignee`, `created`, `status` и т.д.
@@ -297,5 +302,6 @@ php vendor/bin/todo-md-validate todo/TASK-example.todo.md
 - [Ценность (Value)](./reference/VALUES.md)
 - [Сложность (Complexity)](./reference/COMPLEXITY.md)
 - [Приоритет (Priority)](./reference/PRIORITIES.md)
+- [Стоимость в токенах (Cost)](./reference/COST.md)
 - [AI-агенты](./reference/AI_AGENTS.md)
 - [Глоссарий терминов](./reference/GLOSSARY.md)
