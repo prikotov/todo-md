@@ -111,10 +111,7 @@ foreach ($iterator as $item) {
         continue;
     }
 
-    // AGENTS.md is copied separately to $agentsPath (todo/AGENTS.md)
-    if ($relativePath === 'AGENTS.md') {
-        continue;
-    }
+
 
     if (file_exists($targetPath)) {
         if ($force) {
@@ -140,7 +137,7 @@ foreach ($iterator as $item) {
 
 // ── 3. Copy AGENTS.md ──────────────────────────────────────────────────────
 
-$agentsSource = $sourceDocs . '/AGENTS.md';
+$agentsSource = $packageRoot . '/todo/AGENTS.md';
 $agentsTarget = $targetDir . '/' . $agentsPath;
 
 if (file_exists($agentsSource)) {
@@ -214,3 +211,4 @@ echo "Next steps:" . PHP_EOL;
 echo "  1. Add this line to your project's AGENTS.md:" . PHP_EOL;
 echo "     * Регламент работы с задачами: [`$agentsPath`]($agentsPath)." . PHP_EOL;
 echo "  2. Create tasks using template: cp $docsPath/templates/task.md todo/TASK-<category>-<name>.todo.md" . PHP_EOL;
+echo "  3. Validate tasks: php vendor/bin/todo-md-validate" . PHP_EOL;

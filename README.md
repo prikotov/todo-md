@@ -1,72 +1,101 @@
-# prikotov/todo-md
+# todo-md
 
-File-based kanban board for managing tasks in markdown files.
+### Канбан для управления задачами через markdown-файлы
 
-## What is it
+Задачи хранятся как `.md`-файлы с YAML front matter (статус, приоритет, сложность, тип). Переход между статусами — перемещение файла между папками: `todo/` → `todo/done/`. Без базы данных и UI — только файлы, git и консоль.
 
-A set of conventions, templates and rules for managing project tasks as `.md` files with YAML front matter metadata. Tasks move through statuses via folder relocation (`todo/` → `todo/done/`).
+Пакет содержит правила, шаблоны и справочники для постановки задач. AI-агент получает их как контекст и следует формату при создании и обновлении задач.
 
-## Structure
+---
+
+## Правила
+
+Определяют формат задач (статусы, типы, приоритеты, сложность) и правила работы AI-агентов.
+
+- **Руководство по постановке задач** — обязательные метаданные, структура описания, критерии готовности
+- **Типы задач** — `fix`, `feat`, `build`, `chore`, `ci`, `docs`, `style`, `refactor`, `perf`, `test`, `revert`, `epic`
+- **Статусы** — `todo`, `in_progress`, `paused`, `blocked`, `review`, `backlog`, `done`, `cancelled`
+- **Приоритеты** — `P0`, `P1`, `P2`, `P3`
+- **Сложность** — `C0`–`C5`
+- **Ценность** — `V0`–`V4`
+- **Стоимость** — `cost_plan`, `cost_fact` в токенах
+- **AI-агенты** — правила работы агентов с задачами
+
+Руководство по постановке задач: [`AGENTS_TASK_WRITING_GUIDE.md`](docs/todo-md/AGENTS_TASK_WRITING_GUIDE.md).
+
+---
+
+## Шаблоны
+
+Шаблоны задач и эпиков с YAML front matter:
+
+- **task.md** — [`docs/todo-md/templates/task.md`](docs/todo-md/templates/task.md)
+- **epic.md** — [`docs/todo-md/templates/epic.md`](docs/todo-md/templates/epic.md)
+
+---
+
+## Структура папок в проекте
 
 ```
 todo/
-├── docs/                   ← documentation (from this package)
-│   ├── AGENTS.md
-│   ├── AGENTS_TASK_WRITING_GUIDE.md
-│   ├── reference/        ← reference docs
-│   │   ├── TYPES.md
-│   │   ├── STATUSES.md
-│   │   ├── VALUES.md
-│   │   ├── COMPLEXITY.md
-│   │   ├── PRIORITIES.md
-│   │   ├── AI_AGENTS.md
-│   │   └── GLOSSARY.md
-│   └── templates/        ← task and epic templates
-│       ├── task.md
-│       └── epic.md
-├── backlog/               ← backlog tasks (status: backlog)
-├── done/                  ← completed tasks (status: done)
-├── cancelled/             ← cancelled tasks (status: cancelled)
-├── TASK-*.todo.md         ← active tasks
-└── EPIC-*.todo.md         ← active epics
+├── AGENTS.md               ← правила для AI-агентов (из пакета)
+├── backlog/                ← backlog-задачи
+├── done/                   ← завершённые задачи
+├── cancelled/              ← отменённые задачи
+├── TASK-*.todo.md          ← активные задачи
+└── EPIC-*.todo.md          ← активные эпики
+
+docs/todo-md/              ← документация (из пакета)
 ```
 
-## Reference
+---
 
-After initialisation, your `todo/docs/` contains:
-
-- **AGENTS.md** — rules for working with tasks (for AI agents).
-- **AGENTS_TASK_WRITING_GUIDE.md** — how to write tasks.
-- **reference/** — TYPES, STATUSES, VALUES, COMPLEXITY, PRIORITIES, AI_AGENTS, GLOSSARY.
-- **templates/** — task.md, epic.md.
-
-## Installation
+## Установка в проект
 
 ```bash
 composer require --dev prikotov/todo-md
 ```
 
-## Initialisation
+В состав пакета входят:
 
-After installing the package, run the init command in your project root:
+- **Правила** — формат задач и правила работы
+- **Шаблоны** — task.md, epic.md
+- **Справочники** — типы, статусы, приоритеты, сложность
+
+### Инициализация
 
 ```bash
 php vendor/bin/todo-md-init
 ```
 
-Or specify a target directory:
+Создаёт структуру папок (`todo/`, `todo/backlog/`, `todo/done/`, `todo/cancelled/`) и копирует документацию в `docs/todo-md/`. Существующие файлы не перезаписываются.
+
+### Валидация задач
 
 ```bash
-php vendor/bin/todo-md-init /path/to/project
+php vendor/bin/todo-md-validate
 ```
 
-This will:
-1. Create `todo/`, `todo/backlog/`, `todo/done/`, `todo/cancelled/` (with `.gitkeep` files).
-2. Copy `docs/` from the package into `todo/docs/` (AGENTS.md, guides, references, templates).
-3. Print next steps.
+Проверяет `.todo.md` задачи и эпики:
 
-> **Note:** Existing files are never overwritten. Re-running the command is safe.
+- YAML front matter и обязательные поля;
+- допустимые значения `type`, `status`, `value`, `complexity`, `priority`;
+- формат опциональных полей стоимости `cost_plan`, `cost_fact`;
+- соответствие ID в имени файла и заголовке;
+- секцию `Простое описание (Human Brief)`;
+- обязательные разделы задачи и эпика;
+- локальные Markdown-ссылки, чтобы ссылки не ломались после перемещения задач между папками;
+- соответствие статуса папке (`backlog`, `done`, `cancelled`).
+
+Можно проверить конкретный файл или директорию:
+
+```bash
+php vendor/bin/todo-md-validate todo/TASK-example.todo.md
+php vendor/bin/todo-md-validate todo/
+```
+
+---
 
 ## License
 
-MIT
+[MIT](LICENSE)

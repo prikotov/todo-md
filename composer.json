@@ -9,7 +9,10 @@
             "email": "prikotov@gmail.com"
         }
     ],
-    "bin": ["bin/todo-md-init"],
+    "bin": [
+        "bin/todo-md-init",
+        "bin/todo-md-validate"
+    ],
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {

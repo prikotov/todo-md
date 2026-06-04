@@ -17,3 +17,6 @@ jobs:
           php-version: '8.4'
 
       - run: composer validate --strict
+      - run: php -l bin/todo-md-init
+      - run: php -l bin/todo-md-validate
+      - run: php bin/todo-md-validate .
