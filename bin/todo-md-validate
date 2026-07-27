@@ -210,7 +210,7 @@ function removeBom(string $content): string
  */
 function parseFrontMatter(string $content): array
 {
-    $lines = preg_split('/\R/', $content);
+    $lines = preg_split('/\r\n|\r|\n/', $content);
     if ($lines === false || $lines === [] || trim($lines[0]) !== '---') {
         return ['frontMatter' => '', 'body' => '', 'error' => 'missing YAML front matter opening delimiter ---'];
     }
@@ -242,7 +242,7 @@ function parseFrontMatter(string $content): array
 function parseSimpleYaml(string $yaml, array &$warnings): array
 {
     $data = [];
-    $lines = preg_split('/\R/', $yaml) ?: [];
+    $lines = preg_split('/\r\n|\r|\n/', $yaml) ?: [];
 
     foreach ($lines as $lineNumber => $line) {
         $trimmed = trim($line);
