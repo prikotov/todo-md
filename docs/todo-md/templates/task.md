@@ -5,6 +5,7 @@ created: <YYYY-MM-DD>
 due:  # плановый срок; см. [DATES.md](../reference/DATES.md)
 started:  # момент перехода в in_progress; проставляет CLI; см. [DATES.md](../reference/DATES.md)
 completed:  # момент перехода в done; проставляет CLI; см. [DATES.md](../reference/DATES.md)
+cancelled:  # момент перехода в cancelled; проставляет CLI; см. [DATES.md](../reference/DATES.md)
 value: <V0|V1|V2|V3|V4>  # см. [VALUES.md](../reference/VALUES.md)
 complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../reference/COMPLEXITY.md)
 priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../reference/PRIORITIES.md)

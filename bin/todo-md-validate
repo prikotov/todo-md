@@ -347,6 +347,7 @@ function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, 
     validateOptionalDate('due', $frontMatter['due'] ?? '', $errors);
     validateOptionalDate('started', $frontMatter['started'] ?? '', $errors);
     validateOptionalDate('completed', $frontMatter['completed'] ?? '', $errors);
+    validateOptionalDate('cancelled', $frontMatter['cancelled'] ?? '', $errors);
 
     if (($frontMatter['depends_on'] ?? '') !== '') {
         foreach (explode(',', $frontMatter['depends_on']) as $dependency) {
