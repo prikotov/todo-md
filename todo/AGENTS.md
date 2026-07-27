@@ -26,8 +26,8 @@
   - `priority`: очередность выполнения (см. [PRIORITIES.md](../docs/todo-md/reference/PRIORITIES.md))
   - `cost_plan`, `cost_fact`: опциональная стоимость в токенах (см. [COST.md](../docs/todo-md/reference/COST.md))
   - `author`: имя создателя задачи (см. [AI_AGENTS.md](../docs/todo-md/reference/AI_AGENTS.md))
-  - `created`: дата создания в формате YYYY-MM-DD
-  - `due`, `started`, `completed`: опциональные даты жизненного цикла (плановый срок, старт в `in_progress`, завершение в `done`), формат YYYY-MM-DD; см. [DATES.md](../docs/todo-md/reference/DATES.md)
+  - `created`: дата/время создания; формат — `YYYY-MM-DD` либо `YYYY-MM-DD HH:MM:SS (unix_ts)`, проставляет CLI
+  - `due`, `started`, `completed`: опциональные метки жизненного цикла (плановый срок, старт в `in_progress`, завершение в `done`); тот же формат, проставляет CLI; см. [DATES.md](../docs/todo-md/reference/DATES.md)
   - `branch`: имя рабочей ветки; при создании задачи поле остаётся пустым и заполняется только после фактического создания ветки
   - `status`: текущее состояние (см. [STATUSES.md](../docs/todo-md/reference/STATUSES.md))
 - секция **"Простое описание (Human Brief)"**: проблема простыми словами, кому она мешает, поверхностный путь решения или прямое указание, что решение не задано в исходном запросе;

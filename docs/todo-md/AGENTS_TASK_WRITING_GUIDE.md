@@ -30,9 +30,9 @@
 ---
 type: <тип задачи>
 created: <YYYY-MM-DD>
-due:  # плановый срок, дата YYYY-MM-DD; см. [DATES.md](./reference/DATES.md)
-started:  # дата перехода в in_progress, YYYY-MM-DD; см. [DATES.md](./reference/DATES.md)
-completed:  # дата перехода в done, YYYY-MM-DD; см. [DATES.md](./reference/DATES.md)
+due:  # плановый срок; см. [DATES.md](./reference/DATES.md)
+started:  # момент перехода в in_progress; проставляет CLI; см. [DATES.md](./reference/DATES.md)
+completed:  # момент перехода в done; проставляет CLI; см. [DATES.md](./reference/DATES.md)
 value: <V0-V4>
 complexity: <C0-C5>
 priority: <P0-P3>
@@ -164,7 +164,7 @@ ID должен быть уникальным.
    - `value`: см. [VALUES.md](./reference/VALUES.md)
    - `complexity`: см. [COMPLEXITY.md](./reference/COMPLEXITY.md)
    - `cost_plan`, `cost_fact`: опциональные integer-поля стоимости в токенах, см. [COST.md](./reference/COST.md)
-   - `due`, `started`, `completed`: опциональные даты жизненного цикла (YYYY-MM-DD), см. [DATES.md](./reference/DATES.md)
+   - `due`, `started`, `completed`: опциональные метки жизненного цикла; формат — дата `YYYY-MM-DD` либо `YYYY-MM-DD HH:MM:SS (unix_ts)`, проставляет CLI; см. [DATES.md](./reference/DATES.md)
    - `branch`: оставить пустым при создании задачи; заполнить после фактического создания рабочей ветки
    - `pr`: (пусто при создании)
    - Остальные поля: `author`, `assignee`, `created`, `status` и т.д.

@@ -369,15 +369,23 @@ function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, 
 /**
  * @param list<string> $errors
  */
-function validateDate(string $field, string $date, array &$errors): void
+function validateDate(string $field, string $value, array &$errors): void
 {
-    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $matches)) {
-        $errors[] = sprintf('`%s` must use YYYY-MM-DD format', $field);
+    // Принимает либо календарную дату `YYYY-MM-DD`,
+    // либо `YYYY-MM-DD[ T]HH:MM:SS (unix_ts)`: локальное время для человека +
+    // Unix timestamp (UTC) в скобках как источник истины. Проставляет CLI/агент.
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2})\s*\((\d{1,10})\))?$/', $value, $m)) {
+        $errors[] = sprintf('`%s` must use YYYY-MM-DD or "YYYY-MM-DD HH:MM:SS (unix_ts)" format', $field);
         return;
     }
 
-    if (!checkdate((int) $matches[2], (int) $matches[3], (int) $matches[1])) {
+    if (!checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
         $errors[] = sprintf('`%s` contains an invalid date', $field);
+        return;
+    }
+
+    if (isset($m[4]) && ((int) $m[4] > 23 || (int) $m[5] > 59 || (int) $m[6] > 59)) {
+        $errors[] = sprintf('`%s` contains an invalid time', $field);
     }
 }
 
