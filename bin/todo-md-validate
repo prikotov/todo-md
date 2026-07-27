@@ -189,6 +189,7 @@ function validateTodoFile(string $file): array
     validateFrontMatter($frontMatter, $kind, $errors, $warnings);
     validateTitle($body, $id, $errors);
     validateSections($body, $kind, $errors);
+    validateChangeHistory($body, $errors);
     validateFolderStatus($file, $frontMatter['status'] ?? '', $errors);
     validateMarkdownLinks($file, $body, $errors);
     validateNoTemplatePlaceholders($content, $errors);
@@ -337,13 +338,17 @@ function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, 
         $errors[] = '`type` must be one of: ' . implode(', ', TASK_TYPES);
     }
 
-    validateDate($frontMatter['created'] ?? '', $errors);
+    validateDate('created', $frontMatter['created'] ?? '', $errors);
     validateEnum('value', $frontMatter['value'] ?? '', VALUES, $errors);
     validateEnum('complexity', $frontMatter['complexity'] ?? '', COMPLEXITIES, $errors);
     validateEnum('priority', $frontMatter['priority'] ?? '', PRIORITIES, $errors);
     validateEnum('status', $frontMatter['status'] ?? '', STATUSES, $errors);
     validateOptionalInteger('cost_plan', $frontMatter['cost_plan'] ?? '', $errors);
     validateOptionalInteger('cost_fact', $frontMatter['cost_fact'] ?? '', $errors);
+    validateOptionalDate('due', $frontMatter['due'] ?? '', $errors);
+    validateOptionalDate('started', $frontMatter['started'] ?? '', $errors);
+    validateOptionalDate('completed', $frontMatter['completed'] ?? '', $errors);
+    validateOptionalDate('cancelled', $frontMatter['cancelled'] ?? '', $errors);
 
     if (($frontMatter['depends_on'] ?? '') !== '') {
         foreach (explode(',', $frontMatter['depends_on']) as $dependency) {
@@ -366,15 +371,93 @@ function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, 
 /**
  * @param list<string> $errors
  */
-function validateDate(string $date, array &$errors): void
+function validateDate(string $field, string $value, array &$errors): void
 {
-    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $matches)) {
-        $errors[] = '`created` must use YYYY-MM-DD format';
+    // Принимает либо календарную дату `YYYY-MM-DD`,
+    // либо `YYYY-MM-DD[ T]HH:MM:SS (unix_ts)`: локальное время для человека +
+    // Unix timestamp (UTC) в скобках как источник истины. Проставляет CLI/агент.
+    if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2})\s*\((\d{1,10})\))?$/', $value, $m)) {
+        $errors[] = sprintf('`%s` must use YYYY-MM-DD or "YYYY-MM-DD HH:MM:SS (unix_ts)" format', $field);
         return;
     }
 
-    if (!checkdate((int) $matches[2], (int) $matches[3], (int) $matches[1])) {
-        $errors[] = '`created` contains an invalid date';
+    if (!checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+        $errors[] = sprintf('`%s` contains an invalid date', $field);
+        return;
+    }
+
+    if (isset($m[4]) && ((int) $m[4] > 23 || (int) $m[5] > 59 || (int) $m[6] > 59)) {
+        $errors[] = sprintf('`%s` contains an invalid time', $field);
+        return;
+    }
+
+    // Локальное время и timestamp обязаны отличаться на правдоподобный offset
+    // таймзоны: CLI пишет обе части из одного now(), поэтому local − ts = реальный
+    // offset машины. Ручная правка одной части ломает условие. Проверяем диапазон
+    // [-12:00, +14:00] и кратность 15 минутам (покрывает все реальные зоны, incl :30/:45).
+    // Авто-исправления нет — только сигнал об ошибке.
+    if (isset($m[7])) {
+        $local = gmmktime((int) $m[4], (int) $m[5], (int) $m[6], (int) $m[2], (int) $m[3], (int) $m[1]);
+        $offset = $local - (int) $m[7];
+        if ($offset < -12 * 3600 || $offset > 14 * 3600 || $offset % 900 !== 0) {
+            $errors[] = sprintf('`%s` local time does not match the Unix timestamp (implied timezone offset is not plausible)', $field);
+        }
+    }
+}
+
+/**
+ * @param list<string> $errors
+ */
+function validateOptionalDate(string $field, string $value, array &$errors): void
+{
+    if ($value === '') {
+        return;
+    }
+
+    validateDate($field, $value, $errors);
+}
+
+/**
+ * Дата в первой колонке таблицы "Change History" проверяется тем же правилом,
+ * что lifecycle-поля: YYYY-MM-DD либо "YYYY-MM-DD HH:MM:SS (unix_ts)".
+ * Секция необязательна; таблица парсится по строкам, заголовок и разделитель
+ * пропускаются.
+ *
+ * @param list<string> $errors
+ */
+function validateChangeHistory(string $body, array &$errors): void
+{
+    if (!preg_match('/^##\s+.*Change History/im', $body, $m, PREG_OFFSET_CAPTURE)) {
+        return;
+    }
+
+    $rest = substr($body, $m[0][1] + strlen($m[0][0]));
+    if (preg_match('/^##\s+/m', $rest, $next, PREG_OFFSET_CAPTURE)) {
+        $rest = substr($rest, 0, $next[0][1]);
+    }
+
+    $headerSeen = false;
+    foreach (preg_split('/\r\n|\r|\n/', $rest) as $line) {
+        $trimmed = trim($line);
+        if (!str_starts_with($trimmed, '|')) {
+            continue;
+        }
+
+        // разделитель таблицы: | :--- | :--- |
+        if (preg_match('/^\|[\s:|-]+\|\s*$/u', $trimmed)) {
+            continue;
+        }
+
+        $cells = array_map('trim', explode('|', trim($trimmed, '|')));
+        if (!$headerSeen) {
+            $headerSeen = true;
+            continue;
+        }
+
+        $date = $cells[0] ?? '';
+        if ($date !== '') {
+            validateDate('change history date', $date, $errors);
+        }
     }
 }
 

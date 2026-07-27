@@ -30,6 +30,10 @@
 ---
 type: <тип задачи>
 created: <YYYY-MM-DD>
+due:  # плановый срок; см. [DATES.md](./reference/DATES.md)
+started:  # момент перехода в in_progress; проставляет CLI; см. [DATES.md](./reference/DATES.md)
+completed:  # момент перехода в done; проставляет CLI; см. [DATES.md](./reference/DATES.md)
+cancelled:  # момент перехода в cancelled; проставляет CLI; см. [DATES.md](./reference/DATES.md)
 value: <V0-V4>
 complexity: <C0-C5>
 priority: <P0-P3>
@@ -52,6 +56,7 @@ status: <статус>
 - **Сложность (C) — `complexity`**: техническая сложность реализации, определяет Автор, корректирует Исполнитель. См. [COMPLEXITY.md](./reference/COMPLEXITY.md)
 - **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](./reference/PRIORITIES.md)
 - **Стоимость в токенах — `cost_plan`, `cost_fact`**: плановый и фактический расход токенов. Поля опциональные. См. [COST.md](./reference/COST.md)
+- **Даты жизненного цикла — `due`, `started`, `completed`**: плановый срок и фактические даты начала/завершения. Поля опциональные. См. [DATES.md](./reference/DATES.md)
 
 ---
 
@@ -160,6 +165,7 @@ ID должен быть уникальным.
    - `value`: см. [VALUES.md](./reference/VALUES.md)
    - `complexity`: см. [COMPLEXITY.md](./reference/COMPLEXITY.md)
    - `cost_plan`, `cost_fact`: опциональные integer-поля стоимости в токенах, см. [COST.md](./reference/COST.md)
+   - `due`, `started`, `completed`, `cancelled`: опциональные метки жизненного цикла; формат — дата `YYYY-MM-DD` либо `YYYY-MM-DD HH:MM:SS (unix_ts)`, проставляет CLI; см. [DATES.md](./reference/DATES.md)
    - `branch`: оставить пустым при создании задачи; заполнить после фактического создания рабочей ветки
    - `pr`: (пусто при создании)
    - Остальные поля: `author`, `assignee`, `created`, `status` и т.д.
