@@ -11,7 +11,9 @@
     ],
     "bin": [
         "bin/todo-md-init",
-        "bin/todo-md-validate"
+        "bin/todo-md-validate",
+        "bin/todo-md-export-jsonl",
+        "bin/todo-md-dashboard"
     ],
     "minimum-stability": "stable",
     "prefer-stable": true,

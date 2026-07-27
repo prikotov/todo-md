@@ -1,0 +1,281 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * todo-md dashboard — render a self-contained HTML dashboard from JSONL.
+ *
+ * Usage:
+ *   php vendor/bin/todo-md-dashboard <input.jsonl|-> [-o out.html] [--title="..."]
+ *   php vendor/bin/todo-md-export-jsonl . | php vendor/bin/todo-md-dashboard - -o dashboard.html
+ *
+ * Reads JSON Lines produced by todo-md-export-jsonl and writes a single HTML
+ * file with embedded data and Chart.js (CDN) charts: status, priority, folder,
+ * epic distributions and a searchable task table.
+ */
+
+$args = array_slice($argv, 1);
+$argCount = count($args);
+$input = null;
+$output = null;
+$title = 'Задачи todo-md';
+
+for ($i = 0; $i < $argCount; $i++) {
+    $arg = $args[$i];
+
+    if ($arg === '--help' || $arg === '-h') {
+        printHelp();
+        exit(0);
+    }
+
+    if ($arg === '-o' || $arg === '--output') {
+        $output = $args[$i + 1] ?? null;
+        $i++;
+        continue;
+    }
+
+    if (str_starts_with($arg, '--output=')) {
+        $output = substr($arg, strlen('--output='));
+        continue;
+    }
+
+    if (str_starts_with($arg, '--title=')) {
+        $title = substr($arg, strlen('--title='));
+        continue;
+    }
+
+    if ($arg === '-' || !str_starts_with($arg, '-')) {
+        $input = $arg;
+        continue;
+    }
+
+    fwrite(STDERR, "Error: unknown option: $arg" . PHP_EOL);
+    printHelp();
+    exit(1);
+}
+
+$raw = $input === null || $input === '-'
+    ? stream_get_contents(STDIN)
+    : file_get_contents($input);
+
+if ($raw === false) {
+    fwrite(STDERR, "Error: cannot read input: " . ($input ?? 'stdin') . PHP_EOL);
+    exit(1);
+}
+
+$tasks = [];
+foreach (preg_split('/\r\n|\r|\n/', trim($raw)) ?: [] as $line) {
+    if ($line === '') {
+        continue;
+    }
+    $decoded = json_decode($line, true);
+    if (!is_array($decoded)) {
+        fwrite(STDERR, 'Warning: skipping invalid JSON line' . PHP_EOL);
+        continue;
+    }
+    $tasks[] = $decoded;
+}
+
+if ($tasks === []) {
+    fwrite(STDERR, 'No task records in input.' . PHP_EOL);
+    exit(0);
+}
+
+$html = renderHtml($tasks, $title);
+
+if ($output === null) {
+    echo $html;
+} else {
+    $written = file_put_contents($output, $html);
+    if ($written === false) {
+        fwrite(STDERR, "Error: cannot write output: $output" . PHP_EOL);
+        exit(1);
+    }
+    fwrite(STDERR, "Wrote $output (" . count($tasks) . ' task(s)).' . PHP_EOL);
+}
+
+exit(0);
+
+function printHelp(): void
+{
+    echo <<<'TXT'
+todo-md dashboard — render a self-contained HTML dashboard from JSONL.
+
+Usage:
+  php vendor/bin/todo-md-dashboard <input.jsonl|-> [-o out.html] [--title="..."]
+
+Options:
+  -o, --output=FILE   Write HTML to FILE (default: stdout).
+  --title="TEXT"      Dashboard title (default: "Задачи todo-md").
+  --help              Show this help.
+
+TXT;
+}
+
+/**
+ * @param list<array<string, mixed>> $tasks
+ */
+function renderHtml(array $tasks, string $title): string
+{
+    $dataJson = json_encode(
+        $tasks,
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT,
+    );
+
+    $template = <<<'HTML'
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f6f7f9; color: #1b1f23; }
+  header { background: #1f2937; color: #fff; padding: 1rem 1.5rem; }
+  header h1 { margin: 0; font-size: 1.25rem; }
+  header .sub { opacity: .8; font-size: .85rem; margin-top: .25rem; }
+  main { max-width: 1100px; margin: 0 auto; padding: 1.25rem; }
+  .cards { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
+  .card { background: #fff; border-radius: .5rem; padding: .85rem 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.06); min-width: 120px; }
+  .card .n { font-size: 1.6rem; font-weight: 700; }
+  .card .l { font-size: .8rem; opacity: .7; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+  .panel { background: #fff; border-radius: .5rem; padding: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .panel h2 { margin: 0 0 .75rem; font-size: .95rem; }
+  .table-wrap { background: #fff; border-radius: .5rem; padding: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .table-wrap input { padding: .4rem .6rem; width: 100%; box-sizing: border-box; margin-bottom: .75rem; border: 1px solid #d0d7de; border-radius: .375rem; background: inherit; color: inherit; }
+  table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+  th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #eaeef2; vertical-align: top; }
+  th { font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; opacity: .65; }
+  .badge { display: inline-block; padding: .05rem .4rem; border-radius: .375rem; font-size: .72rem; background: #eef1f4; }
+  .status-todo, .status-backlog { background: #e2e8f0; color: #334155; }
+  .status-in_progress, .status-review { background: #fef3c7; color: #92400e; }
+  .status-blocked, .status-paused { background: #fee2e2; color: #991b1b; }
+  .status-done { background: #dcfce7; color: #166534; }
+  .status-cancelled { background: #f1f5f9; color: #64748b; text-decoration: line-through; }
+  a { color: #2563eb; }
+  footer { text-align: center; opacity: .5; font-size: .75rem; padding: 1.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>__TITLE__</h1>
+  <div class="sub" id="sub"></div>
+</header>
+<main>
+  <div class="cards" id="cards"></div>
+  <div class="grid">
+    <div class="panel"><h2>По статусам</h2><canvas id="statusChart"></canvas></div>
+    <div class="panel"><h2>По приоритетам</h2><canvas id="priorityChart"></canvas></div>
+    <div class="panel"><h2>По папкам</h2><canvas id="folderChart"></canvas></div>
+    <div class="panel"><h2>По эпикам (топ-10)</h2><canvas id="epicChart"></canvas></div>
+  </div>
+  <div class="table-wrap">
+    <input id="search" type="search" placeholder="Фильтр по id, заголовку, эпику, исполнителю…">
+    <table>
+      <thead><tr><th>ID</th><th>Статус</th><th>P</th><th>Эпик</th><th>Заголовок</th><th>Исполнитель</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
+<footer>Сгенерировано todo-md-dashboard из __COUNT__ записей JSONL.</footer>
+<script>
+const TASKS = __DATA__;
+const STATUS_ORDER = ["todo","backlog","in_progress","paused","blocked","review","done","cancelled"];
+const STATUS_LABEL = {todo:"todo",backlog:"backlog",in_progress:"in_progress",paused:"paused",blocked:"blocked",review:"review",done:"done",cancelled:"cancelled"};
+const PRIORITY_ORDER = ["P0","P1","P2","P3"];
+const FOLDER_ORDER = ["active","backlog","done","cancelled"];
+const PALETTE = ["#2563eb","#16a34a","#d97706","#dc2626","#7c3aed","#0891b2","#db2777","#65a30d","#ca8a04","#475569"];
+
+function countBy(tasks, key, order) {
+  const counts = {};
+  for (const t of tasks) {
+    const v = t[key] || "(без)";
+    counts[v] = (counts[v] || 0) + 1;
+  }
+  const labels = order ? [...order].filter(k => counts[k] !== undefined).concat(Object.keys(counts).filter(k => !(order||[]).includes(k))) : Object.keys(counts);
+  return { labels: labels, data: labels.map(l => counts[l] || 0) };
+}
+
+function chart(id, agg, paletteOffset = 0) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: "doughnut",
+    data: { labels: agg.labels, datasets: [{ data: agg.data, backgroundColor: agg.labels.map((_, i) => PALETTE[(i + paletteOffset) % PALETTE.length]) }] },
+    options: { plugins: { legend: { position: "right" } }, maintainAspectRatio: false }
+  });
+}
+
+const statusAgg = countBy(TASKS, "status", STATUS_ORDER);
+const priorityAgg = countBy(TASKS, "priority", PRIORITY_ORDER);
+const folderAgg = countBy(TASKS, "folder", FOLDER_ORDER);
+const epicCounts = {};
+for (const t of TASKS) { if (t.epic) epicCounts[t.epic] = (epicCounts[t.epic]||0)+1; }
+const epicLabels = Object.keys(epicCounts).sort((a,b)=>epicCounts[b]-epicCounts[a]).slice(0,10);
+
+// summary cards
+const cards = document.getElementById("cards");
+const stats = {
+  "Всего": TASKS.length,
+  "TASK": TASKS.filter(t=>t.kind==="TASK").length,
+  "EPIC": TASKS.filter(t=>t.kind==="EPIC").length,
+  "Активные": TASKS.filter(t=>["todo","in_progress","review","blocked","paused"].includes(t.status)).length,
+  "Сделано": TASKS.filter(t=>t.status==="done").length,
+};
+for (const [l,n] of Object.entries(stats)) {
+  const d = document.createElement("div"); d.className="card";
+  d.innerHTML = '<div class="n">'+n+'</div><div class="l">'+l+'</div>';
+  cards.appendChild(d);
+}
+document.getElementById("sub").textContent = stats["Всего"] + " записей";
+
+chart("statusChart", statusAgg, 0);
+chart("priorityChart", priorityAgg, 2);
+chart("folderChart", folderAgg, 4);
+// epic bar
+const ectx = document.getElementById("epicChart");
+if (ectx) new Chart(ectx, {
+  type: "bar",
+  data: { labels: epicLabels, datasets: [{ data: epicLabels.map(l=>epicCounts[l]), backgroundColor: "#2563eb" }] },
+  options: { indexAxis: "y", plugins: { legend: { display: false } }, maintainAspectRatio: false, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+});
+
+// table
+const rowsEl = document.getElementById("rows");
+function renderRows(list) {
+  rowsEl.innerHTML = "";
+  for (const t of list) {
+    const tr = document.createElement("tr");
+    const st = t.status || "";
+    tr.innerHTML = '<td>'+esc(t.id)+'</td>'
+      + '<td><span class="badge status-'+st+'">'+esc(st)+'</span></td>'
+      + '<td>'+esc(t.priority||"")+'</td>'
+      + '<td>'+esc(t.epic||"")+'</td>'
+      + '<td>'+esc(t.title||"")+'</td>'
+      + '<td>'+esc(t.assignee||"")+'</td>';
+    rowsEl.appendChild(tr);
+  }
+}
+function esc(s){ return String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+renderRows(TASKS);
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase().trim();
+  if (!q) return renderRows(TASKS);
+  renderRows(TASKS.filter(t => [t.id,t.title,t.epic,t.assignee,t.status,t.priority].filter(Boolean).join(" ").toLowerCase().includes(q)));
+});
+</script>
+</body>
+</html>
+HTML;
+
+    $html = $template;
+    $html = str_replace('__TITLE__', htmlspecialchars($title, ENT_QUOTES, 'UTF-8'), $html);
+    $html = str_replace('__DATA__', $dataJson, $html);
+    $html = str_replace('__COUNT__', (string) count($tasks), $html);
+
+    return $html;
+}
