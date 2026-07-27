@@ -11,8 +11,8 @@ epic:
 author: Владелец проекта (pi)
 assignee: Разработчик (pi)
 branch: feat/lifecycle-dates
-pr:
-status: in_progress
+pr: https://github.com/prikotov/todo-md/pull/13
+status: review
 ---
 
 # TASK-todo-md-lifecycle-dates: Поля жизненного цикла задач (due/started/completed)
