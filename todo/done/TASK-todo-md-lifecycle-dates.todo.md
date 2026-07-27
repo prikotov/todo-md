@@ -12,7 +12,7 @@ author: Владелец проекта (pi)
 assignee: Разработчик (pi)
 branch: feat/lifecycle-dates
 pr: https://github.com/prikotov/todo-md/pull/13
-status: review
+status: done
 ---
 
 # TASK-todo-md-lifecycle-dates: Поля жизненного цикла задач (due/started/completed)
@@ -21,7 +21,7 @@ status: review
 ### Проблема простыми словами (Problem)
 - В схеме задач и эпиков есть только `created`. Нет дат жизненного цикла: планового срока, старта, завершения.
 - Без них нельзя строить диаграммы Ганта по времени, видеть просрочку, считать lead/cycle time.
-- Это блокирует Гант-часть генератора отчётов (см. [сводный анализ 2026-07-25, №3](../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md)).
+- Это блокирует Гант-часть генератора отчётов (см. [сводный анализ 2026-07-25, №3](../../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md)).
 
 ### Варианты или путь решения (Solution Sketch)
 - Добавить в front matter задач и эпиков необязательные поля `due`, `started`, `completed` (дата `YYYY-MM-DD`).
@@ -90,8 +90,8 @@ php bin/todo-md-validate .
 - Зависимость-потребитель: генератор дашбордов/Ганта (research 2026-07-25, №3) — Гант по времени невозможен без этих полей.
 
 ## 8. Sources (Источники)
-- [Сводный анализ 2026-07-25](../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №3, зависимость Ганта от lifecycle-дат.
-- [Дорожная карта 2026-07-04](../docs/research/2026-07-04-todo-md-feature-roadmap-from-comparisons.md) — lifecycle dates как ранее отложенная идея.
+- [Сводный анализ 2026-07-25](../../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №3, зависимость Ганта от lifecycle-дат.
+- [Дорожная карта 2026-07-04](../../docs/research/2026-07-04-todo-md-feature-roadmap-from-comparisons.md) — lifecycle dates как ранее отложенная идея.
 
 ## 9. Comments (Комментарии)
 Гант по времени невозможен без этих дат; дашборд (без оси времени) строится и сейчас. Поэтому задача — prerequisite для Гант-части №3, но не для её дашборд-части. Поля optional по аналогии с `cost_plan`/`cost_fact`: фиксируем место, автозаполнение не делаем.
@@ -105,3 +105,4 @@ php bin/todo-md-validate .
 | 2026-07-27 | Разработчик (pi) | Cross-check локального времени и timestamp в валидаторе: разность должна быть правдоподобным offset таймзоны (диапазон [-12:00, +14:00], кратно 15 мин). Рассинхрон = ошибка, без авто-исправления |
 | 2026-07-27 | Разработчик (pi) | Добавлено поле `cancelled` (терминальная метка отмены, ↔ статус cancelled, взаимоисключающая с completed): шаблоны, валидатор, DATES.md, AGENTS-документы. Закрывает асимметрию: done имел completed, а cancelled не имел даты |
 | 2026-07-27 | Разработчик (pi) | Формат применён к разделу Change History (шаблоны) + enforcement в валидаторе (validateChangeHistory: дата первой колонки проверяется тем же правилом). Существующие записи не переписаны (нет fabricated-точности). Попутно исправлены несогласованные timestamp-примеры в DATES.md (были сдвинуты на год — проваливали бы собственный consistency-check) |
+| 2026-07-27 | Разработчик (pi) | Задача завершена: status → done, файл перенесён в todo/done/, ссылки актуализированы (../ → ../../). Подготовлена к merge в PR #13 |
