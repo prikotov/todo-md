@@ -189,6 +189,7 @@ function validateTodoFile(string $file): array
     validateFrontMatter($frontMatter, $kind, $errors, $warnings);
     validateTitle($body, $id, $errors);
     validateSections($body, $kind, $errors);
+    validateChangeHistory($body, $errors);
     validateFolderStatus($file, $frontMatter['status'] ?? '', $errors);
     validateMarkdownLinks($file, $body, $errors);
     validateNoTemplatePlaceholders($content, $errors);
@@ -414,6 +415,50 @@ function validateOptionalDate(string $field, string $value, array &$errors): voi
     }
 
     validateDate($field, $value, $errors);
+}
+
+/**
+ * Дата в первой колонке таблицы "Change History" проверяется тем же правилом,
+ * что lifecycle-поля: YYYY-MM-DD либо "YYYY-MM-DD HH:MM:SS (unix_ts)".
+ * Секция необязательна; таблица парсится по строкам, заголовок и разделитель
+ * пропускаются.
+ *
+ * @param list<string> $errors
+ */
+function validateChangeHistory(string $body, array &$errors): void
+{
+    if (!preg_match('/^##\s+.*Change History/im', $body, $m, PREG_OFFSET_CAPTURE)) {
+        return;
+    }
+
+    $rest = substr($body, $m[0][1] + strlen($m[0][0]));
+    if (preg_match('/^##\s+/m', $rest, $next, PREG_OFFSET_CAPTURE)) {
+        $rest = substr($rest, 0, $next[0][1]);
+    }
+
+    $headerSeen = false;
+    foreach (preg_split('/\r\n|\r|\n/', $rest) as $line) {
+        $trimmed = trim($line);
+        if (!str_starts_with($trimmed, '|')) {
+            continue;
+        }
+
+        // разделитель таблицы: | :--- | :--- |
+        if (preg_match('/^\|[\s:|-]+\|\s*$/u', $trimmed)) {
+            continue;
+        }
+
+        $cells = array_map('trim', explode('|', trim($trimmed, '|')));
+        if (!$headerSeen) {
+            $headerSeen = true;
+            continue;
+        }
+
+        $date = $cells[0] ?? '';
+        if ($date !== '') {
+            validateDate('change history date', $date, $errors);
+        }
+    }
 }
 
 /**
