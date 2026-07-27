@@ -386,6 +386,20 @@ function validateDate(string $field, string $value, array &$errors): void
 
     if (isset($m[4]) && ((int) $m[4] > 23 || (int) $m[5] > 59 || (int) $m[6] > 59)) {
         $errors[] = sprintf('`%s` contains an invalid time', $field);
+        return;
+    }
+
+    // Локальное время и timestamp обязаны отличаться на правдоподобный offset
+    // таймзоны: CLI пишет обе части из одного now(), поэтому local − ts = реальный
+    // offset машины. Ручная правка одной части ломает условие. Проверяем диапазон
+    // [-12:00, +14:00] и кратность 15 минутам (покрывает все реальные зоны, incl :30/:45).
+    // Авто-исправления нет — только сигнал об ошибке.
+    if (isset($m[7])) {
+        $local = gmmktime((int) $m[4], (int) $m[5], (int) $m[6], (int) $m[2], (int) $m[3], (int) $m[1]);
+        $offset = $local - (int) $m[7];
+        if ($offset < -12 * 3600 || $offset > 14 * 3600 || $offset % 900 !== 0) {
+            $errors[] = sprintf('`%s` local time does not match the Unix timestamp (implied timezone offset is not plausible)', $field);
+        }
     }
 }
 
