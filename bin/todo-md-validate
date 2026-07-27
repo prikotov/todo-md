@@ -337,13 +337,16 @@ function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, 
         $errors[] = '`type` must be one of: ' . implode(', ', TASK_TYPES);
     }
 
-    validateDate($frontMatter['created'] ?? '', $errors);
+    validateDate('created', $frontMatter['created'] ?? '', $errors);
     validateEnum('value', $frontMatter['value'] ?? '', VALUES, $errors);
     validateEnum('complexity', $frontMatter['complexity'] ?? '', COMPLEXITIES, $errors);
     validateEnum('priority', $frontMatter['priority'] ?? '', PRIORITIES, $errors);
     validateEnum('status', $frontMatter['status'] ?? '', STATUSES, $errors);
     validateOptionalInteger('cost_plan', $frontMatter['cost_plan'] ?? '', $errors);
     validateOptionalInteger('cost_fact', $frontMatter['cost_fact'] ?? '', $errors);
+    validateOptionalDate('due', $frontMatter['due'] ?? '', $errors);
+    validateOptionalDate('started', $frontMatter['started'] ?? '', $errors);
+    validateOptionalDate('completed', $frontMatter['completed'] ?? '', $errors);
 
     if (($frontMatter['depends_on'] ?? '') !== '') {
         foreach (explode(',', $frontMatter['depends_on']) as $dependency) {
@@ -366,16 +369,28 @@ function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, 
 /**
  * @param list<string> $errors
  */
-function validateDate(string $date, array &$errors): void
+function validateDate(string $field, string $date, array &$errors): void
 {
     if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $matches)) {
-        $errors[] = '`created` must use YYYY-MM-DD format';
+        $errors[] = sprintf('`%s` must use YYYY-MM-DD format', $field);
         return;
     }
 
     if (!checkdate((int) $matches[2], (int) $matches[3], (int) $matches[1])) {
-        $errors[] = '`created` contains an invalid date';
+        $errors[] = sprintf('`%s` contains an invalid date', $field);
     }
+}
+
+/**
+ * @param list<string> $errors
+ */
+function validateOptionalDate(string $field, string $value, array &$errors): void
+{
+    if ($value === '') {
+        return;
+    }
+
+    validateDate($field, $value, $errors);
 }
 
 /**

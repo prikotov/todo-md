@@ -2,6 +2,9 @@
 # Metadata (Метаданные)
 type: <fix|feat|build|chore|ci|docs|style|refactor|perf|test|revert>  # см. [TYPES.md](../reference/TYPES.md)
 created: <YYYY-MM-DD>
+due:  # плановый срок, дата YYYY-MM-DD; см. [DATES.md](../reference/DATES.md)
+started:  # дата перехода в in_progress, YYYY-MM-DD; см. [DATES.md](../reference/DATES.md)
+completed:  # дата перехода в done, YYYY-MM-DD; см. [DATES.md](../reference/DATES.md)
 value: <V0|V1|V2|V3|V4>  # см. [VALUES.md](../reference/VALUES.md)
 complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../reference/COMPLEXITY.md)
 priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../reference/PRIORITIES.md)

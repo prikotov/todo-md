@@ -30,6 +30,9 @@
 ---
 type: <тип задачи>
 created: <YYYY-MM-DD>
+due:  # плановый срок, дата YYYY-MM-DD; см. [DATES.md](./reference/DATES.md)
+started:  # дата перехода в in_progress, YYYY-MM-DD; см. [DATES.md](./reference/DATES.md)
+completed:  # дата перехода в done, YYYY-MM-DD; см. [DATES.md](./reference/DATES.md)
 value: <V0-V4>
 complexity: <C0-C5>
 priority: <P0-P3>
@@ -52,6 +55,7 @@ status: <статус>
 - **Сложность (C) — `complexity`**: техническая сложность реализации, определяет Автор, корректирует Исполнитель. См. [COMPLEXITY.md](./reference/COMPLEXITY.md)
 - **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](./reference/PRIORITIES.md)
 - **Стоимость в токенах — `cost_plan`, `cost_fact`**: плановый и фактический расход токенов. Поля опциональные. См. [COST.md](./reference/COST.md)
+- **Даты жизненного цикла — `due`, `started`, `completed`**: плановый срок и фактические даты начала/завершения. Поля опциональные. См. [DATES.md](./reference/DATES.md)
 
 ---
 
@@ -160,6 +164,7 @@ ID должен быть уникальным.
    - `value`: см. [VALUES.md](./reference/VALUES.md)
    - `complexity`: см. [COMPLEXITY.md](./reference/COMPLEXITY.md)
    - `cost_plan`, `cost_fact`: опциональные integer-поля стоимости в токенах, см. [COST.md](./reference/COST.md)
+   - `due`, `started`, `completed`: опциональные даты жизненного цикла (YYYY-MM-DD), см. [DATES.md](./reference/DATES.md)
    - `branch`: оставить пустым при создании задачи; заполнить после фактического создания рабочей ветки
    - `pr`: (пусто при создании)
    - Остальные поля: `author`, `assignee`, `created`, `status` и т.д.

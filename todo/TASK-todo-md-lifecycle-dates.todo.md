@@ -10,9 +10,9 @@ depends_on:
 epic:
 author: Владелец проекта (pi)
 assignee: Разработчик (pi)
-branch:
+branch: feat/lifecycle-dates
 pr:
-status: todo
+status: in_progress
 ---
 
 # TASK-todo-md-lifecycle-dates: Поля жизненного цикла задач (due/started/completed)
@@ -100,3 +100,4 @@ php bin/todo-md-validate .
 | Дата | Автор (роль) | Изменение |
 | :--- | :--- | :--- |
 | 2026-07-25 | Владелец проекта (pi) | Создание задачи (выведена из сводного анализа как prerequisite для Ганта) |
+| 2026-07-27 | Разработчик (pi) | Реализация: поля в шаблонах task/epic, справочник DATES.md, валидация дат в todo-md-validate, обновлены AGENTS-документы |
