@@ -12,7 +12,7 @@ author: Владелец проекта (codex-cli)
 assignee: Разработчик (codex-cli)
 branch: codex/cost-tracking-tokens
 pr: https://github.com/prikotov/todo-md/pull/9
-status: review
+status: done
 ---
 
 # TASK-todo-md-cost-tracking-in-tokens: Поля оценки стоимости в токенах для задач и эпиков
@@ -102,3 +102,4 @@ php bin/todo-md-validate .
 | Дата | Автор (роль) | Изменение |
 | :--- | :--- | :--- |
 | 2026-05-21 | Разработчик (codex-cli) | Добавлены поля стоимости в токенах, справочник COST и валидация integer-формата |
+| 2026-07-25 | Разработчик (codex-cli) | PR #9 слит в master; задача переведена в `done` и перенесена в `todo/done/`. |
