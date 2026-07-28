@@ -21,7 +21,7 @@
 
 - **Проверять `composer.json`** на приватные зависимости — в CI нет доступа к VCS-репозиториям.
 - **Локально:** `make check` — lint + валидация + тесты (то же, что в CI).
-- **Запускать CI** — `.github/workflows/ci.yml` (вызывает `make check`).
+- **CI** запускается автоматически при пуше/PR (`.github/workflows/ci.yml` → `make check`).
 
 ---
 
