@@ -94,6 +94,32 @@ php vendor/bin/todo-md-validate todo/TASK-example.todo.md
 php vendor/bin/todo-md-validate todo/
 ```
 
+### Команды смены состояния
+
+CLI-команды для атомарной смены статуса: правят `status` в front matter, переносят файл в каноническую папку, чинят относительные Markdown-ссылки (исходящие и входящие) и прогоняют валидатор. При ошибке валидации все изменения откатываются.
+
+```bash
+# Создать задачу из шаблона
+php vendor/bin/todo-md-create TASK-feature-name --type=feat --title="Название"
+
+# Создать эпик
+php vendor/bin/todo-md-create EPIC-big-thing --title="Большая фича"
+
+# Переходы статусов
+php vendor/bin/todo-md-start  TASK-foo   # → in_progress (проставляет started)
+php vendor/bin/todo-md-review TASK-foo   # → review
+php vendor/bin/todo-md-done   TASK-foo   # → done, перенос в done/ (проставляет completed)
+php vendor/bin/todo-md-cancel TASK-foo   # → cancelled, перенос в cancelled/
+php vendor/bin/todo-md-backlog TASK-foo  # → backlog, перенос в backlog/
+
+# Точечная правка метаданных
+php vendor/bin/todo-md-set TASK-foo priority=P1
+php vendor/bin/todo-md-set TASK-foo branch=task/foo
+php vendor/bin/todo-md-set TASK-foo pr=https://github.com/...
+```
+
+Перед каждой операцией создаётся резервная копия в `.todo-md-backup/` (флаг `--no-backup` отключает). Опция `--root=<путь>` задаёт корень проекта (по умолчанию — текущая директория).
+
 ---
 
 ## License

@@ -14,7 +14,8 @@
 
 1. **Init-скрипт** (`bin/todo-md-init`) — CLI-команда, создаёт структуру `todo/` и копирует документацию в проект-потребитель.
 2. **Валидатор задач** (`bin/todo-md-validate`) — CLI-команда, проверяет `.todo.md` задачи и эпики.
-3. **Документация** (`docs/todo-md/`) — конвенции, справочники, шаблоны задач и эпиков, копируемые init-скриптом.
+3. **Команды смены состояния** (`bin/todo-md-create`, `start`, `review`, `done`, `cancel`, `backlog`, `set`) — CLI-команды для атомарной смены статуса: правят `status`, переносят файл в каноническую папку, чинят ссылки, прогоняют валидатор. Откат при ошибке.
+4. **Документация** (`docs/todo-md/`) — конвенции, справочники, шаблоны задач и эпиков, копируемые init-скриптом.
 
 ---
 
@@ -39,6 +40,21 @@
 bin/
   todo-md-init               # CLI-команда инициализации
   todo-md-validate           # CLI-команда валидации задач и эпиков
+  todo-md-create             # Создание задачи/эпика из шаблона
+  todo-md-start              # → in_progress
+  todo-md-review             # → review
+  todo-md-done               # → done (перенос в done/)
+  todo-md-cancel             # → cancelled (перенос в cancelled/)
+  todo-md-backlog            # → backlog (перенос в backlog/)
+  todo-md-set                # Точечная правка метаданных
+  todo-md-export-jsonl        # Экспорт задач в JSONL для дашборда
+  todo-md-dashboard           # HTML-дашборд из JSONL
+src/
+  TodoMd/
+    Parser.php               # Парсинг front matter, YAML, путей, ссылок
+    Validator.php            # Валидация задач и эпиков
+    Board.php                # Атомарные переходы, link rewriting, backup/rollback
+  bootstrap.php              # Подключение модулей + CLI-хелперы
 docs/
   todo-md/                   # Документация, копируемая в проект-потребитель
     AGENTS.md                # Правила работы с задачами (для AI-агентов потребителя)
