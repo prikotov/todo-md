@@ -229,7 +229,7 @@ ID должен быть уникальным.
 Перед передачей задачи в работу запустите валидатор:
 
 ```bash
-php vendor/bin/todo-md validate    # вся доска (быстро, ловит битые ссылки между файлами)
+php vendor/bin/todo-md validate    # все задачи (быстро, ловит битые ссылки между файлами)
 php vendor/bin/todo-md validate todo/TASK-example.todo.md    # один файл
 ```
 
