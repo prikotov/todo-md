@@ -62,7 +62,11 @@ stateDiagram-v2
 Смена статуса одной командой — атомарно правит `status`, переносит файл, чинит ссылки и валидирует:
 
 ```bash
-php vendor/bin/todo-md create  TASK-name --type=feat --title="..."  # создание (status: todo)
+# Создание
+php vendor/bin/todo-md create  TASK-feature-name --type=feat --title="..."   # задача
+php vendor/bin/todo-md create  EPIC-big-thing --title="Большая фича"         # эпик (без --type)
+
+# Переходы — одинаково для задач и эпиков
 php vendor/bin/todo-md start   TASK-name   # → in_progress
 php vendor/bin/todo-md review  TASK-name   # → review
 php vendor/bin/todo-md done    TASK-name   # → done (перенос в done/)
