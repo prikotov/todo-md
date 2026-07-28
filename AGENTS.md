@@ -12,16 +12,16 @@
 
 ### Состав
 
-1. **Init-скрипт** (`bin/todo-md-init`) — CLI-команда, создаёт структуру `todo/` и копирует документацию в проект-потребитель.
-2. **Валидатор задач** (`bin/todo-md-validate`) — CLI-команда, проверяет `.todo.md` задачи и эпики.
-3. **Документация** (`docs/todo-md/`) — конвенции, справочники, шаблоны задач и эпиков, копируемые init-скриптом.
+1. **CLI `bin/todo-md`** — единая точка входа, диспетчер подкоманд: `init`, `create`, `start`, `review`, `done`, `cancel`, `backlog`, `set`, `validate`, `export-jsonl`, `dashboard`.
+2. **Документация** (`docs/todo-md/`) — конвенции, справочники, шаблоны задач и эпиков, копируемые командой `init`.
 
 ---
 
 ## Перед каждым пушем / PR
 
 - **Проверять `composer.json`** на приватные зависимости — в CI нет доступа к VCS-репозиториям.
-- **Запускать CI** — `.github/workflows/ci.yml`.
+- **Локально:** `make check` — lint + валидация + тесты (то же, что в CI).
+- **CI** запускается автоматически при пуше/PR (`.github/workflows/ci.yml` → `make check`).
 
 ---
 
@@ -37,19 +37,24 @@
 
 ```
 bin/
-  todo-md-init               # CLI-команда инициализации
-  todo-md-validate           # CLI-команда валидации задач и эпиков
+  todo-md                    # Единая CLI-команда (диспетчер подкоманд)
+src/
+  TodoMd/
+    Parser.php               # Парсинг front matter, YAML, путей, ссылок
+    Validator.php            # Валидация задач и эпиков
+    Board.php                # Атомарные переходы, link rewriting, rollback
+  bootstrap.php              # Подключение модулей + CLI-функции всех подкоманд
 docs/
   todo-md/                   # Документация, копируемая в проект-потребитель
     AGENTS.md                # Правила работы с задачами (для AI-агентов потребителя)
     AGENTS_TASK_WRITING_GUIDE.md
     reference/               # Справочники: TYPES, STATUSES, VALUES, COMPLEXITY, PRIORITIES, COST, AI_AGENTS, GLOSSARY
     templates/               # Шаблоны: task.md, epic.md
+tests/                       # Fixture-тесты
 todo/                        # Внутренние задачи по доработке пакета
 ```
 
 ---
-
 ## Правила написания документации
 
 ### Язык и стиль
@@ -66,7 +71,7 @@ todo/                        # Внутренние задачи по дораб
 
 ---
 
-## Init-скрипт (`bin/todo-md-init`)
+## Команда `init` (`todo-md init`)
 
 ### Ключевые принципы
 
@@ -108,5 +113,4 @@ todo/                        # Внутренние задачи по дораб
 - **AGENTS.md (для потребителя)**: [docs/todo-md/AGENTS.md](docs/todo-md/AGENTS.md)
 - **Справочники**: [docs/todo-md/reference/](docs/todo-md/reference/)
 - **Шаблоны**: [docs/todo-md/templates/](docs/todo-md/templates/)
-- **Init-скрипт**: [bin/todo-md-init](bin/todo-md-init)
-- **Валидатор задач**: [bin/todo-md-validate](bin/todo-md-validate)
+- **CLI**: [bin/todo-md](bin/todo-md)

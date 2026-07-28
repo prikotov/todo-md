@@ -35,11 +35,11 @@
 ## Кто проставляет
 
 - Метки проставляет **CLI/агент**, не человек вручную:
-  - `create` → `created`,
-  - `start` (→ `in_progress`) → `started`,
-  - `done` (→ `done`) → `completed`.
-  - `cancel` (→ `cancelled`) → `cancelled`.
-- Ручной ввод минутных меток не предполагается — это гарантированно мусорные данные. См. CLI смены состояний (`todo-md-state-commands`).
+  - `vendor/bin/todo-md create` → `created`,
+  - `vendor/bin/todo-md start` (→ `in_progress`) → `started`,
+  - `vendor/bin/todo-md done` (→ `done`) → `completed`.
+  - `vendor/bin/todo-md cancel` (→ `cancelled`) → `cancelled`.
+- Ручной ввод минутных меток не предполагается — это гарантированно мусорные данные. См. [STATUSES.md](./STATUSES.md) — раздел «CLI-команды для переходов».
 
 ## Семантика
 

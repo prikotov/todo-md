@@ -56,3 +56,22 @@ stateDiagram-v2
 4.  **Приостановка/Блокировка:** При возникновении проблем статус меняется на `paused` или `blocked`. Файл остается в `todo/`.
 5.  **Завершение:** После Code Review и Merge статус меняется на `done`, файл перемещается в `todo/done/`.
 6.  **Отмена:** Если задача неактуальна, статус меняется на `cancelled`, файл перемещается в `todo/cancelled/`.
+
+### CLI-команды для переходов
+
+Смена статуса одной командой — атомарно правит `status`, переносит файл, чинит ссылки и валидирует:
+
+```bash
+# Создание
+php vendor/bin/todo-md create  TASK-feature-name --type=feat --title="..."   # задача
+php vendor/bin/todo-md create  EPIC-big-thing --title="Большая фича"         # эпик (без --type)
+
+# Переходы — одинаково для задач и эпиков
+php vendor/bin/todo-md start   TASK-name   # → in_progress
+php vendor/bin/todo-md review  TASK-name   # → review
+php vendor/bin/todo-md done    TASK-name   # → done (перенос в done/)
+php vendor/bin/todo-md cancel  TASK-name   # → cancelled (перенос в cancelled/)
+php vendor/bin/todo-md backlog TASK-name   # → backlog (перенос в backlog/)
+```
+
+Команды `start`, `done`, `cancel` автоматически проставляют lifecycle-даты (`started`, `completed`, `cancelled`).

@@ -12,7 +12,8 @@ author: Владелец проекта (pi)
 assignee: Разработчик (pi)
 branch:
 pr:
-status: todo
+status: done
+completed: 2026-07-28 04:22:34 (1785212554)
 ---
 
 # TASK-todo-md-state-commands: Команды смены состояния задач (create/done/start/review/cancel/set)
@@ -83,7 +84,7 @@ php tests/run.php
 - Зависит от fixture-тестов (обязательный enabler) и общего парсера.
 
 ## 8. Sources (Источники)
-- [Сводный анализ 2026-07-25](../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №2 (согласовано владельцем).
+- [Сводный анализ 2026-07-25](../../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №2 (согласовано владельцем).
 
 ## 9. Comments (Комментарии)
 CLI выживает на стороне записи, потому что shell (`mv`+`sed`) не знает канонического пути и не чинит относительные ссылки. Доказательство — ошибочный перенос задачи в `done/` корня репо в сессии 2026-07-25.

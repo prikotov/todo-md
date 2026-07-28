@@ -10,10 +10,7 @@
         }
     ],
     "bin": [
-        "bin/todo-md-init",
-        "bin/todo-md-validate",
-        "bin/todo-md-export-jsonl",
-        "bin/todo-md-dashboard"
+        "bin/todo-md"
     ],
     "minimum-stability": "stable",
     "prefer-stable": true,
@@ -29,6 +26,6 @@
         }
     },
     "archive": {
-        "include": ["/bin/"]
+        "include": ["/bin/", "/src/"]
     }
 }
