@@ -10,7 +10,7 @@ declare(strict_types=1);
 test('create: task skeleton validates', function (): void {
     $root = Fixture::board([]);
     [$code, $out, $err] = Fixture::runBin('todo-md', ['create', 
-        'TASK-create-test', '--root=' . $root, '--type=feat', '--title=Create Test', '--no-backup',
+        'TASK-create-test', '--author=Test (pi)', '--root=' . $root, '--type=feat', '--title=Create Test', '--no-backup',
     ]);
     expectEquals(0, $code, "create should succeed\n$err");
     expectContains('created', $out, 'success message');
@@ -29,7 +29,7 @@ test('create: task skeleton validates', function (): void {
 test('create: epic skeleton validates', function (): void {
     $root = Fixture::board([]);
     [$code, $out, $err] = Fixture::runBin('todo-md', ['create', 
-        'EPIC-create-epic', '--root=' . $root, '--title=Create Epic', '--no-backup',
+        'EPIC-create-epic', '--author=Test (pi)', '--root=' . $root, '--title=Create Epic', '--no-backup',
     ]);
     expectEquals(0, $code, "epic create should succeed\n$err");
 
@@ -42,7 +42,7 @@ test('create: collision rejected', function (): void {
         'todo/TASK-dup-id.todo.md' => Fixture::taskFile('TASK-dup-id', 'Dup'),
     ]);
     [$code, $stdout, $stderr] = Fixture::runBin('todo-md', ['create', 
-        'TASK-dup-id', '--root=' . $root, '--type=feat', '--no-backup',
+        'TASK-dup-id', '--author=Test (pi)', '--root=' . $root, '--type=feat', '--no-backup',
     ]);
     expectEquals(1, $code, 'collision should fail');
     expectContains('already exists', $stderr, 'collision message');
@@ -52,7 +52,7 @@ test('create: bad ID rejected', function (): void {
     $root = Fixture::board([]);
     foreach (['BadID', 'TASK_Bad', 'task-lower', 'TASK-UPPER'] as $badId) {
         [$code] = Fixture::runBin('todo-md', ['create', 
-            $badId, '--root=' . $root, '--type=feat', '--no-backup',
+            $badId, '--author=Test (pi)', '--root=' . $root, '--type=feat', '--no-backup',
         ]);
         expectEquals(1, $code, "should reject bad ID: $badId");
     }
@@ -61,7 +61,7 @@ test('create: bad ID rejected', function (): void {
 test('create: missing type rejected for tasks', function (): void {
     $root = Fixture::board([]);
     [$code, $stdout, $stderr] = Fixture::runBin('todo-md', ['create', 
-        'TASK-no-type', '--root=' . $root, '--no-backup',
+        'TASK-no-type', '--author=Test (pi)', '--root=' . $root, '--no-backup',
     ]);
     expectEquals(1, $code, 'missing type should fail');
     expectContains('--type is required', $stderr, 'missing type message');
@@ -70,7 +70,7 @@ test('create: missing type rejected for tasks', function (): void {
 test('create: backlog status places in backlog/', function (): void {
     $root = Fixture::board([]);
     Fixture::runBin('todo-md', ['create', 
-        'TASK-bl-create', '--root=' . $root, '--type=feat', '--status=backlog', '--no-backup',
+        'TASK-bl-create', '--author=Test (pi)', '--root=' . $root, '--type=feat', '--status=backlog', '--no-backup',
     ]);
     expectFileExists("$root/todo/backlog/TASK-bl-create.todo.md", 'should be in backlog/');
 
@@ -81,7 +81,7 @@ test('create: backlog status places in backlog/', function (): void {
 test('create: custom metadata applied', function (): void {
     $root = Fixture::board([]);
     Fixture::runBin('todo-md', ['create', 
-        'TASK-meta-test', '--root=' . $root, '--type=fix',
+        'TASK-meta-test', '--author=Test (pi)', '--root=' . $root, '--type=fix',
         '--value=V3', '--complexity=C4', '--priority=P0', '--no-backup',
     ]);
     $file = "$root/todo/TASK-meta-test.todo.md";

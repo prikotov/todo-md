@@ -67,7 +67,7 @@ test('backup: multiple transitions create multiple snapshots', function (): void
         'todo/TASK-bk-multi.todo.md' => Fixture::taskFile('TASK-bk-multi', 'Multi'),
     ]);
 
-    Fixture::runBin('todo-md', ['start', 'TASK-bk-multi', '--root=' . $root]);
+    Fixture::runBin('todo-md', ['start', 'TASK-bk-multi', '--assignee=Test (pi)', '--root=' . $root]);
     Fixture::runBin('todo-md', ['review', 'TASK-bk-multi', '--root=' . $root]);
     Fixture::runBin('todo-md', ['done', 'TASK-bk-multi', '--root=' . $root]);
 

@@ -77,8 +77,6 @@ Run `todo-md <command> --help` for command-specific help.
 TXT;
 }
 
-// ── Command: transition ─────────────────────────────────────────────────────
-
 /**
  * @param list<string> $args
  */
@@ -100,9 +98,22 @@ function cli_transition(array $args, string $status, string $verb): void
 
     $backup = !isset($parsed['flags']['no-backup']);
 
+    $transitionOpts = ['backup' => $backup];
+
+    // 'start' requires assignee — CLI forces correct behaviour
+    if ($verb === 'start') {
+        $assignee = $parsed['opts']['assignee'] ?? null;
+        if ($assignee === null || trim($assignee) === '') {
+            fwrite(STDERR, "Error: --assignee=<role> is required for 'start'.\n");
+            echo transitionHelp($verb, $status);
+            exit(1);
+        }
+        $transitionOpts['assignee'] = $assignee;
+    }
+
     try {
         $root = Board::resolveRoot($parsed['opts']['root'] ?? (getcwd() ?: '.'));
-        echo Board::transition($root, $id, $status, ['backup' => $backup]) . PHP_EOL;
+        echo Board::transition($root, $id, $status, $transitionOpts) . PHP_EOL;
         exit(0);
     } catch (BoardException $e) {
         fwrite(STDERR, 'Error: ' . $e->getMessage() . PHP_EOL);
@@ -116,7 +127,7 @@ function transitionHelp(string $verb, string $status): string
 todo-md $verb — move a task/epic to status `$status`.
 
 Usage:
-  php vendor/bin/todo-md $verb <ID> [--no-backup]
+  php vendor/bin/todo-md $verb <ID> [--assignee=<role>] [--no-backup]
 
 Atomically sets `status: $status`, moves the file to the canonical folder,
 rewrites relative markdown links (outbound in the moved file + inbound in
@@ -124,8 +135,9 @@ referencing files), and validates. On validation failure all changes are
 rolled back.
 
 Options:
-  --no-backup  Skip writing a backup to .todo-md-backup/.
-  --help       Show this help.
+  --assignee=<role>  Assignee role (required for 'start').
+  --no-backup        Skip writing a backup to .todo-md-backup/.
+  --help             Show this help.
 
 TXT;
 }
@@ -147,6 +159,13 @@ function cli_create(array $args): void
     $id = $parsed['values'][0] ?? null;
     if ($id === null) {
         fwrite(STDERR, "Error: task/epic ID required.\n");
+        echo createHelp();
+        exit(1);
+    }
+
+    $author = $parsed['opts']['author'] ?? null;
+    if ($author === null || trim($author) === '') {
+        fwrite(STDERR, "Error: --author=<role> is required.\n");
         echo createHelp();
         exit(1);
     }
@@ -179,7 +198,7 @@ function createHelp(): string
 todo-md create — create a new task or epic.
 
 Usage:
-  php vendor/bin/todo-md create <ID> --type=<type> [options]
+  php vendor/bin/todo-md create <ID> --type=<type> --author=<role> [options]
 
 ID format:
   TASK-<category>-<name>  → task  (--type required)
@@ -191,7 +210,7 @@ Options:
   --value=<V0-V4>      Business value (default: V2).
   --complexity=<C0-C5> Complexity (default: C2).
   --priority=<P0-P3>   Priority (default: P2).
-  --author=<author>    Author role (default: "Исполнитель (pi)").
+  --author=<author>    Author role (required).
   --status=<status>    Initial status (default: todo).
   --epic=<EPIC-ID>     Epic this task belongs to.
   --depends-on=<ids>   Comma-separated plain IDs.

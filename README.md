@@ -100,13 +100,13 @@ CLI-команды для атомарной смены статуса: прав
 
 ```bash
 # Создать задачу из шаблона
-php vendor/bin/todo-md create TASK-feature-name --type=feat --title="Название"
+php vendor/bin/todo-md create TASK-feature-name --type=feat --author="<роль>" --title="Название"
 
 # Создать эпик
-php vendor/bin/todo-md create EPIC-big-thing --title="Большая фича"
+php vendor/bin/todo-md create EPIC-big-thing --author="<роль>" --title="Большая фича"
 
 # Переходы статусов
-php vendor/bin/todo-md start  TASK-foo   # → in_progress (проставляет started)
+php vendor/bin/todo-md start  TASK-foo --assignee="<роль>"   # → in_progress (проставляет started)
 php vendor/bin/todo-md review TASK-foo   # → review
 php vendor/bin/todo-md done   TASK-foo   # → done, перенос в done/ (проставляет completed)
 php vendor/bin/todo-md cancel TASK-foo   # → cancelled, перенос в cancelled/

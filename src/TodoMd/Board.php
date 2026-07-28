@@ -358,6 +358,10 @@ final class Board
             $newContent = self::setFieldInContent($newContent, $lifecycleField, self::nowTimestamp());
         }
 
+        if (($opts['assignee'] ?? null) !== null) {
+            $newContent = self::setFieldInContent($newContent, 'assignee', $opts['assignee']);
+        }
+
         // ── Compute new path ─────────────────────────────────────────────────
         $subfolder  = Parser::folderForStatus($newStatus);
         $todoDir    = $root . '/todo';
