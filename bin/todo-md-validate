@@ -67,9 +67,9 @@ if ($files === []) {
 
 $errorCount = 0;
 $warningCount = 0;
-
+$idIndex = buildIdIndex($files);
 foreach ($files as $file) {
-    $result = validateTodoFile($file);
+    $result = validateTodoFile($file, $idIndex);
     $errors = $result['errors'];
     $warnings = $result['warnings'];
 
@@ -159,9 +159,10 @@ function findTodoFiles(string $target): array
 }
 
 /**
+ * @param array<string, array{kind: string, status: string}> $idIndex
  * @return array{errors: list<string>, warnings: list<string>}
  */
-function validateTodoFile(string $file): array
+function validateTodoFile(string $file, array $idIndex): array
 {
     $errors = [];
     $warnings = [];
@@ -187,6 +188,7 @@ function validateTodoFile(string $file): array
     }
 
     validateFrontMatter($frontMatter, $kind, $errors, $warnings);
+    validateDependencies($frontMatter, $idIndex, $errors, $warnings);
     validateTitle($body, $id, $errors);
     validateSections($body, $kind, $errors);
     validateChangeHistory($body, $errors);
@@ -365,6 +367,87 @@ function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, 
 
     if (($frontMatter['pr'] ?? '') !== '' && !preg_match('#^https?://#', $frontMatter['pr'])) {
         $warnings[] = '`pr` is not an http(s) URL';
+    }
+}
+
+/**
+ * Собирает индекс ID всех найденных задач/эпиков за один проход.
+ * Файлы с невалидным front matter пропускаются — они будут
+ * помечены ошибками в основном проходе валидации.
+ *
+ * @param list<string> $files
+ * @return array<string, array{kind: string, status: string}>
+ */
+function buildIdIndex(array $files): array
+{
+    $index = [];
+    foreach ($files as $file) {
+        $content = file_get_contents($file);
+        if ($content === false) {
+            continue;
+        }
+
+        $parsed = parseFrontMatter(removeBom($content));
+        if ($parsed['error'] !== null) {
+            continue;
+        }
+
+        $id = fileId($file);
+        $kind = detectKind($id);
+        if ($kind === null) {
+            continue;
+        }
+
+        $warnings = [];
+        $frontMatter = parseSimpleYaml($parsed['frontMatter'], $warnings);
+        $index[$id] = [
+            'kind' => $kind,
+            'status' => $frontMatter['status'] ?? '',
+        ];
+    }
+
+    return $index;
+}
+
+/**
+ * Проверяет существование зависимостей и эпиков против индекса ID.
+ * Формат полей уже проверен в validateFrontMatter — здесь только
+ * существование (epic ведёт на EPIC за счёт формата EPIC-* + имени файла).
+ * Зависимость на отменённую задачу — предупреждение, а не ошибка.
+ *
+ * @param array<string, string> $frontMatter
+ * @param array<string, array{kind: string, status: string}> $idIndex
+ * @param list<string> $errors
+ * @param list<string> $warnings
+ */
+function validateDependencies(array $frontMatter, array $idIndex, array &$errors, array &$warnings): void
+{
+    $idPattern = '/^(TASK|EPIC)-[A-Za-z0-9][A-Za-z0-9_-]*$/';
+
+    foreach (explode(',', $frontMatter['depends_on'] ?? '') as $dependency) {
+        $dependency = trim($dependency);
+        if ($dependency === '' || preg_match($idPattern, $dependency) !== 1) {
+            continue;
+        }
+
+        if (!array_key_exists($dependency, $idIndex)) {
+            $errors[] = "`depends_on` references unknown ID: $dependency";
+            continue;
+        }
+
+        if ($idIndex[$dependency]['status'] === 'cancelled') {
+            $warnings[] = "`depends_on` references a cancelled task: $dependency";
+        }
+    }
+
+    // Формат `epic` (EPIC-* префикс) уже проверен в validateFrontMatter;
+    // имя EPIC-* файла однозначно определяет kind=epic, поэтому для
+    // существующего ID проверка «ведёт на EPIC» выполняется автоматически.
+    $epic = $frontMatter['epic'] ?? '';
+    if ($epic !== '' && preg_match('/^EPIC-[A-Za-z0-9][A-Za-z0-9_-]*$/', $epic) === 1) {
+        if (!array_key_exists($epic, $idIndex)) {
+            $errors[] = "`epic` references unknown ID: $epic";
+        }
     }
 }
 

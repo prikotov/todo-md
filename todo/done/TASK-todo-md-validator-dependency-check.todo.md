@@ -10,9 +10,9 @@ depends_on:
 epic:
 author: Владелец проекта (pi)
 assignee: Разработчик (pi)
-branch:
-pr:
-status: todo
+branch: feat/validator-dependency-check
+pr: https://github.com/prikotov/todo-md/pull/14
+status: done
 ---
 
 # TASK-todo-md-validator-dependency-check: Проверка существования зависимостей и эпиков в валидаторе
@@ -47,13 +47,13 @@ status: todo
 
 ## 3. Requirements (Требования, MoSCoW)
 ### 🔴 Must Have (Обязательно)
-- [ ] Индекс ID всех `.todo.md` за один запуск.
-- [ ] `depends_on`: каждый ID существует в индексе, иначе error.
-- [ ] `epic`: ID существует и ведёт на EPIC, иначе error.
-- [ ] Зависимость на `cancelled` — warning, не error.
+- [x] Индекс ID всех `.todo.md` за один запуск.
+- [x] `depends_on`: каждый ID существует в индексе, иначе error.
+- [x] `epic`: ID существует и ведёт на EPIC, иначе error.
+- [x] Зависимость на `cancelled` — warning, не error.
 
 ### 🟡 Should Have (Желательно)
-- [ ] Понятное сообщение: какой ID в каком файле не найден.
+- [x] Понятное сообщение: какой ID в каком файле не найден.
 
 ### 🟢 Could Have (Опционально)
 - [ ] Self-dependency как warning.
@@ -62,15 +62,15 @@ status: todo
 - [ ] Полный поиск циклов (отдельная задача).
 
 ## 4. Implementation Plan (План реализации)
-1. [ ] Собрать индекс ID (с kind) при обходе файлов.
-2. [ ] Добавить `validateDependencies(file, frontMatter, index, errors, warnings)`.
-3. [ ] Зависимость на `cancelled` → warning.
-4. [ ] Fixture: задача с `depends_on: TASK-no-such` падает.
+1. [x] Собрать индекс ID (с kind) при обходе файлов.
+2. [x] Добавить `validateDependencies(frontMatter, idIndex, errors, warnings)`.
+3. [x] Зависимость на `cancelled` → warning.
+4. [ ] Fixture: задача с `depends_on: TASK-no-such` падает (проверено black-box; постоянный suite — scope TASK-todo-md-state-commands).
 
 ## 5. Definition of Done (Критерии приёмки)
-- [ ] Битая `depends_on`/`epic` даёт error.
-- [ ] Ссылка на `cancelled` даёт warning.
-- [ ] Существующие валидные задачи проходят.
+- [x] Битая `depends_on`/`epic` даёт error.
+- [x] Ссылка на `cancelled` даёт warning.
+- [x] Существующие валидные задачи проходят.
 
 ## 6. Verification (Самопроверка)
 ```bash
@@ -81,7 +81,7 @@ php bin/todo-md-validate .
 - Ложные срабатывания на исторических/архивных ссылках — смягчается warning на `cancelled`.
 
 ## 8. Sources (Источники)
-- [Сводный анализ 2026-07-25](../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №1.
+- [Сводный анализ 2026-07-25](../../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №1.
 
 ## 9. Comments (Комментарии)
 Парсер/индекс из этой задачи переиспользуется в export/dashboard утилитах (№3).
@@ -90,3 +90,6 @@ php bin/todo-md-validate .
 | Дата | Автор (роль) | Изменение |
 | :--- | :--- | :--- |
 | 2026-07-25 | Владелец проекта (pi) | Создание задачи (№1 из сводного анализа) |
+| 2026-07-28 | Разработчик (pi) | Реализованы `buildIdIndex` + `validateDependencies`: индекс ID→{kind,status}, проверка существования depends_on/epic, зависимость на cancelled → warning. Мёртвая ветка kind-проверки epic удалена (формат EPIC-* + имя файла её делают недостижимой). Сценарии проверены black-box. |
+| 2026-07-28 | Разработчик (pi) | PR #14 создан, status → review. |
+| 2026-07-28 | Разработчик (pi) | Смерджено в PR #14, status → done, перенос в todo/done/. |
