@@ -76,7 +76,7 @@ status: <todo|in_progress|review|done|blocked|paused|cancelled>  # см. [STATUS
 - [ ] Обновлена техническая документация (если требуется)
 
 ## 6. Verification (Самопроверка)
-*Рекомендуемые команды для проверки результата.*
+*Примеры команд для самопроверки:*
 ```bash
 make check                                            # lint + валидация + тесты
 php vendor/bin/todo-md validate todo/<ID>.todo.md     # точечная проверка одного файла
