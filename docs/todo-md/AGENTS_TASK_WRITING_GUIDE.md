@@ -226,16 +226,17 @@ ID должен быть уникальным.
 
 ### Автоматическая валидация
 
-Перед передачей задачи в работу запустите валидатор:
+Перед передачей задачи в работу проверьте доску:
 
 ```bash
-php vendor/bin/todo-md validate
+make check    # всё: lint + валидация + тесты
 ```
 
-Для проверки конкретного файла:
+Если нужен только валидатор:
 
 ```bash
-php vendor/bin/todo-md validate todo/TASK-example.todo.md
+php vendor/bin/todo-md validate    # все задачи (быстро, ловит битые ссылки между файлами)
+php vendor/bin/todo-md validate todo/TASK-example.todo.md    # один файл
 ```
 
 Валидатор проверяет front matter, допустимые значения справочников, ID, обязательные секции, Human Brief, локальные Markdown-ссылки и соответствие статуса папке.
