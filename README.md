@@ -118,7 +118,7 @@ php vendor/bin/todo-md set TASK-foo branch=task/foo
 php vendor/bin/todo-md set TASK-foo pr=https://github.com/...
 ```
 
-Перед каждой операцией создаётся резервная копия в `.todo-md-backup/` (флаг `--no-backup` отключает). Опция `--root=<путь>` задаёт корень проекта (по умолчанию — текущая директория).
+При ошибке валидации все изменения откатываются (in-memory rollback). Опция `--root=<путь>` задаёт корень проекта (по умолчанию — текущая директория).
 
 ---
 

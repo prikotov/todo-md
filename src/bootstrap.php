@@ -96,9 +96,8 @@ function cli_transition(array $args, string $status, string $verb): void
         exit(1);
     }
 
-    $backup = !isset($parsed['flags']['no-backup']);
 
-    $transitionOpts = ['backup' => $backup];
+    $transitionOpts = [];
 
     // 'start' requires assignee — CLI forces correct behaviour
     if ($verb === 'start') {
@@ -127,7 +126,7 @@ function transitionHelp(string $verb, string $status): string
 todo-md $verb — move a task/epic to status `$status`.
 
 Usage:
-  php vendor/bin/todo-md $verb <ID> [--assignee=<role>] [--no-backup]
+  php vendor/bin/todo-md $verb <ID> [--assignee=<role>]
 
 Atomically sets `status: $status`, moves the file to the canonical folder,
 rewrites relative markdown links (outbound in the moved file + inbound in
@@ -136,7 +135,6 @@ rolled back.
 
 Options:
   --assignee=<role>  Assignee role (required for 'start').
-  --no-backup        Skip writing a backup to .todo-md-backup/.
   --help             Show this help.
 
 TXT;
@@ -182,7 +180,6 @@ function cli_create(array $args): void
             'status'     => $parsed['opts']['status'] ?? null,
             'epic'       => $parsed['opts']['epic'] ?? null,
             'depends_on' => $parsed['opts']['depends-on'] ?? null,
-            'backup'     => !isset($parsed['flags']['no-backup']),
         ]);
         echo $msg . PHP_EOL;
         exit(0);
@@ -214,7 +211,6 @@ Options:
   --status=<status>    Initial status (default: todo).
   --epic=<EPIC-ID>     Epic this task belongs to.
   --depends-on=<ids>   Comma-separated plain IDs.
-  --no-backup          Skip backup.
   --help               Show this help.
 
 TXT;
@@ -260,7 +256,7 @@ function cli_set(array $args): void
             $id,
             $field,
             $value,
-            ['backup' => !isset($parsed['flags']['no-backup'])],
+            [],
         );
         echo $msg . PHP_EOL;
         exit(0);
@@ -276,13 +272,12 @@ function setHelp(): string
 todo-md set — point-edit a front-matter field.
 
 Usage:
-  php vendor/bin/todo-md set <ID> <field>=<value> [--no-backup]
+  php vendor/bin/todo-md set <ID> <field>=<value>
 
 If <field> is `status`, the full transition runs (folder move + link rewrite).
 Otherwise only the front matter changes in place.
 
 Options:
-  --no-backup  Skip backup.
   --help       Show this help.
 
 TXT;

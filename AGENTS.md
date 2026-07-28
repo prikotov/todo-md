@@ -42,7 +42,7 @@ src/
   TodoMd/
     Parser.php               # Парсинг front matter, YAML, путей, ссылок
     Validator.php            # Валидация задач и эпиков
-    Board.php                # Атомарные переходы, link rewriting, backup/rollback
+    Board.php                # Атомарные переходы, link rewriting, rollback
   bootstrap.php              # Подключение модулей + CLI-функции всех подкоманд
 docs/
   todo-md/                   # Документация, копируемая в проект-потребитель

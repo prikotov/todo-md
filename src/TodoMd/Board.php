@@ -10,17 +10,13 @@ namespace TodoMd;
  * Every mutating operation:
  *  1. Reads affected files into memory.
  *  2. Computes changes (status, folder move, outbound + inbound link rewrite).
- *  3. Writes a backup to .todo-md-backup/ (unless --no-backup).
- *  4. Applies changes to disk.
- *  5. Runs the validator; on failure rolls back ALL touched files.
+ *  3. Applies changes to disk.
+ *  4. Runs the validator; on failure rolls back ALL touched files.
  *
  * Throws BoardException on any failure (after rollback).
  */
 final class Board
 {
-    private const BACKUP_DIR   = '.todo-md-backup';
-    private const MAX_BACKUPS  = 20;
-
     // ══════════════════════════════════════════════════════════════════════════
     //  Path helpers
     // ══════════════════════════════════════════════════════════════════════════
@@ -327,7 +323,7 @@ final class Board
     /**
      * Atomically transition a task/epic to a new status.
      *
-     * @param array{backup?: bool} $opts
+     * @param array $opts
      * @return string success message
      * @throws BoardException
      */
@@ -394,12 +390,6 @@ final class Board
             $snapshot[$inboundFile] = file_get_contents($inboundFile) ?: '';
         }
 
-        // ── Backup ───────────────────────────────────────────────────────────
-        $backupDir = null;
-        if ($opts['backup'] ?? true) {
-            $backupDir = self::backup($root, $snapshot);
-        }
-
         // ── Apply ────────────────────────────────────────────────────────────
         self::applyTransition($file, $newPath, $newContent, $inbound);
 
@@ -407,7 +397,6 @@ final class Board
         $result = Validator::checkOnBoard($root, $newPath);
         if ($result['errors'] !== []) {
             self::rollback($snapshot, $newPath);
-            self::cleanupBackup($backupDir);
             throw new BoardException(
                 "validation failed after transition — rolled back:\n  "
                 . implode("\n  ", $result['errors']),
@@ -431,7 +420,7 @@ final class Board
      * @param array{
      *   type?: string, title?: string, value?: string, complexity?: string,
      *   priority?: string, author?: string, status?: string, epic?: string,
-     *   depends_on?: string, backup?: bool
+     *   depends_on?: string
      * } $opts
      * @return string success message
      * @throws BoardException
@@ -481,11 +470,6 @@ final class Board
             mkdir($dir, 0755, true);
         }
 
-        // Backup (new file — no original to snapshot, but record the create)
-        $backupDir = null;
-        if ($opts['backup'] ?? true) {
-            $backupDir = self::backup($root, []);
-        }
 
         file_put_contents($newPath, $content);
 
@@ -493,7 +477,6 @@ final class Board
         $result = Validator::checkOnBoard($root, $newPath);
         if ($result['errors'] !== []) {
             @unlink($newPath);
-            self::cleanupBackup($backupDir);
             throw new BoardException(
                 "validation failed after create — file removed:\n  "
                 . implode("\n  ", $result['errors']),
@@ -513,7 +496,7 @@ final class Board
      * Point-edit a front-matter field. If the field is `status`, delegates to
      * transition() so folder + links stay in sync.
      *
-     * @param array{backup?: bool} $opts
+     * @param array $opts
      * @return string success message
      * @throws BoardException
      */
@@ -536,17 +519,12 @@ final class Board
 
         $snapshot = [$file => $content];
 
-        $backupDir = null;
-        if ($opts['backup'] ?? true) {
-            $backupDir = self::backup($root, $snapshot);
-        }
 
         file_put_contents($file, $newContent);
 
         $result = Validator::checkOnBoard($root, $file);
         if ($result['errors'] !== []) {
             self::rollback($snapshot, null);
-            self::cleanupBackup($backupDir);
             throw new BoardException(
                 "validation failed after set — rolled back:\n  "
                 . implode("\n  ", $result['errors']),
@@ -737,53 +715,8 @@ final class Board
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    //  Backup / rollback
+    //  Rollback
     // ══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * @param array<string, string> $files  path => original content
-     * @return ?string backup directory path
-     */
-    private static function backup(string $root, array $files): ?string
-    {
-        $base = $root . '/' . self::BACKUP_DIR;
-        if (!is_dir($base)) {
-            mkdir($base, 0755, true);
-        }
-
-        // prune old backups
-        $dirs = glob($base . '/*', GLOB_ONLYDIR) ?: [];
-        sort($dirs);
-        while (count($dirs) >= self::MAX_BACKUPS) {
-            $oldest = array_shift($dirs);
-            if ($oldest !== null) {
-                self::rmrf($oldest);
-            }
-        }
-
-        $stamp   = date('Ymd-His') . '-' . substr(bin2hex(random_bytes(2)), 0, 4);
-        $backupDir = "$base/$stamp";
-        mkdir($backupDir, 0755, true);
-
-        foreach ($files as $path => $content) {
-            $rel    = ltrim(str_replace($root, '', $path), '/');
-            $target = "$backupDir/$rel";
-            $dir    = dirname($target);
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-            file_put_contents($target, $content);
-        }
-
-        return $backupDir;
-    }
-
-    private static function cleanupBackup(?string $backupDir): void
-    {
-        if ($backupDir !== null && is_dir($backupDir)) {
-            self::rmrf($backupDir);
-        }
-    }
 
     /**
      * @param array<string, string> $snapshot  path => original content
