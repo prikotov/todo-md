@@ -349,6 +349,14 @@ final class Board
 
         $oldStatus = self::getFieldFromContent($content, 'status');
 
+        // 'done' requires a PR link
+        if ($newStatus === 'done') {
+            $pr = self::getFieldFromContent($content, 'pr');
+            if ($pr === null || trim($pr) === '') {
+                throw new BoardException("field `pr` must be set before done — use: todo-md set $id pr=<url>");
+            }
+        }
+
         // ── Compute new content ──────────────────────────────────────────────
         $newContent = $content;
         $newContent = self::setFieldInContent($newContent, 'status', $newStatus);

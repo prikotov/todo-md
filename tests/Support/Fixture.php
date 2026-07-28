@@ -180,7 +180,7 @@ class Fixture
             'author'     => 'Test (pi)',
             'assignee'   => 'Test (pi)',
             'branch'     => '',
-            'pr'         => '',
+            'pr'         => 'https://github.com/test/repo/pull/1',
             'status'     => 'todo',
         ];
         foreach ($overrides as $k => $v) {
