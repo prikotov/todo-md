@@ -1,0 +1,47 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * todo-md — single CLI entry point.
+ *
+ * Usage:
+ *   todo-md <command> [options]
+ *
+ * Run `todo-md --help` for the command list.
+ */
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+$command = $argv[1] ?? '';
+$args    = array_slice($argv, 2);
+
+if ($command === '--help' || $command === '-h' || $command === '') {
+    cliHelp();
+    exit(0);
+}
+
+try {
+    match ($command) {
+        'init'         => cli_init($args),
+        'create'       => cli_create($args),
+        'start'        => cli_transition($args, 'in_progress', 'start'),
+        'review'       => cli_transition($args, 'review', 'review'),
+        'done'         => cli_transition($args, 'done', 'done'),
+        'cancel'       => cli_transition($args, 'cancelled', 'cancel'),
+        'backlog'      => cli_transition($args, 'backlog', 'backlog'),
+        'set'          => cli_set($args),
+        'validate'     => cli_validate($args),
+        'export-jsonl' => cli_export_jsonl($args),
+        'dashboard'    => cli_dashboard($args),
+        default        => (function () use ($command): never {
+            fwrite(STDERR, "Error: unknown command \"$command\"." . PHP_EOL);
+            cliHelp();
+            exit(1);
+        })(),
+    };
+} catch (\Throwable $e) {
+    fwrite(STDERR, 'Fatal: ' . $e->getMessage() . PHP_EOL);
+    exit(1);
+}

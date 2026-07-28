@@ -224,7 +224,7 @@ class Fixture
         $lines[] = '';
         $lines[] = '## 6. Verification (Самопроверка)';
         $lines[] = '```bash';
-        $lines[] = 'php vendor/bin/todo-md-validate';
+        $lines[] = 'php vendor/bin/todo-md validate';
         $lines[] = '```';
         $lines[] = '';
         $lines[] = '## Change History (История изменений)';

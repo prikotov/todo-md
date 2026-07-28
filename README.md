@@ -65,7 +65,7 @@ composer require --dev prikotov/todo-md
 ### Инициализация
 
 ```bash
-php vendor/bin/todo-md-init
+php vendor/bin/todo-md init
 ```
 
 Создаёт структуру папок (`todo/`, `todo/backlog/`, `todo/done/`, `todo/cancelled/`) и копирует документацию в `docs/todo-md/`. Существующие файлы не перезаписываются.
@@ -73,7 +73,7 @@ php vendor/bin/todo-md-init
 ### Валидация задач
 
 ```bash
-php vendor/bin/todo-md-validate
+php vendor/bin/todo-md validate
 ```
 
 Проверяет `.todo.md` задачи и эпики:
@@ -90,8 +90,8 @@ php vendor/bin/todo-md-validate
 Можно проверить конкретный файл или директорию:
 
 ```bash
-php vendor/bin/todo-md-validate todo/TASK-example.todo.md
-php vendor/bin/todo-md-validate todo/
+php vendor/bin/todo-md validate todo/TASK-example.todo.md
+php vendor/bin/todo-md validate todo/
 ```
 
 ### Команды смены состояния
@@ -100,22 +100,22 @@ CLI-команды для атомарной смены статуса: прав
 
 ```bash
 # Создать задачу из шаблона
-php vendor/bin/todo-md-create TASK-feature-name --type=feat --title="Название"
+php vendor/bin/todo-md create TASK-feature-name --type=feat --title="Название"
 
 # Создать эпик
-php vendor/bin/todo-md-create EPIC-big-thing --title="Большая фича"
+php vendor/bin/todo-md create EPIC-big-thing --title="Большая фича"
 
 # Переходы статусов
-php vendor/bin/todo-md-start  TASK-foo   # → in_progress (проставляет started)
-php vendor/bin/todo-md-review TASK-foo   # → review
-php vendor/bin/todo-md-done   TASK-foo   # → done, перенос в done/ (проставляет completed)
-php vendor/bin/todo-md-cancel TASK-foo   # → cancelled, перенос в cancelled/
-php vendor/bin/todo-md-backlog TASK-foo  # → backlog, перенос в backlog/
+php vendor/bin/todo-md start  TASK-foo   # → in_progress (проставляет started)
+php vendor/bin/todo-md review TASK-foo   # → review
+php vendor/bin/todo-md done   TASK-foo   # → done, перенос в done/ (проставляет completed)
+php vendor/bin/todo-md cancel TASK-foo   # → cancelled, перенос в cancelled/
+php vendor/bin/todo-md backlog TASK-foo  # → backlog, перенос в backlog/
 
 # Точечная правка метаданных
-php vendor/bin/todo-md-set TASK-foo priority=P1
-php vendor/bin/todo-md-set TASK-foo branch=task/foo
-php vendor/bin/todo-md-set TASK-foo pr=https://github.com/...
+php vendor/bin/todo-md set TASK-foo priority=P1
+php vendor/bin/todo-md set TASK-foo branch=task/foo
+php vendor/bin/todo-md set TASK-foo pr=https://github.com/...
 ```
 
 Перед каждой операцией создаётся резервная копия в `.todo-md-backup/` (флаг `--no-backup` отключает). Опция `--root=<путь>` задаёт корень проекта (по умолчанию — текущая директория).

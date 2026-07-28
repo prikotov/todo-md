@@ -13,7 +13,7 @@ test('transition: start sets in_progress + started date', function (): void {
     $root = Fixture::board([
         'todo/TASK-tr-start.todo.md' => Fixture::taskFile('TASK-tr-start', 'Start'),
     ]);
-    [$code, $out, $err] = Fixture::runBin('todo-md-start', ['TASK-tr-start', '--root=' . $root, '--no-backup']);
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['start', 'TASK-tr-start', '--root=' . $root, '--no-backup']);
     expectEquals(0, $code, "start should succeed\n$err");
 
     $file = "$root/todo/TASK-tr-start.todo.md";
@@ -25,7 +25,7 @@ test('transition: done moves to done/ and sets completed', function (): void {
     $root = Fixture::board([
         'todo/TASK-tr-done.todo.md' => Fixture::taskFile('TASK-tr-done', 'Done'),
     ]);
-    [$code] = Fixture::runBin('todo-md-done', ['TASK-tr-done', '--root=' . $root, '--no-backup']);
+    [$code] = Fixture::runBin('todo-md', ['done', 'TASK-tr-done', '--root=' . $root, '--no-backup']);
     expectEquals(0, $code, 'done should succeed');
 
     expectFileMissing("$root/todo/TASK-tr-done.todo.md", 'old path gone');
@@ -39,7 +39,7 @@ test('transition: cancel moves to cancelled/ and sets cancelled date', function 
     $root = Fixture::board([
         'todo/TASK-tr-cancel.todo.md' => Fixture::taskFile('TASK-tr-cancel', 'Cancel'),
     ]);
-    [$code] = Fixture::runBin('todo-md-cancel', ['TASK-tr-cancel', '--root=' . $root, '--no-backup']);
+    [$code] = Fixture::runBin('todo-md', ['cancel', 'TASK-tr-cancel', '--root=' . $root, '--no-backup']);
     expectEquals(0, $code, 'cancel should succeed');
 
     $file = "$root/todo/cancelled/TASK-tr-cancel.todo.md";
@@ -52,7 +52,7 @@ test('transition: backlog moves to backlog/', function (): void {
     $root = Fixture::board([
         'todo/TASK-tr-bl.todo.md' => Fixture::taskFile('TASK-tr-bl', 'BL'),
     ]);
-    [$code] = Fixture::runBin('todo-md-backlog', ['TASK-tr-bl', '--root=' . $root, '--no-backup']);
+    [$code] = Fixture::runBin('todo-md', ['backlog', 'TASK-tr-bl', '--root=' . $root, '--no-backup']);
     expectEquals(0, $code, 'backlog should succeed');
 
     $file = "$root/todo/backlog/TASK-tr-bl.todo.md";
@@ -64,7 +64,7 @@ test('transition: review sets review status', function (): void {
     $root = Fixture::board([
         'todo/TASK-tr-rev.todo.md' => Fixture::taskFile('TASK-tr-rev', 'Rev'),
     ]);
-    [$code] = Fixture::runBin('todo-md-review', ['TASK-tr-rev', '--root=' . $root, '--no-backup']);
+    [$code] = Fixture::runBin('todo-md', ['review', 'TASK-tr-rev', '--root=' . $root, '--no-backup']);
     expectEquals(0, $code, 'review should succeed');
     expectEquals('review', frontMatterField("$root/todo/TASK-tr-rev.todo.md", 'status'), 'status review');
 });
@@ -73,8 +73,8 @@ test('transition: reverse move done → start brings back to todo/', function ()
     $root = Fixture::board([
         'todo/TASK-tr-rev2.todo.md' => Fixture::taskFile('TASK-tr-rev2', 'Rev2'),
     ]);
-    Fixture::runBin('todo-md-done', ['TASK-tr-rev2', '--root=' . $root, '--no-backup']);
-    Fixture::runBin('todo-md-start', ['TASK-tr-rev2', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['done', 'TASK-tr-rev2', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['start', 'TASK-tr-rev2', '--root=' . $root, '--no-backup']);
 
     expectFileExists("$root/todo/TASK-tr-rev2.todo.md", 'back in todo/');
     expectFileMissing("$root/todo/done/TASK-tr-rev2.todo.md", 'gone from done/');
@@ -83,7 +83,7 @@ test('transition: reverse move done → start brings back to todo/', function ()
 
 test('transition: not found fails', function (): void {
     $root = Fixture::board([]);
-    [$code, $stdout, $stderr] = Fixture::runBin('todo-md-start', ['TASK-ghost', '--root=' . $root, '--no-backup']);
+    [$code, $stdout, $stderr] = Fixture::runBin('todo-md', ['start', 'TASK-ghost', '--root=' . $root, '--no-backup']);
     expectEquals(1, $code, 'should fail');
     expectContains('not found', $stderr, 'error message');
 });
@@ -121,7 +121,7 @@ test('links: outbound rebased when moving deeper', function (): void {
     makeRef($root); // creates <root>/docs/ref.md
     injectLink($root, 'todo/TASK-out-link.todo.md', '- [ref](../docs/ref.md)');
 
-    Fixture::runBin('todo-md-done', ['TASK-out-link', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['done', 'TASK-out-link', '--root=' . $root, '--no-backup']);
 
     $content = file_get_contents("$root/todo/done/TASK-out-link.todo.md");
     expectContains('](../../docs/ref.md)', $content, 'outbound link rebased one level deeper');
@@ -133,7 +133,7 @@ test('links: outbound rebased when moving shallower', function (): void {
     makeRef($root);
     injectLink($root, 'todo/done/TASK-out-link2.todo.md', '- [ref](../../docs/ref.md)');
 
-    Fixture::runBin('todo-md-start', ['TASK-out-link2', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['start', 'TASK-out-link2', '--root=' . $root, '--no-backup']);
 
     $content = file_get_contents("$root/todo/TASK-out-link2.todo.md");
     expectContains('](../docs/ref.md)', $content, 'outbound link rebased one level shallower');
@@ -146,7 +146,7 @@ test('links: inbound updated in referencing files', function (): void {
     ]);
     injectLink($root, 'todo/EPIC-has-link.todo.md', '- [ ] [TASK-inbound](TASK-inbound.todo.md)');
 
-    Fixture::runBin('todo-md-done', ['TASK-inbound', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['done', 'TASK-inbound', '--root=' . $root, '--no-backup']);
 
     $epicAfter = file_get_contents("$root/todo/EPIC-has-link.todo.md");
     expectContains('(done/TASK-inbound.todo.md)', $epicAfter, 'inbound link updated to done/');
@@ -160,8 +160,8 @@ test('links: inbound updated on reverse move', function (): void {
     ]);
     injectLink($root, 'todo/EPIC-inb-rev.todo.md', '- [ ] [TASK-inb-rev](TASK-inb-rev.todo.md)');
 
-    Fixture::runBin('todo-md-done', ['TASK-inb-rev', '--root=' . $root, '--no-backup']);
-    Fixture::runBin('todo-md-start', ['TASK-inb-rev', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['done', 'TASK-inb-rev', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['start', 'TASK-inb-rev', '--root=' . $root, '--no-backup']);
 
     $epicAfter = file_get_contents("$root/todo/EPIC-inb-rev.todo.md");
     expectContains('](TASK-inb-rev.todo.md)', $epicAfter, 'inbound link restored');
@@ -172,7 +172,7 @@ test('links: http links left untouched', function (): void {
     $root = Fixture::board(['todo/TASK-http-link.todo.md' => $task]);
     injectLink($root, 'todo/TASK-http-link.todo.md', '- [PR](https://github.com/foo/bar/pull/1)');
 
-    Fixture::runBin('todo-md-done', ['TASK-http-link', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['done', 'TASK-http-link', '--root=' . $root, '--no-backup']);
 
     $content = file_get_contents("$root/todo/done/TASK-http-link.todo.md");
     expectContains('https://github.com/foo/bar/pull/1', $content, 'http link untouched');
@@ -189,7 +189,7 @@ test('guard: transition rolls back on validation failure', function (): void {
     // Break the link target AFTER creating it
     unlink($ref);
 
-    [$code, $stdout, $stderr] = Fixture::runBin('todo-md-done', ['TASK-rb-test', '--root=' . $root, '--no-backup']);
+    [$code, $stdout, $stderr] = Fixture::runBin('todo-md', ['done', 'TASK-rb-test', '--root=' . $root, '--no-backup']);
     expectEquals(1, $code, 'should fail on broken link');
     expectContains('rolled back', $stderr, 'rollback message');
 
@@ -204,7 +204,7 @@ test('set: field updated in place', function (): void {
     $root = Fixture::board([
         'todo/TASK-set-test.todo.md' => Fixture::taskFile('TASK-set-test', 'Set'),
     ]);
-    [$code] = Fixture::runBin('todo-md-set', ['TASK-set-test', 'priority=P0', '--root=' . $root, '--no-backup']);
+    [$code] = Fixture::runBin('todo-md', ['set', 'TASK-set-test', 'priority=P0', '--root=' . $root, '--no-backup']);
     expectEquals(0, $code, 'set should succeed');
     expectEquals('P0', frontMatterField("$root/todo/TASK-set-test.todo.md", 'priority'), 'priority changed');
 });
@@ -213,7 +213,7 @@ test('set: status delegates to transition', function (): void {
     $root = Fixture::board([
         'todo/TASK-set-status.todo.md' => Fixture::taskFile('TASK-set-status', 'SS'),
     ]);
-    [$code] = Fixture::runBin('todo-md-set', ['TASK-set-status', 'status=done', '--root=' . $root, '--no-backup']);
+    [$code] = Fixture::runBin('todo-md', ['set', 'TASK-set-status', 'status=done', '--root=' . $root, '--no-backup']);
     expectEquals(0, $code, 'set status should succeed');
     expectFileExists("$root/todo/done/TASK-set-status.todo.md", 'moved to done/');
     expectEquals('done', frontMatterField("$root/todo/done/TASK-set-status.todo.md", 'status'), 'status done');
@@ -223,6 +223,6 @@ test('set: branch field', function (): void {
     $root = Fixture::board([
         'todo/TASK-set-branch.todo.md' => Fixture::taskFile('TASK-set-branch', 'Branch'),
     ]);
-    Fixture::runBin('todo-md-set', ['TASK-set-branch', 'branch=task/foo-bar', '--root=' . $root, '--no-backup']);
+    Fixture::runBin('todo-md', ['set', 'TASK-set-branch', 'branch=task/foo-bar', '--root=' . $root, '--no-backup']);
     expectEquals('task/foo-bar', frontMatterField("$root/todo/TASK-set-branch.todo.md", 'branch'), 'branch set');
 });

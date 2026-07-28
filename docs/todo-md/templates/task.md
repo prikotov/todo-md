@@ -79,7 +79,7 @@ status: <todo|in_progress|review|done|blocked|paused|cancelled>  # см. [STATUS
 *Рекомендуемые команды для проверки результата.*
 ```bash
 make check
-php vendor/bin/todo-md-validate
+php vendor/bin/todo-md validate
 ```
 
 ## 7. Risks and Dependencies (Риски и зависимости)

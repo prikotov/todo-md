@@ -9,7 +9,7 @@ lint:  ## Синтаксический контроль всех PHP-файло�
 	done
 
 validate:  ## Валидация задач и эпиков пакета
-	php bin/todo-md-validate .
+	php bin/todo-md validate .
 
 test:  ## Запуск тестов
 	php tests/run.php

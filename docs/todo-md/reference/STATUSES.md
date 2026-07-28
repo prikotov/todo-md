@@ -62,12 +62,12 @@ stateDiagram-v2
 Смена статуса одной командой — атомарно правит `status`, переносит файл, чинит ссылки и валидирует:
 
 ```bash
-php vendor/bin/todo-md-create  TASK-name --type=feat --title="..."  # создание (status: todo)
-php vendor/bin/todo-md-start   TASK-name   # → in_progress
-php vendor/bin/todo-md-review  TASK-name   # → review
-php vendor/bin/todo-md-done    TASK-name   # → done (перенос в done/)
-php vendor/bin/todo-md-cancel  TASK-name   # → cancelled (перенос в cancelled/)
-php vendor/bin/todo-md-backlog TASK-name   # → backlog (перенос в backlog/)
+php vendor/bin/todo-md create  TASK-name --type=feat --title="..."  # создание (status: todo)
+php vendor/bin/todo-md start   TASK-name   # → in_progress
+php vendor/bin/todo-md review  TASK-name   # → review
+php vendor/bin/todo-md done    TASK-name   # → done (перенос в done/)
+php vendor/bin/todo-md cancel  TASK-name   # → cancelled (перенос в cancelled/)
+php vendor/bin/todo-md backlog TASK-name   # → backlog (перенос в backlog/)
 ```
 
 Команды `start`, `done`, `cancel` автоматически проставляют lifecycle-даты (`started`, `completed`, `cancelled`).
