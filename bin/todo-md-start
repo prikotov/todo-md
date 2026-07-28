@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * todo-md-start — transition a task/epic to in_progress.
+ *
+ * Usage:
+ *   php vendor/bin/todo-md-start <ID> [--no-backup]
+ */
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+cliRunTransition(array_slice($argv, 1), 'in_progress', 'start');

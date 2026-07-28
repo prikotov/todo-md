@@ -13,7 +13,14 @@
         "bin/todo-md-init",
         "bin/todo-md-validate",
         "bin/todo-md-export-jsonl",
-        "bin/todo-md-dashboard"
+        "bin/todo-md-dashboard",
+        "bin/todo-md-create",
+        "bin/todo-md-start",
+        "bin/todo-md-review",
+        "bin/todo-md-done",
+        "bin/todo-md-cancel",
+        "bin/todo-md-backlog",
+        "bin/todo-md-set"
     ],
     "minimum-stability": "stable",
     "prefer-stable": true,
@@ -29,6 +36,6 @@
         }
     },
     "archive": {
-        "include": ["/bin/"]
+        "include": ["/bin/", "/src/"]
     }
 }

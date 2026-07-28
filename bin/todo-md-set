@@ -1,0 +1,88 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * todo-md-set — point-edit a front-matter field.
+ *
+ * Usage:
+ *   php vendor/bin/todo-md-set <ID> <field>=<value> [--no-backup]
+ *
+ * If <field> is `status`, delegates to the full transition (folder move +
+ * link rewrite). Otherwise edits only the front matter in place.
+ *
+ * Examples:
+ *   php vendor/bin/todo-md-set TASK-foo priority=P1
+ *   php vendor/bin/todo-md-set TASK-foo branch=task/foo
+ *   php vendor/bin/todo-md-set TASK-foo assignee="Разработчик (pi)"
+ *
+ * Options:
+ *   --no-backup  Skip writing a backup to .todo-md-backup/.
+ *   --help       Show this help.
+ */
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+use TodoMd\Board;
+use TodoMd\BoardException;
+
+$parsed = cliParseArgs(array_slice($argv, 1));
+
+if (isset($parsed['flags']['help']) || isset($parsed['flags']['h'])) {
+    printSetHelp();
+    exit(0);
+}
+
+$id     = $parsed['values'][0] ?? null;
+$assign = $parsed['values'][1] ?? null;
+
+if ($id === null || $assign === null) {
+    fwrite(STDERR, "Error: usage: todo-md-set <ID> <field>=<value>\n");
+    printSetHelp();
+    exit(1);
+}
+
+$eqPos = strpos($assign, '=');
+if ($eqPos === false) {
+    fwrite(STDERR, "Error: second argument must be <field>=<value>, got: $assign\n");
+    printSetHelp();
+    exit(1);
+}
+
+$field = substr($assign, 0, $eqPos);
+$value = substr($assign, $eqPos + 1);
+
+try {
+    $root = Board::resolveRoot($parsed['opts']['root'] ?? (getcwd() ?: '.'));
+    $msg  = Board::setField(
+        $root,
+        $id,
+        $field,
+        $value,
+        ['backup' => !isset($parsed['flags']['no-backup'])],
+    );
+    echo $msg . PHP_EOL;
+    exit(0);
+} catch (BoardException $e) {
+    fwrite(STDERR, 'Error: ' . $e->getMessage() . PHP_EOL);
+    exit(1);
+}
+
+function printSetHelp(): void
+{
+    echo <<<'TXT'
+todo-md-set — point-edit a front-matter field.
+
+Usage:
+  php vendor/bin/todo-md-set <ID> <field>=<value> [--no-backup]
+
+If <field> is `status`, the full transition runs (folder move + link rewrite).
+Otherwise only the front matter changes in place.
+
+Options:
+  --no-backup  Skip backup.
+  --help       Show this help.
+
+TXT;
+}
