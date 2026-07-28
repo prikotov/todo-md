@@ -78,8 +78,8 @@ status: <todo|in_progress|review|done|blocked|paused|cancelled>  # см. [STATUS
 ## 6. Verification (Самопроверка)
 *Рекомендуемые команды для проверки результата.*
 ```bash
-make check
-php vendor/bin/todo-md validate
+make check                          # lint + валидация + тесты
+php vendor/bin/todo-md validate     # валидация front matter, секций, ссылок
 ```
 
 ## 7. Risks and Dependencies (Риски и зависимости)
