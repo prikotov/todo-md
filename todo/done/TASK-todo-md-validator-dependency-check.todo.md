@@ -12,7 +12,7 @@ author: Владелец проекта (pi)
 assignee: Разработчик (pi)
 branch: feat/validator-dependency-check
 pr: https://github.com/prikotov/todo-md/pull/14
-status: review
+status: done
 ---
 
 # TASK-todo-md-validator-dependency-check: Проверка существования зависимостей и эпиков в валидаторе
@@ -81,7 +81,7 @@ php bin/todo-md-validate .
 - Ложные срабатывания на исторических/архивных ссылках — смягчается warning на `cancelled`.
 
 ## 8. Sources (Источники)
-- [Сводный анализ 2026-07-25](../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №1.
+- [Сводный анализ 2026-07-25](../../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №1.
 
 ## 9. Comments (Комментарии)
 Парсер/индекс из этой задачи переиспользуется в export/dashboard утилитах (№3).
@@ -92,3 +92,4 @@ php bin/todo-md-validate .
 | 2026-07-25 | Владелец проекта (pi) | Создание задачи (№1 из сводного анализа) |
 | 2026-07-28 | Разработчик (pi) | Реализованы `buildIdIndex` + `validateDependencies`: индекс ID→{kind,status}, проверка существования depends_on/epic, зависимость на cancelled → warning. Мёртвая ветка kind-проверки epic удалена (формат EPIC-* + имя файла её делают недостижимой). Сценарии проверены black-box. |
 | 2026-07-28 | Разработчик (pi) | PR #14 создан, status → review. |
+| 2026-07-28 | Разработчик (pi) | Смерджено в PR #14, status → done, перенос в todo/done/. |
