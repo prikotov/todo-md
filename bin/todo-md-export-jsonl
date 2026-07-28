@@ -19,6 +19,10 @@ declare(strict_types=1);
  *   php bin/todo-md-export-jsonl . | php bin/todo-md-dashboard -o dashboard.html
  */
 
+require_once __DIR__ . '/../src/TodoMd/Parser.php';
+
+use TodoMd\Parser;
+
 $targets = [];
 
 foreach (array_slice($argv, 1) as $arg) {
@@ -40,11 +44,11 @@ if ($targets === []) {
     $targets[] = getcwd() ?: '.';
 }
 
-$cwd = getcwd() ?: '.';
+$cwd   = getcwd() ?: '.';
 $files = [];
 
 foreach ($targets as $target) {
-    $files = array_merge($files, findTodoFiles($target));
+    $files = array_merge($files, Parser::findTodoFiles($target));
 }
 
 $files = array_values(array_unique($files));
@@ -63,7 +67,7 @@ foreach ($files as $file) {
 
     $json = json_encode($record, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($json === false) {
-        fwrite(STDERR, 'Warning: failed to encode ' . makeRelativePath($file, $cwd) . ': ' . json_last_error_msg() . PHP_EOL);
+        fwrite(STDERR, 'Warning: failed to encode ' . Parser::makeRelativePath($file, $cwd) . ': ' . json_last_error_msg() . PHP_EOL);
         continue;
     }
     echo $json . PHP_EOL;
@@ -95,258 +99,47 @@ function extractRecord(string $file, string $cwd): ?array
         return null;
     }
 
-    $content = removeBom($content);
-    $parsed = parseFrontMatter($content);
+    $content = Parser::removeBom($content);
+    $parsed  = Parser::parseFrontMatter($content);
     $warnings = [];
     if ($parsed['error'] !== null) {
         $frontMatter = [];
-        $body = $content;
+        $body        = $content;
     } else {
-        $frontMatter = parseSimpleYaml($parsed['frontMatter'], $warnings);
-        $body = $parsed['body'];
+        $frontMatter = Parser::parseSimpleYaml($parsed['frontMatter'], $warnings);
+        $body        = $parsed['body'];
     }
-    $id = fileId($file);
-    $kind = detectKind($id) ?? 'TASK';
+    $id   = Parser::fileId($file);
+    $kind = Parser::detectKind($id) ?? 'task';
 
     $dependsOn = trim($frontMatter['depends_on'] ?? '');
     if ($dependsOn === '') {
         $dependsOnList = [];
     } else {
-        $parts = preg_split('/\s*,\s*/', $dependsOn);
+        $parts         = preg_split('/\s*,\s*/', $dependsOn);
         $dependsOnList = $parts === false ? [] : $parts;
     }
 
-    $record = [
-        'id' => $id,
-        'kind' => $kind,
-        'title' => extractTitle($body, $id),
-        'file' => makeRelativePath($file, $cwd),
-        'folder' => detectFolder($file),
-        'status' => valueOrNull($frontMatter['status'] ?? null),
-        'type' => valueOrNull($frontMatter['type'] ?? null),
-        'priority' => valueOrNull($frontMatter['priority'] ?? null),
-        'value' => valueOrNull($frontMatter['value'] ?? null),
-        'complexity' => valueOrNull($frontMatter['complexity'] ?? null),
-        'epic' => valueOrNull($frontMatter['epic'] ?? null),
-        'depends_on' => $dependsOnList,
-        'assignee' => valueOrNull($frontMatter['assignee'] ?? null),
-        'author' => valueOrNull($frontMatter['author'] ?? null),
-        'created' => valueOrNull($frontMatter['created'] ?? null),
-        'due' => valueOrNull($frontMatter['due'] ?? null),
-        'started' => valueOrNull($frontMatter['started'] ?? null),
-        'completed' => valueOrNull($frontMatter['completed'] ?? null),
-        'cost_plan' => valueOrNull($frontMatter['cost_plan'] ?? null),
-        'cost_fact' => valueOrNull($frontMatter['cost_fact'] ?? null),
-    ];
-
-    return $record;
-}
-
-function valueOrNull(?string $value): ?string
-{
-    if ($value === null) {
-        return null;
-    }
-
-    $value = trim($value);
-
-    return $value === '' ? null : $value;
-}
-
-function extractTitle(string $body, string $id): string
-{
-    $lines = preg_split('/\r\n|\r|\n/', $body) ?: [];
-
-    foreach ($lines as $line) {
-        if (preg_match('/^#\s+(.*)$/', $line, $matches)) {
-            $heading = trim($matches[1]);
-            $prefix = $id . ':';
-            if (str_starts_with($heading, $prefix)) {
-                return trim(substr($heading, strlen($prefix)));
-            }
-
-            $colonPos = strpos($heading, ':');
-            if ($colonPos !== false) {
-                return trim(substr($heading, $colonPos + 1));
-            }
-
-            return $heading;
-        }
-    }
-
-    return '';
-}
-
-function detectFolder(string $file): string
-{
-    if (preg_match('#/(done|backlog|cancelled)/#', $file, $matches)) {
-        return $matches[1];
-    }
-
-    return 'active';
-}
-
-function removeBom(string $content): string
-{
-    if (str_starts_with($content, "\xEF\xBB\xBF")) {
-        return substr($content, 3);
-    }
-
-    return $content;
-}
-
-/**
- * @return array{frontMatter: string, body: string, error: ?string}
- */
-function parseFrontMatter(string $content): array
-{
-    $lines = preg_split('/\r\n|\r|\n/', $content);
-    if ($lines === false || $lines === [] || trim($lines[0]) !== '---') {
-        return ['frontMatter' => '', 'body' => '', 'error' => 'missing YAML front matter opening delimiter ---'];
-    }
-
-    $closingLine = null;
-    $lineCount = count($lines);
-    for ($i = 1; $i < $lineCount; $i++) {
-        if (trim($lines[$i]) === '---') {
-            $closingLine = $i;
-            break;
-        }
-    }
-
-    if ($closingLine === null) {
-        return ['frontMatter' => '', 'body' => '', 'error' => 'missing YAML front matter closing delimiter ---'];
-    }
-
     return [
-        'frontMatter' => implode(PHP_EOL, array_slice($lines, 1, $closingLine - 1)),
-        'body' => implode(PHP_EOL, array_slice($lines, $closingLine + 1)),
-        'error' => null,
+        'id'         => $id,
+        'kind'       => strtoupper($kind),
+        'title'      => Parser::extractTitle($body, $id),
+        'file'       => Parser::makeRelativePath($file, $cwd),
+        'folder'     => Parser::detectFolder($file),
+        'status'     => Parser::valueOrNull($frontMatter['status'] ?? null),
+        'type'       => Parser::valueOrNull($frontMatter['type'] ?? null),
+        'priority'   => Parser::valueOrNull($frontMatter['priority'] ?? null),
+        'value'      => Parser::valueOrNull($frontMatter['value'] ?? null),
+        'complexity' => Parser::valueOrNull($frontMatter['complexity'] ?? null),
+        'epic'       => Parser::valueOrNull($frontMatter['epic'] ?? null),
+        'depends_on' => $dependsOnList,
+        'assignee'   => Parser::valueOrNull($frontMatter['assignee'] ?? null),
+        'author'     => Parser::valueOrNull($frontMatter['author'] ?? null),
+        'created'    => Parser::valueOrNull($frontMatter['created'] ?? null),
+        'due'        => Parser::valueOrNull($frontMatter['due'] ?? null),
+        'started'    => Parser::valueOrNull($frontMatter['started'] ?? null),
+        'completed'  => Parser::valueOrNull($frontMatter['completed'] ?? null),
+        'cost_plan'  => Parser::valueOrNull($frontMatter['cost_plan'] ?? null),
+        'cost_fact'  => Parser::valueOrNull($frontMatter['cost_fact'] ?? null),
     ];
-}
-
-/**
- * @param list<string> $warnings
- * @return array<string, string>
- */
-function parseSimpleYaml(string $yaml, array &$warnings): array
-{
-    $data = [];
-    $lines = preg_split('/\r\n|\r|\n/', $yaml) ?: [];
-
-    foreach ($lines as $lineNumber => $line) {
-        $trimmed = trim($line);
-        if ($trimmed === '' || str_starts_with($trimmed, '#')) {
-            continue;
-        }
-
-        if (!preg_match('/^([A-Za-z_][A-Za-z0-9_-]*):(?:\s*(.*))?$/', $line, $matches)) {
-            $warnings[] = sprintf('front matter line %d is not a simple key: value pair', $lineNumber + 2);
-            continue;
-        }
-
-        $key = $matches[1];
-        $value = stripInlineComment($matches[2] ?? '');
-        $data[$key] = trim($value, " \t\n\r\0\x0B\"'");
-    }
-
-    return $data;
-}
-
-function stripInlineComment(string $value): string
-{
-    $inSingleQuote = false;
-    $inDoubleQuote = false;
-    $length = strlen($value);
-
-    for ($i = 0; $i < $length; $i++) {
-        $char = $value[$i];
-        if ($char === "'" && !$inDoubleQuote) {
-            $inSingleQuote = !$inSingleQuote;
-            continue;
-        }
-        if ($char === '"' && !$inSingleQuote) {
-            $inDoubleQuote = !$inDoubleQuote;
-            continue;
-        }
-        if ($char === '#' && !$inSingleQuote && !$inDoubleQuote) {
-            $previous = $i === 0 ? ' ' : $value[$i - 1];
-            if (ctype_space($previous)) {
-                return rtrim(substr($value, 0, $i));
-            }
-        }
-    }
-
-    return trim($value);
-}
-
-function fileId(string $file): string
-{
-    return substr(basename($file), 0, -strlen('.todo.md'));
-}
-
-function detectKind(string $id): ?string
-{
-    if (str_starts_with($id, 'TASK-')) {
-        return 'TASK';
-    }
-    if (str_starts_with($id, 'EPIC-')) {
-        return 'EPIC';
-    }
-
-    return null;
-}
-
-function makeRelativePath(string $file, string $base): string
-{
-    $realBase = realpath($base);
-    if ($realBase === false) {
-        return $file;
-    }
-
-    $baseWithSep = $realBase . DIRECTORY_SEPARATOR;
-    if (str_starts_with($file, $baseWithSep)) {
-        return substr($file, strlen($baseWithSep));
-    }
-
-    return $file;
-}
-
-/**
- * @return list<string>
- */
-function findTodoFiles(string $target): array
-{
-    $path = realpath($target);
-    if ($path === false) {
-        fwrite(STDERR, "Warning: target does not exist: $target" . PHP_EOL);
-        return [];
-    }
-
-    if (is_file($path)) {
-        return str_ends_with($path, '.todo.md') ? [$path] : [];
-    }
-
-    $searchRoot = $path;
-    if (basename($path) !== 'todo' && is_dir($path . '/todo')) {
-        $searchRoot = $path . '/todo';
-    }
-
-    $files = [];
-    $iterator = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($searchRoot, RecursiveDirectoryIterator::SKIP_DOTS),
-    );
-
-    foreach ($iterator as $item) {
-        if (!$item->isFile()) {
-            continue;
-        }
-
-        $file = $item->getPathname();
-        if (str_ends_with($file, '.todo.md')) {
-            $files[] = $file;
-        }
-    }
-
-    return $files;
 }
