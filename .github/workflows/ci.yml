@@ -17,6 +17,22 @@ jobs:
           php-version: '8.4'
 
       - run: composer validate --strict
-      - run: find bin src -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - run: php -l bin/todo-md-init
+      - run: php -l bin/todo-md-validate
+      - run: php -l bin/todo-md-export-jsonl
+      - run: php -l bin/todo-md-dashboard
+      - run: php -l bin/todo-md-create
+      - run: php -l bin/todo-md-start
+      - run: php -l bin/todo-md-review
+      - run: php -l bin/todo-md-done
+      - run: php -l bin/todo-md-cancel
+      - run: php -l bin/todo-md-backlog
+      - run: php -l bin/todo-md-set
+      - run: php -l src/bootstrap.php
+      - run: php -l src/TodoMd/Parser.php
+      - run: php -l src/TodoMd/Validator.php
+      - run: php -l src/TodoMd/Board.php
+      - run: php -l tests/run.php
+      - run: php -l tests/Support/Fixture.php
       - run: php bin/todo-md-validate .
       - run: php tests/run.php
