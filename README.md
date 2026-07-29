@@ -1,5 +1,8 @@
 # todo-md
 
+![Доска](docs/screenshots/kanban-preview.webp)
+![Графики](docs/screenshots/charts-preview.webp)
+
 ### Канбан для управления задачами через markdown-файлы
 
 Задачи хранятся как `.md`-файлы с YAML front matter (статус, приоритет, сложность, тип). Переход между статусами — перемещение файла между папками: `todo/` → `todo/done/`. Без базы данных и UI — только файлы, git и консоль.
@@ -119,6 +122,51 @@ php vendor/bin/todo-md set TASK-foo pr=https://github.com/...
 ```
 
 При ошибке валидации все изменения откатываются (in-memory rollback). Опция `--root=<путь>` задаёт корень проекта (по умолчанию — текущая директория).
+
+---
+
+## Дашборд
+
+```bash
+# Прямой экспорт из директории todo/
+php vendor/bin/todo-md dashboard todo/ -o dashboard.html
+
+# Из текущей директории (todo/ по умолчанию)
+php vendor/bin/todo-md dashboard -o dashboard.html
+
+# С файловыми ссылками на исходники
+php vendor/bin/todo-md dashboard todo/ -o dashboard.html --base="$(pwd)"
+
+# Продвинутый вариант: через JSONL (для пайпов и промежуточных файлов)
+php vendor/bin/todo-md export-jsonl todo/ | php vendor/bin/todo-md dashboard - -o dashboard.html
+
+# или через промежуточный файл
+php vendor/bin/todo-md export-jsonl todo/ -o /tmp/tasks.jsonl
+php vendor/bin/todo-md dashboard /tmp/tasks.jsonl -o dashboard.html --base="$(pwd)"
+
+Активная вкладка запоминается в URL (`#board`, `#charts`, `#gantt`) — переживает F5 и даёт прямые ссылки.
+
+### Доска
+
+Канбан с колонками по статусам в порядке жизненного цикла (Бэклог → Todo → В работе → … → Готово). Поиск, пять режимов сортировки, цвета по приоритету, ссылки на файлы задач.
+
+![Доска по статусам](docs/screenshots/kanban-board.webp)
+
+Переключение группировки «По эпикам» — каждый эпик разворачивается в свои статус-колонки:
+
+![Доска по эпикам](docs/screenshots/epics-board.webp)
+
+### Графики
+
+Сводные карточки (всего / задачи / эпики / бэклог / активные / сделано), тепловая карта поставок (GitHub-style, период 3/6/12 мес), распределения по статусам, приоритетам и типам, гистограмма Time-to-Market, scatter Cycle Time со скользящей медианой, пропускная способность по неделям, разбивка эпиков по статусам, «кто делает» с переключением измерения (роль / агент / исполнитель).
+
+![Графики](docs/screenshots/charts.webp)
+
+### Гант
+
+Диаграмма Ганта: обзор всех эпиков (полоса = размах дат задач эпика) и задачи выбранного эпика с фильтром. Легенда цветов статусов, счётчик задач эпика в подписях и тултипах.
+
+![Диаграмма Ганта](docs/screenshots/gants.webp)
 
 ---
 

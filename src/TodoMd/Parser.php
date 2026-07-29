@@ -22,6 +22,8 @@ final class Parser
     public const PRIORITIES   = ['P0', 'P1', 'P2', 'P3'];
     public const STATUSES     = ['todo', 'backlog', 'in_progress', 'paused', 'blocked', 'review', 'done', 'cancelled'];
     public const ACTIVE_STATUSES = ['todo', 'in_progress', 'paused', 'blocked', 'review'];
+    /** Canonical AI agents for `author`/`assignee`; see reference/AI_AGENTS.md. */
+    public const AI_AGENTS = ['gemini-cli', 'codex-cli', 'codex', 'opencode', 'roocode', 'kilocode', 'pi'];
 
     /**
      * Canonical folder (relative to todo/) for each status.

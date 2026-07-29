@@ -14,9 +14,11 @@
 >   - [Статусы и Workflow](./reference/STATUSES.md)
 >   - [Ценность (Value)](./reference/VALUES.md)
 >   - [Сложность (Complexity)](./reference/COMPLEXITY.md)
->   - [Приоритет (Priority)](./reference/PRIORITIES.md)
->   - [Стоимость в токенах (Cost)](./reference/COST.md)
->   - [AI-агенты](./reference/AI_AGENTS.md)
+   - [Приоритет (Priority)](./reference/PRIORITIES.md)
+   - [Стоимость в токенах (Cost)](./reference/COST.md)
+   - [Роли (Roles)](./reference/ROLES.md)
+   - [AI-агенты](./reference/AI_AGENTS.md)
+   - [Конфиг проекта (.todo-md.php)](./reference/CONFIG.md)
 
 ---
 
@@ -41,8 +43,8 @@ cost_plan:  # integer, токены; пусто, если нет оценки
 cost_fact:  # integer, токены; пусто, если факт ещё неизвестен
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет эпика
-author: <роль> (<агент>)
-assignee: <роль> (<агент>)
+author: <роль> (<агент>)  # формат: Роль (агент); роль — функциональная обязанность (Бэкендер, Продакт), агент — исполнитель (codex, pi); см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md)
+assignee: <роль> (<агент>)  # исполнитель задачи, формат: Роль (агент); роль — функциональная обязанность (Бэкендер, Продакт), агент — исполнитель (codex, pi); см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md)
 branch:  # пусто при создании; заполняется после фактического создания ветки
 pr:  # пусто при создании
 status: <статус>
@@ -57,6 +59,21 @@ status: <статус>
 - **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](./reference/PRIORITIES.md)
 - **Стоимость в токенах — `cost_plan`, `cost_fact`**: плановый и фактический расход токенов. Поля опциональные. См. [COST.md](./reference/COST.md)
 - **Даты жизненного цикла — `due`, `started`, `completed`**: плановый срок и фактические даты начала/завершения. Поля опциональные. См. [DATES.md](./reference/DATES.md)
+### Роли и агенты
+
+Поля `author` и `assignee` используют формат `<роль> (<агент>)`:
+
+- **Роль** — функциональная обязанность в проекте (позиция/должность). Примеры: `Бэкендер`, `Фронтендер`, `Продакт`, `Аналитик`, `Архитектор`, `Team Lead`.
+  - Базовый список ролей см. в [ROLES.md](./reference/ROLES.md).
+  - Проект может расширить или переопределить список через `.todo-md.php` — см. [CONFIG.md](./reference/CONFIG.md).
+- **Агент** — исполнитель задачи (AI-агент или человек). Примеры: `codex`, `pi`, `gemini-cli`, `opencode`.
+  - Базовый список агентов см. в [AI_AGENTS.md](./reference/AI_AGENTS.md).
+  - Проект может расширить или переопределить список через `.todo-md.php` — см. [CONFIG.md](./reference/CONFIG.md).
+
+Примеры значений:
+- `Бэкендер (codex-cli)`
+- `Продакт (pi)`
+- `Team Lead (opencode)`
 
 ---
 
@@ -304,5 +321,7 @@ php vendor/bin/todo-md validate todo/TASK-example.todo.md    # одна зада
 - [Сложность (Complexity)](./reference/COMPLEXITY.md)
 - [Приоритет (Priority)](./reference/PRIORITIES.md)
 - [Стоимость в токенах (Cost)](./reference/COST.md)
+- [Роли (Roles)](./reference/ROLES.md)
 - [AI-агенты](./reference/AI_AGENTS.md)
+- [Конфиг проекта (.todo-md.php)](./reference/CONFIG.md)
 - [Глоссарий терминов](./reference/GLOSSARY.md)

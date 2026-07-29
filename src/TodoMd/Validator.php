@@ -11,12 +11,11 @@ namespace TodoMd;
 final class Validator
 {
     /**
-     * Validate a single file against an ID index.
-     *
      * @param array<string, array{kind: string, status: string, file?: string}> $idIndex
+     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
      * @return array{errors: list<string>, warnings: list<string>}
      */
-    public static function validateFile(string $file, array $idIndex): array
+    public static function validateFile(string $file, array $idIndex, array $config = []): array
     {
         $errors   = [];
         $warnings = [];
@@ -41,7 +40,7 @@ final class Validator
             $errors[] = 'file name must start with TASK- or EPIC- and end with .todo.md';
         }
 
-        self::validateFrontMatter($frontMatter, $kind, $errors, $warnings);
+        self::validateFrontMatter($frontMatter, $kind, $errors, $warnings, $config);
         self::validateDependencies($frontMatter, $idIndex, $errors, $warnings);
         self::validateTitle($body, $id, $errors);
         self::validateSections($body, $kind, $errors);
@@ -55,7 +54,8 @@ final class Validator
 
     /**
      * Validate a single file against the whole board (builds index on the fly).
-     * Used by state commands for the post-write check.
+     * Used by state commands for the post-write check. Loads the project config
+     * (.todo-md.php) from the board root.
      *
      * @return array{errors: list<string>, warnings: list<string>}
      */
@@ -64,7 +64,7 @@ final class Validator
         $allFiles = Parser::findTodoFiles($root);
         $idIndex  = Parser::buildIdIndex($allFiles);
 
-        return self::validateFile($file, $idIndex);
+        return self::validateFile($file, $idIndex, self::loadConfig($root));
     }
 
     // ── Front matter ─────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ final class Validator
      * @param list<string> $errors
      * @param list<string> $warnings
      */
-    private static function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, array &$warnings): void
+    private static function validateFrontMatter(array $frontMatter, ?string $kind, array &$errors, array &$warnings, array $config = []): void
     {
         $required = ['type', 'created', 'value', 'complexity', 'priority', 'author', 'assignee', 'status'];
         if ($kind === 'task') {
@@ -109,6 +109,8 @@ final class Validator
         self::validateOptionalDate('started', $frontMatter['started'] ?? '', $errors);
         self::validateOptionalDate('completed', $frontMatter['completed'] ?? '', $errors);
         self::validateOptionalDate('cancelled', $frontMatter['cancelled'] ?? '', $errors);
+        self::validateActor('author', $frontMatter['author'] ?? '', $config, $errors, $warnings);
+        self::validateActor('assignee', $frontMatter['assignee'] ?? '', $config, $errors, $warnings);
 
         if (($frontMatter['depends_on'] ?? '') !== '') {
             foreach (explode(',', $frontMatter['depends_on']) as $dependency) {
@@ -422,6 +424,98 @@ final class Validator
 
         if (preg_match('/^\s*-\s*\.\.\.\s*$/m', $content)) {
             $errors[] = 'unfinished list placeholder found: `- ...`';
+        }
+    }
+    // ── Project config (.todo-md.php) ────────────────────────────────────────
+
+    /**
+     * Load the project config from <root>/.todo-md.php (missing file → defaults).
+     *
+     * @return array{roles: list<string>, agents: list<string>, strict: bool}
+     */
+    public static function loadConfig(string $root): array
+    {
+        return self::loadConfigFile(rtrim($root, '/') . '/.todo-md.php');
+    }
+
+    /**
+     * Load and normalise a config file. Missing or malformed file → safe defaults.
+     *
+     * @return array{roles: list<string>, agents: list<string>, strict: bool}
+     */
+    public static function loadConfigFile(string $file): array
+    {
+        $config = ['roles' => [], 'agents' => [], 'strict' => false];
+        if (!is_file($file)) {
+            return $config;
+        }
+
+        $loaded = require $file;
+        if (!is_array($loaded)) {
+            return $config;
+        }
+
+        if (isset($loaded['roles']) && is_array($loaded['roles'])) {
+            $config['roles'] = array_values(array_filter($loaded['roles'], 'is_string'));
+        }
+        if (isset($loaded['agents']) && is_array($loaded['agents'])) {
+            $config['agents'] = array_values(array_filter($loaded['agents'], 'is_string'));
+        }
+        if (isset($loaded['strict']) && is_bool($loaded['strict'])) {
+            $config['strict'] = $loaded['strict'];
+        }
+
+        return $config;
+    }
+
+    // ── Author / assignee ────────────────────────────────────────────────────
+
+    /**
+     * Validate `author`/`assignee` against the canonical format
+     * `<роль> (<агент>)` and, when lists are available, the known roles/agents.
+     *
+     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
+     * @param list<string> $errors
+     * @param list<string> $warnings
+     */
+    private static function validateActor(string $field, string $value, array $config, array &$errors, array &$warnings): void
+    {
+        $strict = (bool) ($config['strict'] ?? false);
+        $value  = trim($value);
+
+        if ($value === '') {
+            self::actorIssue($errors, $warnings, $strict, "`$field` must not be empty — expected `<роль> (<агент>)`, e.g. `Бэкендер (codex-cli)`");
+            return;
+        }
+
+        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)\)\s*$/u', $value, $m)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>)` with a lowercase agent id, e.g. `Бэкендер (codex-cli)` — got `$value`");
+            return;
+        }
+
+        $role  = trim($m[1]);
+        $agent = $m[2];
+
+        $agents = !empty($config['agents']) ? $config['agents'] : Parser::AI_AGENTS;
+        if (!in_array($agent, $agents, true)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` agent `$agent` is not a known agent: " . implode(', ', $agents));
+        }
+
+        if (!empty($config['roles']) && !in_array($role, $config['roles'], true)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` role `$role` is not in the project roles list");
+        }
+    }
+
+    /**
+     * @param list<string> $errors
+     * @param list<string> $warnings
+     */
+    private static function actorIssue(array &$errors, array &$warnings, bool $strict, string $message): void
+    {
+        if ($strict) {
+            $errors[] = $message;
+        } else {
+            $warnings[] = $message;
         }
     }
 }

@@ -11,8 +11,8 @@ complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../reference/COMPLEXITY
 priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../reference/PRIORITIES.md)
 cost_plan:  # суммарная плановая стоимость задач эпика в токенах, integer; см. [COST.md](../reference/COST.md)
 cost_fact:  # суммарная фактическая стоимость задач эпика в токенах, integer; заполняется по завершении
-author: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
-assignee: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
+author: <роль> (<агент>)  # формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
+assignee: <роль> (<агент>)  # исполнитель задачи, формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
 status: <todo|backlog|in_progress|paused|blocked|review|done|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)
 pr: <ссылка на PR>  # пусто при создании
 ---
@@ -20,7 +20,7 @@ pr: <ссылка на PR>  # пусто при создании
 # EPIC-<категория>-<краткое-название>: <Название эпика>
 
 ## 0. Простое описание (Human Brief)
-*Пишите для человека без погружения в код. 3–7 коротких пунктов, без внутреннего жаргона.*
+<!-- AI: Пишите для человека без погружения в код. 3–7 коротких пунктов, без внутреннего жаргона. -->
 
 ### Проблема простыми словами (Problem)
 - <Что сейчас не так или чего не хватает.>
@@ -106,5 +106,6 @@ flowchart LR
 
 ## Change History (История изменений)
 | Дата | Автор (роль) | Изменение |
+*Формат автора: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)*
 | :--- | :--- | :--- |
-| YYYY-MM-DD HH:MM:SS (unix_ts) | <роль> (<имя агента>) | Создание эпика |
+| YYYY-MM-DD HH:MM:SS (unix_ts) | <роль> (<агент>) | Создание эпика |

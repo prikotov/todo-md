@@ -124,3 +124,31 @@ test('validate: --help works', function (): void {
     expectEquals(0, $code, '--help should exit 0');
     expectContains('todo-md validate', $out, 'help banner');
 });
+
+test('validate: bad author/assignee format is a warning', function (): void {
+    $content = Fixture::taskFile('TASK-actor-bad', 'Actor', ['author' => 'codex-cli', 'assignee' => 'Бэкендер (Codex)']);
+    $root = Fixture::board(['todo/TASK-actor-bad.todo.md' => $content]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, 'format violations are warnings, not errors');
+    expectContains('warning: `author` must use format', $out, 'author format warning');
+    expectContains('warning: `assignee` must use format', $out, 'assignee format warning');
+});
+
+test('validate: --strict fails on author/assignee violations', function (): void {
+    $content = Fixture::taskFile('TASK-strict-actor', 'Strict', ['author' => 'codex-cli']);
+    $root = Fixture::board(['todo/TASK-strict-actor.todo.md' => $content]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, '--strict should fail on format violation');
+    expectContains('error: `author` must use format', $out, 'strict promotes to error');
+});
+
+test('validate: --config validates roles and agents', function (): void {
+    $content = Fixture::taskFile('TASK-cfg-actor', 'Cfg', ['author' => 'Бэкендер (codex-cli)', 'assignee' => 'Бэкендер (codex-cli)']);
+    $root = Fixture::board(['todo/TASK-cfg-actor.todo.md' => $content]);
+    $configFile = $root . '/.todo-md.php';
+    file_put_contents($configFile, '<?php declare(strict_types=1); return ["roles" => ["Аналитик"], "agents" => ["pi"]];');
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--config=' . $configFile]);
+    expectEquals(0, $code, 'unknown role/agent are warnings by default');
+    expectContains('`author` agent `codex-cli` is not a known agent', $out, 'config agent check');
+    expectContains('`author` role `Бэкендер` is not in the project roles list', $out, 'config role check');
+});
