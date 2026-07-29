@@ -108,7 +108,6 @@ php vendor/bin/todo-md dashboard todo/ -o /tmp/dashboard.html
 
 ## 8. Sources (Источники)
 *Ссылки на документацию, RFC, связанные задачи.*
-- [ ] [MODELS.md](../../docs/todo-md/reference/MODELS.md)
 - [ ] [CONFIG.md](../../docs/todo-md/reference/CONFIG.md)
 
 ## 9. Comments (Комментарии)
