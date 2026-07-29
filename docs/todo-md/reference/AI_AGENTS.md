@@ -11,3 +11,5 @@
 - `pi` — Pi Coding Agent
 
 *Список синхронизирован с git-workflow pull-request rules.*
+
+Валидатор `todo-md validate` проверяет, что агент в полях `author`/`assignee` входит в этот список (по умолчанию — как warning; в режиме `--strict` — как ошибка). Проект расширяет список собственными агентами и ролями через конфиг `.todo-md.php` — см. [CONFIG.md](./CONFIG.md).

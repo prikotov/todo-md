@@ -17,6 +17,7 @@
 >   - [Приоритет (Priority)](./reference/PRIORITIES.md)
 >   - [Стоимость в токенах (Cost)](./reference/COST.md)
 >   - [AI-агенты](./reference/AI_AGENTS.md)
+>   - [Конфиг проекта (.todo-md.php)](./reference/CONFIG.md)
 
 ---
 
@@ -41,8 +42,8 @@ cost_plan:  # integer, токены; пусто, если нет оценки
 cost_fact:  # integer, токены; пусто, если факт ещё неизвестен
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет эпика
-author: <роль> (<агент>)
-assignee: <роль> (<агент>)
+author: <роль> (<агент>)  # формат строго `Роль (agent)`; см. [AI_AGENTS.md](./reference/AI_AGENTS.md), [CONFIG.md](./reference/CONFIG.md)
+assignee: <роль> (<агент>)  # исполнитель; тот же формат и валидация, что у author
 branch:  # пусто при создании; заполняется после фактического создания ветки
 pr:  # пусто при создании
 status: <статус>
@@ -305,4 +306,5 @@ php vendor/bin/todo-md validate todo/TASK-example.todo.md    # одна зада
 - [Приоритет (Priority)](./reference/PRIORITIES.md)
 - [Стоимость в токенах (Cost)](./reference/COST.md)
 - [AI-агенты](./reference/AI_AGENTS.md)
+- [Конфиг проекта (.todo-md.php)](./reference/CONFIG.md)
 - [Глоссарий терминов](./reference/GLOSSARY.md)
