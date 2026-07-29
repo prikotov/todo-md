@@ -143,6 +143,7 @@ php vendor/bin/todo-md export-jsonl todo/ | php vendor/bin/todo-md dashboard - -
 php vendor/bin/todo-md export-jsonl todo/ -o /tmp/tasks.jsonl
 php vendor/bin/todo-md dashboard /tmp/tasks.jsonl -o dashboard.html --base="$(pwd)"
 
+```
 Активная вкладка запоминается в URL (`#board`, `#charts`, `#gantt`) — переживает F5 и даёт прямые ссылки.
 
 ### Доска
