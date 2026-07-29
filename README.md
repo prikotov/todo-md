@@ -1,5 +1,4 @@
 # todo-md
-
 ![Доска](docs/screenshots/kanban-preview.webp)
 ![Графики](docs/screenshots/charts-preview.webp)
 
