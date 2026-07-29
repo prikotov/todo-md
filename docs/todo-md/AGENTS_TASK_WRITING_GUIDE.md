@@ -14,10 +14,11 @@
 >   - [Статусы и Workflow](./reference/STATUSES.md)
 >   - [Ценность (Value)](./reference/VALUES.md)
 >   - [Сложность (Complexity)](./reference/COMPLEXITY.md)
->   - [Приоритет (Priority)](./reference/PRIORITIES.md)
+   - [Приоритет (Priority)](./reference/PRIORITIES.md)
+   - [Стоимость в токенах (Cost)](./reference/COST.md)
    - [Роли (Roles)](./reference/ROLES.md)
    - [AI-агенты](./reference/AI_AGENTS.md)
->   - [Конфиг проекта (.todo-md.php)](./reference/CONFIG.md)
+   - [Конфиг проекта (.todo-md.php)](./reference/CONFIG.md)
 
 ---
 
@@ -325,6 +326,7 @@ php vendor/bin/todo-md validate todo/TASK-example.todo.md    # одна зада
 - [Сложность (Complexity)](./reference/COMPLEXITY.md)
 - [Приоритет (Priority)](./reference/PRIORITIES.md)
 - [Стоимость в токенах (Cost)](./reference/COST.md)
+- [Роли (Roles)](./reference/ROLES.md)
 - [AI-агенты](./reference/AI_AGENTS.md)
 - [Конфиг проекта (.todo-md.php)](./reference/CONFIG.md)
 - [Глоссарий терминов](./reference/GLOSSARY.md)
