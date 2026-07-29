@@ -124,16 +124,22 @@ php vendor/bin/todo-md set TASK-foo pr=https://github.com/...
 
 ## Дашборд
 
-Самодостаточный HTML-дашборд из `.todo.md` задач — канбан-доска, графики и диаграмма Ганта в одном статичном файле (Chart.js подгружается с CDN). Без сервера: открывается по `file://` и обновляется перегенерацией.
-
 ```bash
-# экспорт задач в JSONL и сборка дашборда (одной командой через пайп)
+# Прямой экспорт из директории todo/
+php vendor/bin/todo-md dashboard todo/ -o dashboard.html
+
+# Из текущей директории (todo/ по умолчанию)
+php vendor/bin/todo-md dashboard -o dashboard.html
+
+# С файловыми ссылками на исходники
+php vendor/bin/todo-md dashboard todo/ -o dashboard.html --base="$(pwd)"
+
+# Продвинутый вариант: через JSONL (для пайпов и промежуточных файлов)
 php vendor/bin/todo-md export-jsonl todo/ | php vendor/bin/todo-md dashboard - -o dashboard.html
 
-# или через промежуточный файл; --base добавляет ссылки file:// на исходники
+# или через промежуточный файл
 php vendor/bin/todo-md export-jsonl todo/ -o /tmp/tasks.jsonl
 php vendor/bin/todo-md dashboard /tmp/tasks.jsonl -o dashboard.html --base="$(pwd)"
-```
 
 Активная вкладка запоминается в URL (`#board`, `#charts`, `#gantt`) — переживает F5 и даёт прямые ссылки.
 

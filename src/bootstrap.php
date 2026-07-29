@@ -621,32 +621,43 @@ function cli_dashboard(array $args): void
         echo dashboardHelp();
         exit(1);
     }
+    // Если input не указан или это директория — делаем экспорт из неё
+    if ($input === null || ($input !== '-' && is_dir($input))) {
+        $target = $input ?? (getcwd() ?: '.');
+        $files  = Parser::findTodoFiles($target);
+        sort($files);
 
-    $raw = $input === null || $input === '-'
-        ? stream_get_contents(STDIN)
-        : file_get_contents($input);
-
-    if ($raw === false) {
-        fwrite(STDERR, 'Error: cannot read input: ' . ($input ?? 'stdin') . PHP_EOL);
-        exit(1);
-    }
-
-    $tasks = [];
-    foreach (preg_split('/\r\n|\r|\n/', trim($raw)) ?: [] as $line) {
-        if ($line === '') {
-            continue;
+        $tasks = [];
+        foreach ($files as $file) {
+            $record = exportExtractRecord($file, getcwd() ?: '.');
+            if ($record === null) {
+                continue;
+            }
+            $tasks[] = $record;
         }
-        $decoded = json_decode($line, true);
-        if (!is_array($decoded)) {
-            fwrite(STDERR, 'Warning: skipping invalid JSON line' . PHP_EOL);
-            continue;
-        }
-        $tasks[] = $decoded;
-    }
+    } else {
+        // Иначе читаем JSONL из файла или stdin
+        $raw = $input === null || $input === '-'
+            ? stream_get_contents(STDIN)
+            : file_get_contents($input);
 
-    if ($tasks === []) {
-        fwrite(STDERR, 'No task records in input.' . PHP_EOL);
-        exit(0);
+        if ($raw === false) {
+            fwrite(STDERR, 'Error: cannot read input: ' . ($input ?? 'stdin') . PHP_EOL);
+            exit(1);
+        }
+
+        $tasks = [];
+        foreach (preg_split('/\r\n|\r|\n/', trim($raw)) ?: [] as $line) {
+            if ($line === '') {
+                continue;
+            }
+            $decoded = json_decode($line, true);
+            if (!is_array($decoded)) {
+                fwrite(STDERR, 'Warning: skipping invalid JSON line' . PHP_EOL);
+                continue;
+            }
+            $tasks[] = $decoded;
+        }
     }
 
     $html = dashboardRenderHtml($tasks, $title, $base);
@@ -668,16 +679,21 @@ function cli_dashboard(array $args): void
 function dashboardHelp(): string
 {
     return <<<'TXT'
-todo-md dashboard — render a self-contained HTML dashboard from JSONL.
+todo-md dashboard — render a self-contained HTML dashboard from .todo.md files or JSONL.
 
 Usage:
-  php vendor/bin/todo-md dashboard <input.jsonl|-> [-o out.html] [--title="..."] [--base=DIR]
+  php vendor/bin/todo-md dashboard [todo-dir|-|input.jsonl] [-o out.html] [--title="..."] [--base=DIR]
+
+Arguments:
+  todo-dir            Directory with .todo.md files (default: current directory).
+  input.jsonl         JSONL file exported by export-jsonl.
+  -                   Read JSONL from stdin.
 
 Options:
   -o, --output=FILE   Write HTML to FILE (default: stdout).
   --title="TEXT"      Dashboard title (default: "Задачи").
-  --base=DIR          Project root (absolute) to build file:// links to source .md files.
-  --help              Show this help.
+  --base=DIR          Base directory for file:// links (absolute path).
+  -h, --help          Show this help.
 
 TXT;
 }
