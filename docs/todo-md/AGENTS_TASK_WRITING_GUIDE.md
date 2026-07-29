@@ -44,7 +44,7 @@ cost_fact:  # integer, токены; пусто, если факт ещё неи
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет эпика
 author: <роль> (<агент>)  # формат: Роль (агент); роль — функциональная обязанность (Бэкендер, Продакт), агент — исполнитель (codex, pi); см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [CONFIG.md](./reference/CONFIG.md)
-assignee: <роль> (<агент>)  # исполнитель, тот же формат, см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [CONFIG.md](./reference/CONFIG.md)
+assignee: <роль> (<агент>)  # исполнитель задачи, формат: Роль (агент); роль — функциональная обязанность (Бэкендер, Продакт), агент — исполнитель (codex, pi); см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [CONFIG.md](./reference/CONFIG.md)
 branch:  # пусто при создании; заполняется после фактического создания ветки
 pr:  # пусто при создании
 status: <статус>
