@@ -13,8 +13,8 @@ cost_plan:  # плановая стоимость в токенах, integer; с
 cost_fact:  # фактическая стоимость в токенах, integer; заполняется по завершении, источник — billing/API usage dashboard
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID эпика; пусто, если нет эпика
-author: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
-assignee: <роль> (<имя агента>)  # см. [AI_AGENTS.md](../reference/AI_AGENTS.md)
+author: <роль> (<агент>)  # формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
+assignee: <роль> (<агент>)  # исполнитель задачи, формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
 branch:  # пусто при создании; заполняется после фактического создания ветки
 pr: <ссылка на PR>  # пусто при создании
 status: <todo|in_progress|review|done|blocked|paused|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)
@@ -95,5 +95,6 @@ php vendor/bin/todo-md validate todo/<ID>.todo.md     # точечная про�
 
 ## Change History (История изменений)
 | Дата | Автор (роль) | Изменение |
+*Формат автора: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)*
 | :--- | :--- | :--- |
-| YYYY-MM-DD HH:MM:SS (unix_ts) | <роль> (<имя агента>) | Создание задачи |
+| YYYY-MM-DD HH:MM:SS (unix_ts) | <роль> (<агент>) | Создание задачи |
