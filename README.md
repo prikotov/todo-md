@@ -1,5 +1,8 @@
 # todo-md
 
+![Доска](docs/screenshots/kanban-preview.webp)
+![Графики](docs/screenshots/charts-preview.webp)
+
 ### Канбан для управления задачами через markdown-файлы
 
 Задачи хранятся как `.md`-файлы с YAML front matter (статус, приоритет, сложность, тип). Переход между статусами — перемещение файла между папками: `todo/` → `todo/done/`. Без базы данных и UI — только файлы, git и консоль.
