@@ -299,15 +299,15 @@ final class Validator
             'Problem'           => '/^###\s+Проблема простыми словами \(Problem\)/m',
             'Solution Sketch'   => '/^###\s+Варианты или путь решения \(Solution Sketch\)/m',
             'Expected Result'   => '/^###\s+Ожидаемый результат \(Expected Result\)/m',
-            'Concept and Goal'  => '/^##\s+\d+\.\s+Concept and Goal/m',
-            'Context and Scope' => '/^##\s+\d+\.\s+Context and Scope/m',
-            'Requirements'      => '/^##\s+\d+\.\s+Requirements/m',
-            'Implementation Plan' => '/^##\s+\d+\.\s+Implementation Plan/m',
-            'Definition of Done'  => '/^##\s+\d+\.\s+Definition of Done/m',
+            'Concept and Goal'  => '/^##\s+\d+\.\s+.*Concept and Goal/m',
+            'Context and Scope' => '/^##\s+\d+\.\s+.*Context and Scope/m',
+            'Requirements'      => '/^##\s+\d+\.\s+.*Requirements/m',
+            'Implementation Plan' => '/^##\s+\d+\.\s+.*Implementation Plan/m',
+            'Definition of Done'  => '/^##\s+\d+\.\s+.*Definition of Done/m',
         ];
 
         if ($kind === 'task') {
-            $requiredSections['Verification'] = '/^##\s+\d+\.\s+Verification/m';
+            $requiredSections['Verification'] = '/^##\s+\d+\.\s+.*Verification/m';
         }
 
         foreach ($requiredSections as $section => $pattern) {

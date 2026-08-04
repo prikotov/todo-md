@@ -71,7 +71,7 @@ test('validate: template placeholder fails', function (): void {
 
 test('validate: missing section fails', function (): void {
     $content = Fixture::taskFile('TASK-sec-bad', 'Sec');
-    $content = preg_replace('/^## 1\. Concept.*$/m', '## REMOVED', $content);
+    $content = preg_replace('/^## 1\..*Concept and Goal.*$/m', '## REMOVED', $content);
     $root = Fixture::board(['todo/TASK-sec-bad.todo.md' => $content]);
     [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
     expectEquals(1, $code, 'should fail on missing section');

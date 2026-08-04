@@ -31,62 +31,62 @@ status: done
 - Валидатор ловит ссылки на несуществующие задачи/эпики.
 - Этот же индекс — фундамент для export/dashboard утилит.
 
-## 1. Concept and Goal (Концепция и Цель)
-### Story (User Story)
+## 1. Концепция и Цель (Concept and Goal)
+### История (User Story)
 > Как владелец проекта, я хочу, чтобы валидатор ловил битые ссылки на зависимости и эпики, чтобы доска не содержала висячих связей.
 
-### Goal (Цель по SMART)
+### Цель по SMART (Goal)
 В `bin/todo-md-validate` построить индекс ID всех найденных `.todo.md` и проверять каждое `depends_on` и `epic` на существование; зависимость на `cancelled` — warning.
 
-## 2. Context and Scope (Контекст и Границы)
+## 2. Контекст и Границы (Context and Scope)
 *   **Где делаем:** `bin/todo-md-validate`.
 *   **Текущее поведение:** формат `depends_on`/`epic` валидируется, существование — нет.
 *   **Границы (Out of Scope):**
     *   Self-dependency и циклы — отдельная задача (позже, как warning).
     *   Перекрёстная проверка Markdown-ссылок уже есть — не трогаем.
 
-## 3. Requirements (Требования, MoSCoW)
-### 🔴 Must Have (Обязательно)
+## 3. Требования, MoSCoW (Requirements)
+### 🔴 Обязательно (Must Have)
 - [x] Индекс ID всех `.todo.md` за один запуск.
 - [x] `depends_on`: каждый ID существует в индексе, иначе error.
 - [x] `epic`: ID существует и ведёт на EPIC, иначе error.
 - [x] Зависимость на `cancelled` — warning, не error.
 
-### 🟡 Should Have (Желательно)
+### 🟡 Желательно (Should Have)
 - [x] Понятное сообщение: какой ID в каком файле не найден.
 
-### 🟢 Could Have (Опционально)
+### 🟢 Опционально (Could Have)
 - [ ] Self-dependency как warning.
 
-### ⚫ Won't Have (Не будем делать)
+### ⚫ Не будем делать (Won't Have)
 - [ ] Полный поиск циклов (отдельная задача).
 
-## 4. Implementation Plan (План реализации)
+## 4. План реализации (Implementation Plan)
 1. [x] Собрать индекс ID (с kind) при обходе файлов.
 2. [x] Добавить `validateDependencies(frontMatter, idIndex, errors, warnings)`.
 3. [x] Зависимость на `cancelled` → warning.
 4. [ ] Fixture: задача с `depends_on: TASK-no-such` падает (проверено black-box; постоянный suite — scope TASK-todo-md-state-commands).
 
-## 5. Definition of Done (Критерии приёмки)
+## 5. Критерии приёмки (Definition of Done)
 - [x] Битая `depends_on`/`epic` даёт error.
 - [x] Ссылка на `cancelled` даёт warning.
 - [x] Существующие валидные задачи проходят.
 
-## 6. Verification (Самопроверка)
+## 6. Самопроверка (Verification)
 ```bash
 php bin/todo-md-validate .
 ```
 
-## 7. Risks and Dependencies (Риски и зависимости)
+## 7. Риски и зависимости (Risks and Dependencies)
 - Ложные срабатывания на исторических/архивных ссылках — смягчается warning на `cancelled`.
 
-## 8. Sources (Источники)
+## 8. Источники (Sources)
 - [Сводный анализ 2026-07-25](../../docs/research/2026-07-25-top-ideas-for-agent-and-human-ux.md) — №1.
 
-## 9. Comments (Комментарии)
+## 9. Комментарии (Comments)
 Парсер/индекс из этой задачи переиспользуется в export/dashboard утилитах (№3).
 
-## Change History (История изменений)
+## История изменений (Change History)
 | Дата | Автор (роль) | Изменение |
 | :--- | :--- | :--- |
 | 2026-07-25 | Владелец проекта (pi) | Создание задачи (№1 из сводного анализа) |

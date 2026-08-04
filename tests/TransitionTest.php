@@ -103,13 +103,13 @@ function makeRef(string $root, string $name = 'ref.md'): string
     return $path;
 }
 
-/** Inject a markdown link into the "## 4. Implementation Plan" section. */
+/** Inject a markdown link into the "## 4. План реализации (Implementation Plan)" section. */
 function injectLink(string $root, string $file, string $markdown): void
 {
     $content = file_get_contents("$root/$file");
     $content = preg_replace(
-        '/^## 4\. Implementation Plan/m',
-        "## 4. Implementation Plan\n\n$markdown",
+        '/^## 4\. План реализации \(Implementation Plan\)/m',
+        "## 4. План реализации (Implementation Plan)\n\n$markdown",
         $content,
     );
     file_put_contents("$root/$file", $content);
