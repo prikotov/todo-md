@@ -3,8 +3,8 @@
 type: docs
 created: 2026-08-04
 due:
-started:
-completed:
+started: 2026-08-04
+completed: 2026-08-04
 cancelled:
 value: V2
 complexity: C2
@@ -17,7 +17,7 @@ author: Продакт (pi)
 assignee: Архитектор (pi)
 branch:
 pr:
-status: todo
+status: done
 ---
 
 # TASK-todo-md-sdd-comparison-research: Ресёрч — сравнение todo-md с SDD-подходами (OpenSpec, BMAD и др.)
