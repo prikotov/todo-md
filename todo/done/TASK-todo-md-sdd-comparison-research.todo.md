@@ -4,7 +4,7 @@ type: docs
 created: 2026-08-04
 due:
 started: 2026-08-04
-completed: 2026-08-04
+completed: 2026-08-05
 cancelled:
 value: V2
 complexity: C2
@@ -15,8 +15,8 @@ depends_on:
 epic:
 author: Продакт (pi)
 assignee: Архитектор (pi)
-branch:
-pr:
+branch: feature/sdd-comparison-research
+pr: https://github.com/prikotov/todo-md/pull/19
 status: done
 ---
 
