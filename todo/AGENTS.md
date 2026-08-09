@@ -26,6 +26,7 @@
   - `priority`: очередность выполнения (см. [PRIORITIES.md](../docs/todo-md/reference/PRIORITIES.md))
   - `cost_plan`, `cost_fact`: опциональная стоимость в токенах (см. [COST.md](../docs/todo-md/reference/COST.md))
   - `author`: имя создателя задачи (см. [AI_AGENTS.md](../docs/todo-md/reference/AI_AGENTS.md))
+  - `assignee`: исполнитель; пусто для `backlog`, `todo` и `cancelled`, обязательно для `in_progress`, `paused`, `blocked`, `review` и `done`
   - `created`: дата/время создания; формат — `YYYY-MM-DD` либо `YYYY-MM-DD HH:MM:SS (unix_ts)`, проставляет CLI
   - `due`, `started`, `completed`, `cancelled`: опциональные метки жизненного цикла (плановый срок, старт в `in_progress`, завершение в `done`, отмена в `cancelled`); тот же формат, проставляет CLI; см. [DATES.md](../docs/todo-md/reference/DATES.md)
   - `branch`: имя рабочей ветки; при создании задачи поле остаётся пустым и заполняется только после фактического создания ветки
