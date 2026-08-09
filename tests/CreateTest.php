@@ -18,8 +18,8 @@ test('create: task skeleton validates', function (): void {
     $file = "$root/todo/TASK-create-test.todo.md";
     expectFileExists($file, 'task file created');
 
-    [$vCode] = Fixture::runBin('todo-md', ['validate', $root]);
-    expectEquals(0, $vCode, 'created task validates');
+    [$vCode] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $vCode, 'created task validates in strict mode with an empty assignee');
 
     expectEquals('feat', frontMatterField($file, 'type'), 'type set');
     expectEquals('todo', frontMatterField($file, 'status'), 'status todo');
@@ -33,8 +33,8 @@ test('create: epic skeleton validates', function (): void {
     ]);
     expectEquals(0, $code, "epic create should succeed\n$err");
 
-    [$vCode] = Fixture::runBin('todo-md', ['validate', $root]);
-    expectEquals(0, $vCode, 'created epic validates');
+    [$vCode] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $vCode, 'created epic validates in strict mode with an empty assignee');
 });
 
 test('create: collision rejected', function (): void {

@@ -12,7 +12,7 @@ priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../reference/PRIORITIES.md)
 cost_plan:  # суммарная плановая стоимость задач эпика в токенах, integer; см. [COST.md](../reference/COST.md)
 cost_fact:  # суммарная фактическая стоимость задач эпика в токенах, integer; заполняется по завершении
 author: <роль> (<агент>)  # формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
-assignee: <роль> (<агент>)  # исполнитель задачи, формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
+assignee:  # исполнитель эпика, формат: Роль (агент); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md); может быть пустым для backlog, todo и cancelled
 status: <todo|backlog|in_progress|paused|blocked|review|done|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)
 pr: <ссылка на PR>  # пусто при создании
 ---

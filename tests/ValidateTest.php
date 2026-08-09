@@ -142,6 +142,64 @@ test('validate: --strict fails on author/assignee violations', function (): void
     expectContains('error: `author` must use format', $out, 'strict promotes to error');
 });
 
+test('validate: empty assignee is allowed before work and when cancelled', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-assignee-todo.todo.md' => Fixture::taskFile(
+            'TASK-assignee-todo',
+            'Todo',
+            ['assignee' => '', 'status' => 'todo'],
+        ),
+        'todo/backlog/TASK-assignee-backlog.todo.md' => Fixture::taskFile(
+            'TASK-assignee-backlog',
+            'Backlog',
+            ['assignee' => '', 'status' => 'backlog'],
+        ),
+        'todo/cancelled/TASK-assignee-cancelled.todo.md' => Fixture::taskFile(
+            'TASK-assignee-cancelled',
+            'Cancelled',
+            ['assignee' => '', 'status' => 'cancelled'],
+        ),
+    ]);
+
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "empty assignee should be allowed for todo, backlog, and cancelled\n$out$err");
+});
+
+test('validate: empty assignee is rejected after work starts', function (): void {
+    foreach (['in_progress', 'paused', 'blocked', 'review', 'done'] as $status) {
+        $folder = $status === 'done' ? 'todo/done' : 'todo';
+        $id = 'TASK-assignee-' . str_replace('_', '-', $status);
+        $root = Fixture::board([
+            "$folder/$id.todo.md" => Fixture::taskFile(
+                $id,
+                ucfirst(str_replace('_', ' ', $status)),
+                ['assignee' => '', 'status' => $status],
+            ),
+        ]);
+
+        [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+        expectEquals(1, $code, "empty assignee should fail for $status");
+        expectContains(
+            "error: `assignee` must not be empty for status `$status`",
+            $out,
+            "required assignee error for $status",
+        );
+    }
+});
+
+test('validate: non-empty assignee is validated even when optional', function (): void {
+    $content = Fixture::taskFile(
+        'TASK-assignee-optional-format',
+        'Optional format',
+        ['assignee' => 'unassigned', 'status' => 'backlog'],
+    );
+    $root = Fixture::board(['todo/backlog/TASK-assignee-optional-format.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'non-empty optional assignee should still use the canonical format');
+    expectContains('error: `assignee` must use format', $out, 'optional assignee format error');
+});
+
 test('validate: --config validates roles and agents', function (): void {
     $content = Fixture::taskFile('TASK-cfg-actor', 'Cfg', ['author' => 'Бэкендер (codex-cli)', 'assignee' => 'Бэкендер (codex-cli)']);
     $root = Fixture::board(['todo/TASK-cfg-actor.todo.md' => $content]);

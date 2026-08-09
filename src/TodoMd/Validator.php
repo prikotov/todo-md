@@ -10,6 +10,14 @@ namespace TodoMd;
  */
 final class Validator
 {
+    private const ASSIGNEE_REQUIRED_STATUSES = [
+        'in_progress',
+        'paused',
+        'blocked',
+        'review',
+        'done',
+    ];
+
     /**
      * @param array<string, array{kind: string, status: string, file?: string}> $idIndex
      * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
@@ -110,7 +118,13 @@ final class Validator
         self::validateOptionalDate('completed', $frontMatter['completed'] ?? '', $errors);
         self::validateOptionalDate('cancelled', $frontMatter['cancelled'] ?? '', $errors);
         self::validateActor('author', $frontMatter['author'] ?? '', $config, $errors, $warnings);
-        self::validateActor('assignee', $frontMatter['assignee'] ?? '', $config, $errors, $warnings);
+        self::validateAssignee(
+            $frontMatter['assignee'] ?? '',
+            $frontMatter['status'] ?? '',
+            $config,
+            $errors,
+            $warnings,
+        );
 
         if (($frontMatter['depends_on'] ?? '') !== '') {
             foreach (explode(',', $frontMatter['depends_on']) as $dependency) {
@@ -471,8 +485,41 @@ final class Validator
     // ── Author / assignee ────────────────────────────────────────────────────
 
     /**
-     * Validate `author`/`assignee` against the canonical format
-     * `<роль> (<агент>)` and, when lists are available, the known roles/agents.
+     * Allow an empty assignee before work starts or when cancelled, and require
+     * one for statuses that represent actual or completed work.
+     *
+     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
+     * @param list<string> $errors
+     * @param list<string> $warnings
+     */
+    private static function validateAssignee(
+        string $value,
+        string $status,
+        array $config,
+        array &$errors,
+        array &$warnings,
+    ): void {
+        if (trim($value) === '') {
+            if (!in_array($status, self::ASSIGNEE_REQUIRED_STATUSES, true)) {
+                return;
+            }
+
+            $strict = (bool) ($config['strict'] ?? false);
+            self::actorIssue(
+                $errors,
+                $warnings,
+                $strict,
+                "`assignee` must not be empty for status `$status` — expected `<роль> (<агент>)`, e.g. `Бэкендер (codex-cli)`",
+            );
+            return;
+        }
+
+        self::validateActor('assignee', $value, $config, $errors, $warnings);
+    }
+
+    /**
+     * Validate an actor against the canonical `<роль> (<агент>)` format and,
+     * when lists are available, the known roles and agents.
      *
      * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
      * @param list<string> $errors
