@@ -52,8 +52,7 @@ return [
 
 1. **Обязательность**:
    - `author` должен быть заполнен всегда.
-   - `assignee` может быть пустым для `backlog`, `todo` и `cancelled`.
-   - `assignee` должен быть заполнен для `in_progress`, `paused`, `blocked`, `review` и `done`.
+   - `assignee` может быть пустым для `backlog`, `todo` и `cancelled`, но должен быть заполнен для `in_progress`, `paused`, `blocked`, `review` и `done`.
 2. **Формат** — заполненное значение должно быть `<роль> (<агент>)`, где агент — lowercase-идентификатор
    `[a-z0-9][a-z0-9_-]*`. Пример: `Бэкендер (codex-cli)`.
    - Запрещены: bare-значения без скобок (`codex-cli`, `backend_developer`),
