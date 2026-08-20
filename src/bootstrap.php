@@ -230,34 +230,43 @@ function cli_set(array $args): void
         exit(0);
     }
 
-    $id     = $parsed['values'][0] ?? null;
-    $assign = $parsed['values'][1] ?? null;
+    $id = $parsed['values'][0] ?? null;
 
-    if ($id === null || $assign === null) {
-        fwrite(STDERR, "Error: usage: todo-md set <ID> <field>=<value>\n");
+    if ($id === null || count($parsed['values']) < 2) {
+        fwrite(STDERR, "Error: usage: todo-md set <ID> <field>=<value> [field=value ...]\n");
         echo setHelp();
         exit(1);
     }
 
-    $eqPos = strpos($assign, '=');
-    if ($eqPos === false) {
-        fwrite(STDERR, "Error: second argument must be <field>=<value>, got: $assign\n");
-        echo setHelp();
-        exit(1);
-    }
+    // Collect and check every <field>=<value> argument before touching the
+    // disk, so a malformed one cannot silently drop the assignments after it.
+    $assignments = [];
+    foreach (array_slice($parsed['values'], 1) as $assign) {
+        $eqPos = strpos($assign, '=');
+        if ($eqPos === false || $eqPos === 0) {
+            fwrite(STDERR, "Error: arguments after <ID> must be <field>=<value>, got: $assign\n");
+            echo setHelp();
+            exit(1);
+        }
 
-    $field = substr($assign, 0, $eqPos);
-    $value = substr($assign, $eqPos + 1);
+        $field = substr($assign, 0, $eqPos);
+        $value = substr($assign, $eqPos + 1);
+
+        if (isset($assignments[$field]) && $assignments[$field] !== $value) {
+            fwrite(STDERR, "Error: conflicting values for field `$field`: {$assignments[$field]} vs $value\n");
+            exit(1);
+        }
+        $assignments[$field] = $value;
+    }
 
     try {
         $root = Board::resolveRoot($parsed['opts']['root'] ?? (getcwd() ?: '.'));
-        $msg  = Board::setField(
-            $root,
-            $id,
-            $field,
-            $value,
-            [],
-        );
+
+        // `status` is a transition, not a point edit — allow it only alone.
+        $msg = count($assignments) === 1 && array_key_exists('status', $assignments)
+            ? Board::setField($root, $id, 'status', $assignments['status'], [])
+            : Board::setFields($root, $id, $assignments, []);
+
         echo $msg . PHP_EOL;
         exit(0);
     } catch (BoardException $e) {
@@ -269,13 +278,17 @@ function cli_set(array $args): void
 function setHelp(): string
 {
     return <<<'TXT'
-todo-md set — point-edit a front-matter field.
+todo-md set — point-edit front-matter fields.
 
 Usage:
-  php vendor/bin/todo-md set <ID> <field>=<value>
+  php vendor/bin/todo-md set <ID> <field>=<value> [field=value ...]
 
-If <field> is `status`, the full transition runs (folder move + link rewrite).
-Otherwise only the front matter changes in place.
+Accepts one or more assignments; all of them are applied in a single atomic
+write (all or nothing), e.g.:
+  php vendor/bin/todo-md set TASK-foo-bar branch=fix/foo pr=https://github.com/x/repo/pull/1
+
+If <field> is `status`, the full transition runs (folder move + link rewrite);
+`status` must be the only assignment in the call.
 
 Options:
   --help       Show this help.
@@ -336,9 +349,25 @@ function cli_validate(array $args): void
         exit(0);
     }
 
+    // The ID index must span the whole task tree, not only the explicit
+    // targets: a single-file validate still has to resolve depends_on/epic
+    // references to tasks living in done/, cancelled/ or backlog/.
+    // Prefer the tree containing the targets, fall back to cwd, then to the
+    // targets themselves (standalone files outside any project).
+    $idFiles = $files;
+    foreach (array_unique([dirname((string) $files[0]), getcwd() ?: '.']) as $base) {
+        try {
+            $treeRoot = Board::resolveRoot($base);
+            $idFiles  = array_values(array_unique(array_merge($idFiles, Parser::findTodoFiles($treeRoot))));
+            break;
+        } catch (BoardException) {
+            // Not inside a project tree — try the next base.
+        }
+    }
+
     $errorCount   = 0;
     $warningCount = 0;
-    $idIndex      = Parser::buildIdIndex($files);
+    $idIndex      = Parser::buildIdIndex($idFiles);
 
     $config = ['roles' => [], 'agents' => [], 'strict' => false];
     if ($configPath !== null) {

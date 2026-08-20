@@ -536,6 +536,66 @@ final class Board
         return "set $id.$field = $value ($rel)";
     }
 
+    /**
+     * Point-edit several front-matter fields in a single atomic write.
+     * All fields are applied in memory first; the file is written and
+     * validated only if every assignment succeeded. `status` is not allowed
+     * here — it delegates to transition() via setField().
+     *
+     * @param array<string, string> $fields  field => value, insertion order kept
+     * @param array $opts
+     * @return string success message
+     * @throws BoardException
+     */
+    public static function setFields(string $root, string $id, array $fields, array $opts = []): string
+    {
+        if ($fields === []) {
+            throw new BoardException('no fields to set');
+        }
+        if (array_key_exists('status', $fields)) {
+            throw new BoardException('`status` cannot be combined with other fields — set it alone: set ' . $id . ' status=<value>');
+        }
+
+        $file = Parser::findFileById($root, $id);
+        if ($file === null) {
+            throw new BoardException("task not found: $id");
+        }
+
+        $content = file_get_contents($file) ?: '';
+
+        // Apply every assignment in memory; abort before touching the disk
+        // if any of them fails (all-or-nothing).
+        $newContent = $content;
+        foreach ($fields as $field => $value) {
+            $updated    = self::setFieldInContent($newContent, $field, $value);
+            if ($updated === $newContent) {
+                throw new BoardException("could not set field (no front matter?): $field");
+            }
+            $newContent = $updated;
+        }
+
+        $snapshot = [$file => $content];
+
+        file_put_contents($file, $newContent);
+
+        $result = Validator::checkOnBoard($root, $file);
+        if ($result['errors'] !== []) {
+            self::rollback($snapshot, null);
+            throw new BoardException(
+                "validation failed after set — rolled back:\n  "
+                . implode("\n  ", $result['errors']),
+            );
+        }
+
+        $rel     = Parser::makeRelativePath($file, $root);
+        $applied = [];
+        foreach ($fields as $field => $value) {
+            $applied[] = "$field = $value";
+        }
+
+        return 'set ' . $id . ': ' . implode(', ', $applied) . " ($rel)";
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     //  Skeleton rendering
     // ══════════════════════════════════════════════════════════════════════════
