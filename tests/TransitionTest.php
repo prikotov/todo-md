@@ -226,3 +226,41 @@ test('set: branch field', function (): void {
     Fixture::runBin('todo-md', ['set', 'TASK-set-branch', 'branch=task/foo-bar', '--root=' . $root]);
     expectEquals('task/foo-bar', frontMatterField("$root/todo/TASK-set-branch.todo.md", 'branch'), 'branch set');
 });
+
+test('set: multiple assignments applied in one call', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-set-multi.todo.md' => Fixture::taskFile('TASK-set-multi', 'Multi'),
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'set', 'TASK-set-multi', 'branch=fix/multi', 'pr=https://github.com/test/repo/pull/7', '--root=' . $root,
+    ]);
+    expectEquals(0, $code, "multi-assignment set should succeed\n$err");
+    expectEquals('fix/multi', frontMatterField("$root/todo/TASK-set-multi.todo.md", 'branch'), 'branch set');
+    expectEquals('https://github.com/test/repo/pull/7', frontMatterField("$root/todo/TASK-set-multi.todo.md", 'pr'), 'pr set');
+});
+
+test('set: non-assignment argument is an error, nothing applied', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-set-junk.todo.md' => Fixture::taskFile('TASK-set-junk', 'Junk'),
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'set', 'TASK-set-junk', 'branch=fix/junk', 'oops', '--root=' . $root,
+    ]);
+    expectEquals(1, $code, 'malformed assignment must fail');
+    expectContains('must be <field>=<value>', $err, 'malformed assignment error');
+    expectEquals(null, frontMatterField("$root/todo/TASK-set-junk.todo.md", 'branch'), 'nothing applied');
+});
+
+test('set: status cannot be combined with other fields', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-set-mix.todo.md' => Fixture::taskFile('TASK-set-mix', 'Mix'),
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'set', 'TASK-set-mix', 'status=done', 'branch=fix/mix', '--root=' . $root,
+    ]);
+    expectEquals(1, $code, 'status mixed with other fields must fail');
+    expectContains('alone', $err, 'status-alone error');
+    expectFileExists("$root/todo/TASK-set-mix.todo.md", 'file not moved');
+    expectFileMissing("$root/todo/done/TASK-set-mix.todo.md", 'not in done/');
+    expectEquals(null, frontMatterField("$root/todo/TASK-set-mix.todo.md", 'branch'), 'nothing applied');
+});

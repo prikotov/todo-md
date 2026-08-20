@@ -78,7 +78,7 @@ function frontMatterField(string $file, string $field): ?string
     if (!preg_match('/^---\s*\n(.*?)\n---\n/s', $content, $m)) {
         return null;
     }
-    if (preg_match('/^' . preg_quote($field, '/') . ':\s*(.*)$/m', $m[1], $v)) {
+    if (preg_match('/^' . preg_quote($field, '/') . ':[ \t]*(.*)$/m', $m[1], $v)) {
         $val = trim($v[1], " \t\"'");
 
         return $val === '' ? null : $val;

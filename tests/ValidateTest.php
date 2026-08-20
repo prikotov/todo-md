@@ -95,6 +95,39 @@ test('validate: unknown depends_on fails', function (): void {
     expectContains('references unknown ID', $out, 'unknown-dep error');
 });
 
+test('validate: single file resolves depends_on from done/', function (): void {
+    $done = Fixture::taskFile('TASK-finished', 'Finished', ['status' => 'done']);
+    $task = Fixture::taskFile('TASK-needs-finished', 'Needs', ['depends_on' => 'TASK-finished']);
+    $root = Fixture::board([
+        'todo/done/TASK-finished.todo.md'  => $done,
+        'todo/TASK-needs-finished.todo.md' => $task,
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['validate', "$root/todo/TASK-needs-finished.todo.md"]);
+    expectEquals(0, $code, "single-file validate should resolve a done/ dependency\n$out$err");
+    expectNotContains('unknown ID', $out, 'no false unknown-ID error');
+    expectContains('1 file(s): 0 error', $out, 'only the target file is validated');
+});
+
+test('validate: single file resolves epic from cancelled/', function (): void {
+    $epic = Fixture::taskFile('EPIC-dead-thing', 'Dead', ['type' => 'epic', 'status' => 'cancelled']);
+    $task = Fixture::taskFile('TASK-orphan', 'Orphan', ['epic' => 'EPIC-dead-thing']);
+    $root = Fixture::board([
+        'todo/cancelled/EPIC-dead-thing.todo.md' => $epic,
+        'todo/TASK-orphan.todo.md'               => $task,
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['validate', "$root/todo/TASK-orphan.todo.md"]);
+    expectEquals(0, $code, "single-file validate should resolve a cancelled/ epic\n$out$err");
+    expectNotContains('unknown ID', $out, 'no false unknown-ID error');
+});
+
+test('validate: single file still fails on truly unknown depends_on', function (): void {
+    $task = Fixture::taskFile('TASK-dep-ghost', 'Ghost', ['depends_on' => 'TASK-ghost']);
+    $root = Fixture::board(['todo/TASK-dep-ghost.todo.md' => $task]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', "$root/todo/TASK-dep-ghost.todo.md"]);
+    expectEquals(1, $code, 'unknown dependency must still fail on single-file validate');
+    expectContains('references unknown ID', $out, 'unknown-dep error');
+});
+
 test('validate: cancelled dependency is a warning', function (): void {
     $done = Fixture::taskFile('TASK-gone', 'Gone', ['status' => 'cancelled']);
     $active = Fixture::taskFile('TASK-active', 'Active', ['depends_on' => 'TASK-gone']);
