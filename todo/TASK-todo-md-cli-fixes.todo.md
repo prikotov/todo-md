@@ -16,7 +16,7 @@ author: Разработчик (pi)
 assignee: 
 branch: 
 pr: 
-status: backlog
+status: todo
 ---
 
 # TASK-todo-md-cli-fixes: Починить ложные ошибки validate по одному файлу и молчаливое игнорирование лишних аргументов set
