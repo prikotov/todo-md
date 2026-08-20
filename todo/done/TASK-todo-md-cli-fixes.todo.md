@@ -3,7 +3,7 @@ type: fix
 created: 2026-08-19 17:41:43 (1787161303)
 due: 
 started: 2026-08-20 03:08:44 (1787195324)
-completed: 
+completed: 2026-08-20 03:12:21 (1787195541)
 cancelled: 
 value: V2
 complexity: C1
@@ -14,9 +14,9 @@ depends_on:
 epic: 
 author: Разработчик (pi)
 assignee: Разработчик (pi)
-branch: 
-pr: 
-status: in_progress
+branch: fix/cli-validate-index-set-multi
+pr: https://github.com/prikotov/todo-md/pull/27
+status: done
 ---
 
 # TASK-todo-md-cli-fixes: Починить ложные ошибки validate по одному файлу и молчаливое игнорирование лишних аргументов set
