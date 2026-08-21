@@ -3,7 +3,7 @@ type: docs
 created: 2026-08-21 13:07:52 (1787317672)
 due: 
 started: 2026-08-21 13:07:52 (1787317672)
-completed: 
+completed: 2026-08-21 13:42:34 (1787319754)
 cancelled: 
 value: V2
 complexity: C1
@@ -15,8 +15,8 @@ epic:
 author: Технический писатель (pi)
 assignee: Технический писатель (pi)
 branch: task/docs-done-before-approval
-pr: 
-status: in_progress
+pr: https://github.com/prikotov/todo-md/pull/29
+status: done
 ---
 
 # TASK-docs-done-timing: Момент перехода done и маркировка package в распределяемых документах
