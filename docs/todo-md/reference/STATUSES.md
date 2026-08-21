@@ -37,7 +37,7 @@ stateDiagram-v2
     backlog --> todo: Готова к работе (DoR)
     todo --> in_progress: В работе
     in_progress --> review: Готово (PR создан)
-    review --> done: Завершено исполнителем (к приёмке)
+    review --> done: Выполнена
     
     in_progress --> paused: Пауза
     paused --> in_progress: Возобновление
