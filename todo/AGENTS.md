@@ -103,12 +103,12 @@ ID эпика следует формату: `EPIC-<категория>-<кра�
 
 4. **Завершение задачи**:
    - Создать Pull Request и заполнить `pr`: `php vendor/bin/todo-md set <ID> pr=https://...`.
-   - `php vendor/bin/todo-md review <ID>` — переводит `status` в `review`: результат на проверке, доработки по ревью идут в этом статусе.
-   - Перевести задачу в `done`, когда доработки завершены и результат финален: `php vendor/bin/todo-md done <ID>` (требует заполненного поля `pr`):
+   - `php vendor/bin/todo-md review <ID>` — переводит `status` в `review`: результат на проверке до передачи на приёмку (CI, self-review); доработки идут в этом статусе.
+   - Перевести задачу в `done`, когда результат готов к приёмке: `php vendor/bin/todo-md done <ID>` (требует заполненного поля `pr`):
      - переносит файл в `todo/done/`, проставляет `completed`;
      - относительные ссылки в эпике и соседних задачах обновляются автоматически.
    - Момент перевода в `done` и порядок относительно апрува PR определяет процесс проекта (например, пакет `prikotov/git-workflow`).
-   - Возврат из `done` при замечаниях ревью: `php vendor/bin/todo-md review <ID>` или `php vendor/bin/todo-md set <ID> status=review`.
+   - Возврат из `done` при замечаниях приёмки: `php vendor/bin/todo-md review <ID>` или `php vendor/bin/todo-md set <ID> status=review`.
 
 5. **Блокировка**:
    - Если задача заблокирована, `php vendor/bin/todo-md set <ID> status=blocked` и указать причину в разделе "Риски и зависимости".
