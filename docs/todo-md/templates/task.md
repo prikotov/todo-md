@@ -15,7 +15,7 @@ depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; п�
 epic: <EPIC-ID>  # plain ID эпика; пусто, если нет эпика
 author: <роль> (<агент>)  # формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
 assignee:  # исполнитель задачи, формат: Роль (агент); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md); может быть пустым для backlog, todo и cancelled
-branch:  # пусто до выбора фактической ветки реализации; не ветка только для постановки
+branch:  # ветка реализации; пусто до её выбора
 pr: <ссылка на PR>  # пусто при создании
 status: <todo|in_progress|review|done|blocked|paused|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)
 ---
@@ -106,7 +106,7 @@ Must — обязательно для приёмки, Won't — явные за
 
 ## 4. План реализации (Implementation Plan)
 <!-- AI:
-Пошаговый план работ. Заполняется исполнителем (агентом) перед стартом, уже в выбранной рабочей ветке.
+Пошаговый план работ. Заполняется исполнителем (агентом) перед стартом.
 -->
 1. [ ] ...
 2. [ ] ...

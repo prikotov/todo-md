@@ -8,7 +8,7 @@
 
 **prikotov/todo-md** — PHP-пакет: file-based kanban board для управления задачами в markdown-файлах с YAML front matter.
 
-Пакет подключается к проекту-потребителю через `composer require --dev` и инициализируется командой `php vendor/bin/todo-md init`. В исходном репозитории пакета эта команда запускается как `php bin/todo-md init`.
+Пакет подключается к проекту-потребителю через `composer require --dev` и инициализируется командой `php vendor/bin/todo-md init`. В репозитории пакета: `php bin/todo-md init`.
 
 ### Состав
 
@@ -83,7 +83,7 @@ todo/                        # Внутренние задачи по дораб
 
 1. Создаёт `todo/`, `todo/backlog/`, `todo/done/`, `todo/cancelled/` (с `.gitkeep`).
 2. Копирует `docs/todo-md/` в проект-потребитель.
-3. Копирует исходный `todo/AGENTS.md` пакета отдельно в `todo/AGENTS.md` потребителя (либо по `--agents-path`); источник задан в `src/bootstrap.php`.
+3. Копирует `todo/AGENTS.md` пакета в `todo/AGENTS.md` потребителя (либо по `--agents-path`).
 4. Обновляет `.gitignore` в `docs/` и `todo/`.
 
 ---

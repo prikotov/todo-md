@@ -49,7 +49,7 @@ depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; п�
 epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет эпика
 author: <роль> (<агент>)  # формат: Роль (агент); роль — функциональная обязанность (Бэкендер, Продакт), агент — исполнитель (codex, pi); см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md)
 assignee:  # исполнитель задачи, формат: Роль (агент); см. [STATUSES.md](./reference/STATUSES.md), [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md); может быть пустым для backlog, todo и cancelled
-branch:  # пусто до выбора фактической ветки реализации; не ветка только для постановки
+branch:  # ветка реализации; пусто до её выбора
 pr:  # пусто при создании
 status: <статус>
 ---
@@ -216,7 +216,7 @@ ID должен быть уникальным.
    - `complexity`: см. [COMPLEXITY.md](./reference/COMPLEXITY.md)
    - `cost_plan`, `cost_fact`: опциональные integer-поля стоимости в токенах, см. [COST.md](./reference/COST.md)
    - `due`, `started`, `completed`, `cancelled`: опциональные метки жизненного цикла; формат — дата `YYYY-MM-DD` либо `YYYY-MM-DD HH:MM:SS (unix_ts)`, проставляет CLI; см. [DATES.md](./reference/DATES.md)
-   - `branch`: пусто до выбора ветки реализации; затем указать её фактическое имя. Ветка только для постановки не указывается
+   - `branch`: имя выбранной ветки реализации; ветку только для постановки не указывать
    - `pr`: (пусто при создании)
    - `author`: заполнить при создании
    - `assignee`: оставить пустым до начала работы; для `in_progress`, `paused`, `blocked`, `review` и `done` указать исполнителя
@@ -293,7 +293,7 @@ php vendor/bin/todo-md validate todo/TASK-example.todo.md    # одна зада
 
 Эпик — это крупная единица работы, которая объединяет набор связанных задач в одну цель.
 
-Используйте шаблон: [todo/templates/epic.md](./templates/epic.md). Разметка шаблона и требование рабочей ветки до изменения файлов те же, что и для задач — см. [раздел 4](#4-создание-задач).
+Используйте шаблон: [todo/templates/epic.md](./templates/epic.md). Порядок работы тот же, что и для задач — см. [раздел 4](#4-создание-задач).
 
 ### Обязательные метаданные эпика
 Эпик также должен содержать поля **Ценность (V)** и **Сложность (C)** в YAML front matter, которые отражают общую ценность и сложность всего эпика.
