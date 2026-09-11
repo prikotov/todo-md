@@ -8,7 +8,7 @@
 
 **prikotov/todo-md** — PHP-пакет: file-based kanban board для управления задачами в markdown-файлах с YAML front matter.
 
-Пакет подключается к проекту-потребителю через `composer require --dev` и init-скрипт `bin/todo-md-init`.
+Пакет подключается к проекту-потребителю через `composer require --dev` и инициализируется командой `php vendor/bin/todo-md init`. В исходном репозитории пакета эта команда запускается как `php bin/todo-md init`.
 
 ### Состав
 
