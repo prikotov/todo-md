@@ -27,5 +27,13 @@
     },
     "archive": {
         "include": ["/bin/", "/src/"]
+    },
+    "repositories": [{
+        "name": "git-workflow",
+        "type": "vcs",
+        "url": "https://github.com/prikotov/git-workflow"
+    }],
+    "require-dev": {
+        "prikotov/git-workflow": "^0.3.2"
     }
 }
