@@ -11,7 +11,7 @@ complexity: C1
 priority: P2
 cost_plan:
 cost_fact:
-depends_on:
+depends_on: TASK-todo-md-sdd-comparison-research
 epic:
 author: Владелец проекта (pi)
 assignee: Архитектор (pi)
@@ -42,7 +42,7 @@ status: todo
 ## 1. Концепция и Цель (Concept and Goal)
 
 ### История (User Story или Job Story)
-- **Зависимость:** эта задача расширяет scope завершённого ресёрча TASK-todo-md-sdd-comparison-research. Связь явно упомянута здесь, т.к. depends_on работает только для активных задач.
+- **Зависимость:** эта задача расширяет scope завершённого ресёрча TASK-todo-md-sdd-comparison-research (ссылка в `depends_on`).
 
 ### Цель по SMART (Goal)
 Добавить Kiro (Amazon) в существующий документ `docs/research/SDD-comparison.md` в течение 1 часа работы. Задача не включает проведение ресёрча — только расширение уже существующего обзора. Зависимость от TASK-todo-md-sdd-comparison-research явно указана в depends_on.
@@ -125,3 +125,4 @@ php bin/todo-md validate todo/TASK-todo-md-sdd-comparison-add-kiro.todo.md
 | Дата | Автор (роль) | Изменение |
 | :--- | :--- | :--- |
 | 2026-08-05 | Владелец проекта (pi) | Создание задачи |
+| 2026-08-20 | Владелец проекта (pi) | Восстановлен `depends_on` на TASK-todo-md-sdd-comparison-research: валидатор резолвит зависимости по всему дереву задач (v0.0.11) |

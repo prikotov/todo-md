@@ -240,9 +240,10 @@ class Fixture
      * Run a package bin script and capture output.
      *
      * @param list<string> $args
+     * @param ?string $cwd Working directory for the subprocess.
      * @return array{int, string, string}  [exitCode, stdout, stderr]
      */
-    public static function runBin(string $bin, array $args = []): array
+    public static function runBin(string $bin, array $args = [], ?string $cwd = null): array
     {
         $script = self::pkgRoot() . "/bin/$bin";
         $cmd    = array_merge(['php', $script], $args);
@@ -252,7 +253,7 @@ class Fixture
             2 => ['pipe', 'w'],
         ];
 
-        $proc = proc_open($cmd, $descriptors, $pipes);
+        $proc = proc_open($cmd, $descriptors, $pipes, $cwd);
         if (!is_resource($proc)) {
             throw new TestFailure("failed to start bin/$bin");
         }
