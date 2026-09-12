@@ -15,8 +15,8 @@ epic:
 author: Разработчик (pi)
 assignee: Разработчик (pi)
 branch: task/validate-by-id
-pr:
-status: in_progress
+pr: https://github.com/prikotov/todo-md/pull/32
+status: review
 ---
 
 # TASK-todo-md-validate-by-id: Валидация задачи по ID
