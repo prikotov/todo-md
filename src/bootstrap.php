@@ -338,7 +338,31 @@ function cli_validate(array $args): void
 
     $files = [];
     foreach ($targets as $target) {
-        $files = array_merge($files, Parser::findTodoFiles($target));
+        if (file_exists($target)) {
+            $files = array_merge($files, Parser::findTodoFiles($target));
+            continue;
+        }
+
+        if (Parser::detectKind($target) !== null) {
+            try {
+                $root = Board::resolveRoot(getcwd() ?: '.');
+            } catch (BoardException) {
+                fwrite(STDERR, "Error: cannot resolve ID outside a todo-md project: $target" . PHP_EOL);
+                exit(1);
+            }
+
+            $file = Parser::findFileById($root, $target);
+            if ($file === null) {
+                fwrite(STDERR, "Error: task/epic not found: $target" . PHP_EOL);
+                exit(1);
+            }
+
+            $files[] = $file;
+            continue;
+        }
+
+        fwrite(STDERR, "Error: target does not exist: $target" . PHP_EOL);
+        exit(1);
     }
 
     $files = array_values(array_unique($files));
@@ -423,7 +447,7 @@ function validateHelp(): string
 todo-md validate — validate todo-md task and epic files.
 
 Usage:
-  php vendor/bin/todo-md validate [target-dir|file ...]
+  php vendor/bin/todo-md validate [target-dir|file|ID ...]
 
 Options:
   --help          Show this help.

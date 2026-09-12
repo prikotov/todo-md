@@ -89,10 +89,10 @@ php vendor/bin/todo-md validate
 - локальные Markdown-ссылки, чтобы ссылки не ломались после перемещения задач между папками;
 - соответствие статуса папке (`backlog`, `done`, `cancelled`).
 
-Можно проверить конкретный файл или директорию:
+Можно проверить конкретную задачу по ID или директорию:
 
 ```bash
-php vendor/bin/todo-md validate todo/TASK-example.todo.md
+php vendor/bin/todo-md validate TASK-example
 php vendor/bin/todo-md validate todo/
 ```
 

@@ -16,6 +16,37 @@ test('validate: clean board passes', function (): void {
     expectContains('1 file(s): 0 error', $out, 'summary line');
 });
 
+test('validate: task ID resolves across status folders', function (): void {
+    $root = Fixture::board([
+        'todo/backlog/TASK-in-backlog.todo.md' => Fixture::taskFile(
+            'TASK-in-backlog',
+            'Backlog task',
+            ['status' => 'backlog'],
+        ),
+    ]);
+
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['validate', 'TASK-in-backlog'], $root);
+    expectEquals(0, $code, "validate by ID should find a backlog task\n$out$err");
+    expectContains('todo/backlog/TASK-in-backlog.todo.md', $out, 'resolved task path');
+});
+
+test('validate: unknown task ID fails', function (): void {
+    $root = Fixture::board();
+
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['validate', 'TASK-does-not-exist'], $root);
+    expectEquals(1, $code, 'unknown ID must fail');
+    expectContains('task/epic not found: TASK-does-not-exist', $err, 'unknown-ID error');
+});
+
+test('validate: missing explicit path fails', function (): void {
+    $root = Fixture::board();
+    $target = 'todo/TASK-does-not-exist.todo.md';
+
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['validate', $target], $root);
+    expectEquals(1, $code, 'missing path must fail');
+    expectContains("target does not exist: $target", $err, 'missing-path error');
+});
+
 test('validate: missing required field fails', function (): void {
     $content = Fixture::taskFile('TASK-bad-task', 'Bad');
     // Strip the status line entirely

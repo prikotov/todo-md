@@ -51,10 +51,10 @@ package: prikotov/todo-md
 php vendor/bin/todo-md validate
 ```
 
-Для проверки конкретной задачи:
+Для проверки конкретной задачи используй её ID:
 
 ```bash
-php vendor/bin/todo-md validate todo/TASK-example.todo.md
+php vendor/bin/todo-md validate TASK-example
 ```
 
 Команды смены состояния (`todo-md done` и др.) обновляют ссылки и валидируют автоматически. При ручном редактировании — обнови ссылки и запусти `php vendor/bin/todo-md validate`.
