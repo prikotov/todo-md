@@ -3,7 +3,7 @@ type: fix
 created: 2026-09-12 00:39:47 (1789173587)
 due:
 started: 2026-09-12 00:40:17 (1789173617)
-completed:
+completed: 2026-09-12 00:41:49 (1789173709)
 cancelled:
 value: V2
 complexity: C1
@@ -16,7 +16,7 @@ author: Разработчик (pi)
 assignee: Разработчик (pi)
 branch: task/validate-by-id
 pr: https://github.com/prikotov/todo-md/pull/32
-status: review
+status: done
 ---
 
 # TASK-todo-md-validate-by-id: Валидация задачи по ID
