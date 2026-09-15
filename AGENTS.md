@@ -8,7 +8,7 @@
 
 **prikotov/todo-md** — PHP-пакет: file-based kanban board для управления задачами в markdown-файлах с YAML front matter.
 
-Пакет подключается к проекту-потребителю через `composer require --dev` и init-скрипт `bin/todo-md-init`.
+Пакет подключается к проекту-потребителю через `composer require --dev` и инициализируется командой `php vendor/bin/todo-md init`. В репозитории пакета: `php bin/todo-md init`.
 
 ### Состав
 
@@ -35,7 +35,7 @@
 
 ## Структура пакета
 
-```
+```text
 bin/
   todo-md                    # Единая CLI-команда (диспетчер подкоманд)
 src/
@@ -46,12 +46,12 @@ src/
   bootstrap.php              # Подключение модулей + CLI-функции всех подкоманд
 docs/
   todo-md/                   # Документация, копируемая в проект-потребитель
-    AGENTS.md                # Правила работы с задачами (для AI-агентов потребителя)
     AGENTS_TASK_WRITING_GUIDE.md
     reference/               # Справочники: TYPES, STATUSES, VALUES, COMPLEXITY, PRIORITIES, COST, AI_AGENTS, GLOSSARY
     templates/               # Шаблоны: task.md, epic.md
 tests/                       # Fixture-тесты
 todo/                        # Внутренние задачи по доработке пакета
+  AGENTS.md                  # Исходник правил работы с задачами, копируемый потребителю
 ```
 
 ---
@@ -82,8 +82,8 @@ todo/                        # Внутренние задачи по дораб
 ### Что делает
 
 1. Создаёт `todo/`, `todo/backlog/`, `todo/done/`, `todo/cancelled/` (с `.gitkeep`).
-2. Копирует `docs/todo-md/` в проект-потребитель (без `AGENTS.md`).
-3. Копирует `AGENTS.md` отдельно в `todo/AGENTS.md`.
+2. Копирует `docs/todo-md/` в проект-потребитель.
+3. Копирует `todo/AGENTS.md` пакета в `todo/AGENTS.md` потребителя (либо по `--agents-path`).
 4. Обновляет `.gitignore` в `docs/` и `todo/`.
 
 ---
@@ -110,7 +110,7 @@ todo/                        # Внутренние задачи по дораб
 
 - **README**: [README.md](README.md)
 - **Документация пакета**: [docs/todo-md/](docs/todo-md/)
-- **AGENTS.md (для потребителя)**: [docs/todo-md/AGENTS.md](docs/todo-md/AGENTS.md)
+- **AGENTS.md (исходник правил для потребителя)**: [todo/AGENTS.md](todo/AGENTS.md)
 - **Справочники**: [docs/todo-md/reference/](docs/todo-md/reference/)
 - **Шаблоны**: [docs/todo-md/templates/](docs/todo-md/templates/)
 - **CLI**: [bin/todo-md](bin/todo-md)
