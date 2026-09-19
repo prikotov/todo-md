@@ -13,6 +13,10 @@ cost_plan:  # суммарная плановая стоимость задач 
 cost_fact:  # суммарная фактическая стоимость задач эпика в токенах, integer; заполняется по завершении
 author: <роль> (<агент>)  # формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
 assignee:  # исполнитель эпика, формат: Роль (агент); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md); может быть пустым для backlog, todo и cancelled
+consultants: []  # консультанты подготовки постановки; см. [PARTICIPANTS.md](../reference/PARTICIPANTS.md)
+reviewer:  # проверяющий постановку, формат: Роль (агент)
+approver:  # принимающий постановку, формат: Роль (агент)
+informed: []  # оповещаемые участники подготовки постановки
 status: <todo|backlog|in_progress|paused|blocked|review|done|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)
 pr: <ссылка на PR>  # пусто при создании
 ---

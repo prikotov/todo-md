@@ -149,6 +149,17 @@ final class Board
         $found   = false;
         for ($i = 1; $i < $closing; $i++) {
             if (preg_match($pattern, $lines[$i])) {
+                if (in_array($field, Parser::PARTICIPANT_LISTS, true)) {
+                    $end = $i + 1;
+                    while ($end < $closing && preg_match('/^(?:\s|#|$)/', $lines[$end])) {
+                        $end++;
+                    }
+                    $comments = array_values(array_filter(
+                        array_slice($lines, $i + 1, $end - $i - 1),
+                        static fn(string $line): bool => trim($line) === '' || str_starts_with(ltrim($line), '#'),
+                    ));
+                    array_splice($lines, $i + 1, $end - $i - 1, $comments);
+                }
                 $lines[$i] = "$field: $value";
                 $found     = true;
                 break;
@@ -176,6 +187,10 @@ final class Board
         $warnings    = [];
         $frontMatter = Parser::parseSimpleYaml($parsed['frontMatter'], $warnings);
         $value       = $frontMatter[$field] ?? null;
+
+        if (is_array($value)) {
+            return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        }
 
         return $value === null || $value === '' ? null : $value;
     }
@@ -626,6 +641,10 @@ final class Board
             'epic'       => $epic,
             'author'     => $author,
             'assignee'   => '',
+            'consultants' => '[]',
+            'reviewer'    => '',
+            'approver'    => '',
+            'informed'    => '[]',
             'branch'     => '',
             'pr'         => '',
             'status'     => $status,
@@ -716,6 +735,10 @@ final class Board
             'cost_fact'  => '',
             'author'     => $author,
             'assignee'   => '',
+            'consultants' => '[]',
+            'reviewer'    => '',
+            'approver'    => '',
+            'informed'    => '[]',
             'status'     => $status,
             'pr'         => '',
         ];

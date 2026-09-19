@@ -15,6 +15,10 @@ depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; п�
 epic: <EPIC-ID>  # plain ID эпика; пусто, если нет эпика
 author: <роль> (<агент>)  # формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
 assignee:  # исполнитель задачи, формат: Роль (агент); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md); может быть пустым для backlog, todo и cancelled
+consultants: []  # консультанты подготовки постановки; см. [PARTICIPANTS.md](../reference/PARTICIPANTS.md)
+reviewer:  # проверяющий постановку, формат: Роль (агент)
+approver:  # принимающий постановку, формат: Роль (агент)
+informed: []  # оповещаемые участники подготовки постановки
 branch:  # ветка реализации; пусто до её выбора
 pr: <ссылка на PR>  # пусто при создании
 status: <todo|in_progress|review|done|blocked|paused|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)

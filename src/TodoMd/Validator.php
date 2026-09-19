@@ -39,7 +39,7 @@ final class Validator
             return ['errors' => [$parsed['error']], 'warnings' => []];
         }
 
-        $frontMatter = Parser::parseSimpleYaml($parsed['frontMatter'], $warnings);
+        $frontMatter = Parser::parseSimpleYaml($parsed['frontMatter'], $warnings, $errors);
         $body        = $parsed['body'];
         $id          = Parser::fileId($file);
         $kind        = Parser::detectKind($id);
@@ -78,7 +78,7 @@ final class Validator
     // ── Front matter ─────────────────────────────────────────────────────────
 
     /**
-     * @param array<string, string> $frontMatter
+     * @param array<string, string|list<string>> $frontMatter
      * @param list<string> $errors
      * @param list<string> $warnings
      */
@@ -126,6 +126,23 @@ final class Validator
             $warnings,
         );
 
+        foreach (Parser::PARTICIPANT_FIELDS as $field) {
+            if (!array_key_exists($field, $frontMatter)) {
+                continue;
+            }
+            $value = $frontMatter[$field];
+            if (is_array($value)) {
+                if (count($value) !== count(array_unique($value))) {
+                    $errors[] = "`$field` must not contain duplicate participants";
+                }
+                foreach ($value as $index => $actor) {
+                    self::validateActor($field . '[' . $index . ']', $actor, $config, $errors, $warnings);
+                }
+            } elseif ($value !== '') {
+                self::validateActor($field, $value, $config, $errors, $warnings);
+            }
+        }
+
         if (($frontMatter['depends_on'] ?? '') !== '') {
             foreach (explode(',', $frontMatter['depends_on']) as $dependency) {
                 $dependency = trim($dependency);
@@ -145,7 +162,7 @@ final class Validator
     }
 
     /**
-     * @param array<string, string> $frontMatter
+     * @param array<string, string|list<string>> $frontMatter
      * @param array<string, array{kind: string, status: string}> $idIndex
      * @param list<string> $errors
      * @param list<string> $warnings
