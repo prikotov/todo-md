@@ -22,6 +22,7 @@
 - **Ценность** — `V0`–`V4`
 - **Стоимость** — `cost_plan`, `cost_fact` в токенах
 - **AI-агенты** — правила работы агентов с задачами
+- **[Участники подготовки постановки](docs/todo-md/reference/PARTICIPANTS.md)** — необязательные поля `consultants`, `reviewer`, `approver`, `informed`
 
 Руководство по постановке задач: [`AGENTS_TASK_WRITING_GUIDE.md`](docs/todo-md/AGENTS_TASK_WRITING_GUIDE.md).
 
@@ -83,6 +84,7 @@ php vendor/bin/todo-md validate
 - YAML front matter и обязательные поля;
 - допустимые значения `type`, `status`, `value`, `complexity`, `priority`;
 - формат опциональных полей стоимости `cost_plan`, `cost_fact`;
+- списки участников подготовки постановки и формат ролей/агентов (`--strict` превращает предупреждения в ошибки);
 - соответствие ID в имени файла и заголовке;
 - секцию `Простое описание (Human Brief)`;
 - обязательные разделы задачи и эпика;

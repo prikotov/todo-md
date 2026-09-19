@@ -451,10 +451,10 @@ Usage:
 
 Options:
   --help          Show this help.
-  --strict        Treat author/assignee format and unknown role/agent
-                  warnings as errors (non-zero exit).
+  --strict        Treat actor format and unknown role/agent warnings as errors
+                  (author, assignee and optional participants; non-zero exit).
   --config=FILE   Project config file (default: <project-root>/.todo-md.php).
-                  Lists canonical `roles` and `agents` for author/assignee checks.
+                  Lists canonical `roles` and `agents` for actor checks.
 
 TXT;
 }
@@ -550,7 +550,11 @@ function exportExtractRecord(string $file, string $cwd): ?array
         $frontMatter = [];
         $body        = $content;
     } else {
-        $frontMatter = Parser::parseSimpleYaml($parsed['frontMatter'], $warnings);
+        $errors = [];
+        $frontMatter = Parser::parseSimpleYaml($parsed['frontMatter'], $warnings, $errors);
+        if ($errors !== []) {
+            throw new \RuntimeException(Parser::makeRelativePath($file, $cwd) . ': ' . implode('; ', $errors));
+        }
         $body        = $parsed['body'];
     }
     $id   = Parser::fileId($file);
@@ -607,6 +611,10 @@ function exportExtractRecord(string $file, string $cwd): ?array
         'depends_on' => $dependsOnList,
         'assignee'   => Parser::valueOrNull($frontMatter['assignee'] ?? null),
         'author'     => Parser::valueOrNull($frontMatter['author'] ?? null),
+        'consultants' => $frontMatter['consultants'] ?? [],
+        'reviewer'    => Parser::valueOrNull($frontMatter['reviewer'] ?? null),
+        'approver'    => Parser::valueOrNull($frontMatter['approver'] ?? null),
+        'informed'    => $frontMatter['informed'] ?? [],
         'created'    => Parser::valueOrNull($frontMatter['created'] ?? null),
         'due'        => Parser::valueOrNull($frontMatter['due'] ?? null),
         'started'    => Parser::valueOrNull($frontMatter['started'] ?? null),
@@ -1699,7 +1707,7 @@ function cli_init(array $args): void
 declare(strict_types=1);
 
 // Project-level configuration for todo-md validate.
-// Lists canonical roles and agents for author/assignee validation.
+// Lists canonical roles and agents for author, assignee and participant validation.
 // Full reference: docs/todo-md/reference/CONFIG.md
 return [
     // Канонические роли проекта (текст перед скобками). Пусто/отсутствует — роль
@@ -1710,7 +1718,7 @@ return [
     // используется пакетный список из reference/AI_AGENTS.md.
     // 'agents' => ['codex-cli', 'codex', 'pi', 'kilocode'],
 
-    // Считать нарушения author/assignee ошибками (аналог флага --strict).
+    // Считать нарушения формата и справочников участников ошибками (аналог --strict).
     'strict' => false,
 ];
 PHP;

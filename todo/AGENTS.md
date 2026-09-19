@@ -31,6 +31,7 @@ package: prikotov/todo-md
   - `cost_plan`, `cost_fact`: опциональная стоимость в токенах (см. [COST.md](../docs/todo-md/reference/COST.md))
   - `author`: имя создателя задачи (см. [AI_AGENTS.md](../docs/todo-md/reference/AI_AGENTS.md))
   - `assignee`: исполнитель задачи (см. [STATUSES.md](../docs/todo-md/reference/STATUSES.md)); может быть пустым для `backlog`, `todo` и `cancelled`
+  - `consultants`, `reviewer`, `approver`, `informed`: необязательные [участники подготовки постановки](../docs/todo-md/reference/PARTICIPANTS.md), без дублирования автора и исполнителя
   - `created`: дата/время создания; формат — `YYYY-MM-DD` либо `YYYY-MM-DD HH:MM:SS (unix_ts)`, проставляет CLI
   - `due`, `started`, `completed`, `cancelled`: опциональные метки жизненного цикла (плановый срок, старт в `in_progress`, завершение в `done`, отмена в `cancelled`); тот же формат, проставляет CLI; см. [DATES.md](../docs/todo-md/reference/DATES.md)
   - `branch`: ветка реализации; пусто до её выбора. Ветка только для постановки не указывается

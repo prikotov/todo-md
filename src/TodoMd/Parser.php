@@ -24,6 +24,8 @@ final class Parser
     public const ACTIVE_STATUSES = ['todo', 'in_progress', 'paused', 'blocked', 'review'];
     /** Canonical AI agents for `author`/`assignee`; see reference/AI_AGENTS.md. */
     public const AI_AGENTS = ['gemini-cli', 'codex-cli', 'codex', 'opencode', 'roocode', 'kilocode', 'pi'];
+    public const PARTICIPANT_LISTS = ['consultants', 'informed'];
+    public const PARTICIPANT_FIELDS = ['consultants', 'reviewer', 'approver', 'informed'];
 
     /**
      * Canonical folder (relative to todo/) for each status.
@@ -89,13 +91,20 @@ final class Parser
     }
 
     /**
+     * Participant fields additionally support string lists (flow or indented block).
+     * Other fields retain the existing scalar-only contract.
+     *
      * @param list<string> $warnings
-     * @return array<string, string>
+     * @param list<string> $errors Participant syntax errors, never downgraded to warnings.
+     * @return array<string, string|list<string>>
      */
-    public static function parseSimpleYaml(string $yaml, array &$warnings): array
+    public static function parseSimpleYaml(string $yaml, array &$warnings, array &$errors = []): array
     {
         $data  = [];
         $lines = preg_split('/\r\n|\r|\n/', $yaml) ?: [];
+        $activeParticipant = null;
+        $blockList = false;
+        $blockIndent = null;
 
         foreach ($lines as $lineNumber => $line) {
             $trimmed = trim($line);
@@ -104,16 +113,92 @@ final class Parser
             }
 
             if (!preg_match('/^([A-Za-z_][A-Za-z0-9_-]*):(?:\s*(.*))?$/', $line, $matches)) {
-                $warnings[] = sprintf('front matter line %d is not a simple key: value pair', $lineNumber + 2);
+                if ($activeParticipant !== null) {
+                    if ($blockList && preg_match('/^( +)-[ ]+(.*)$/', $line, $item)
+                        && ($blockIndent === null || $blockIndent === strlen($item[1]))) {
+                        $blockIndent = strlen($item[1]);
+                        try {
+                            $data[$activeParticipant][] = self::parseParticipantString(self::stripInlineComment($item[2]));
+                        } catch (\InvalidArgumentException $e) {
+                            $errors[] = "`$activeParticipant`: " . $e->getMessage();
+                        }
+                    } else {
+                        $errors[] = "`$activeParticipant` contains an unsupported continuation at line " . ($lineNumber + 2);
+                    }
+                } else {
+                    $warnings[] = sprintf('front matter line %d is not a simple key: value pair', $lineNumber + 2);
+                }
                 continue;
             }
 
-            $key         = $matches[1];
-            $value       = self::stripInlineComment($matches[2] ?? '');
-            $data[$key]  = trim($value, " \t\n\r\0\x0B\"'");
+            $key = $matches[1];
+            $value = self::stripInlineComment($matches[2] ?? '');
+            $activeParticipant = in_array($key, self::PARTICIPANT_FIELDS, true) ? $key : null;
+            $blockList = false;
+            $blockIndent = null;
+            if ($activeParticipant === null) {
+                $data[$key] = trim($value, " \t\n\r\0\x0B\"'");
+                continue;
+            }
+            if (array_key_exists($key, $data)) {
+                $errors[] = "duplicate participant field `$key`";
+            }
+            try {
+                if (in_array($key, self::PARTICIPANT_LISTS, true)) {
+                    $blockList = $value === '';
+                    $data[$key] = $blockList ? [] : self::parseParticipantList($value);
+                } else {
+                    $data[$key] = $value === '' ? '' : self::parseParticipantString($value);
+                }
+            } catch (\InvalidArgumentException $e) {
+                $errors[] = "`$key`: " . $e->getMessage();
+            }
         }
 
         return $data;
+    }
+
+    /** @return list<string> */
+    private static function parseParticipantList(string $value): array
+    {
+        if (!str_starts_with($value, '[') || !str_ends_with($value, ']')) {
+            throw new \InvalidArgumentException('expected a YAML string list');
+        }
+        $inner = trim(substr($value, 1, -1));
+        if ($inner === '') {
+            return [];
+        }
+        // Quoted strings may contain commas; nested collections are not supported.
+        $pattern = '~\G\s*("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\']|\'\')*\'|[^,\[\]{}"\']+)\s*(,|$)~u';
+        $items = [];
+        $offset = 0;
+        while ($offset < strlen($inner)) {
+            if (!preg_match($pattern, $inner, $match, 0, $offset)) {
+                throw new \InvalidArgumentException('expected a YAML string list');
+            }
+            $items[] = self::parseParticipantString(trim($match[1]));
+            $offset += strlen($match[0]);
+        }
+
+        return $items;
+    }
+
+    private static function parseParticipantString(string $value): string
+    {
+        if (preg_match('/^\'(?:[^\']|\'\')*\'$/u', $value)) {
+            return str_replace("''", "'", substr($value, 1, -1));
+        }
+        if (str_starts_with($value, '"')) {
+            $decoded = json_decode($value, true);
+            if (is_string($decoded)) {
+                return $decoded;
+            }
+        } elseif ($value !== '' && !preg_match('/^[\[\]{}&*!|>@`\'"%?-]|:\s|[\r\n]/u', $value)
+            && !preg_match('/^(?:null|true|false|~|[-+]?\d+(?:\.\d+)?)$/i', $value)) {
+            return $value;
+        }
+
+        throw new \InvalidArgumentException('expected a participant string');
     }
 
     public static function stripInlineComment(string $value): string
@@ -124,6 +209,10 @@ final class Parser
 
         for ($i = 0; $i < $length; $i++) {
             $char = $value[$i];
+            if ($char === '\\' && $inDoubleQuote) {
+                $i++;
+                continue;
+            }
             if ($char === "'" && !$inDoubleQuote) {
                 $inSingleQuote = !$inSingleQuote;
                 continue;
