@@ -10,7 +10,7 @@ value: V2
 complexity: C2
 priority: P1
 cost_plan:
-status: in_progress
+status: review
 depends_on:
 epic:
 author: Продакт (pi)
