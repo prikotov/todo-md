@@ -13,8 +13,8 @@ cost_plan:  # плановая стоимость в токенах, integer; с
 cost_fact:  # фактическая стоимость в токенах, integer; заполняется по завершении, источник — billing/API usage dashboard
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID эпика; пусто, если нет эпика
-author: <роль> (<агент>@<модель>[~<уровень>][|<резерв>...])  # формат: Роль (агент); модели и уровни мышления опциональны; см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [MODELS.md](../reference/MODELS.md), [CONFIG.md](../reference/CONFIG.md)
-assignee:  # исполнитель задачи, формат: Роль (агент@модель[~уровень][|резерв...]); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [MODELS.md](../reference/MODELS.md); может быть пустым для backlog, todo и cancelled
+author: <роль> (<агент>[@<модель>[~<уровень>]])  # формат: Роль (агент); модель и уровень мышления опциональны; см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [MODELS.md](../reference/MODELS.md), [CONFIG.md](../reference/CONFIG.md)
+assignee:  # исполнитель задачи, формат: Роль (агент[@модель[~уровень]]); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [MODELS.md](../reference/MODELS.md); может быть пустым для backlog, todo и cancelled
 consultants: []  # консультанты подготовки постановки; см. [PARTICIPANTS.md](../reference/PARTICIPANTS.md)
 reviewer:  # проверяющий постановку, формат: Роль (агент)
 approver:  # принимающий постановку, формат: Роль (агент)
