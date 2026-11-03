@@ -17,7 +17,7 @@ author: Продакт (pi)
 assignee: Бэкендер (pi)
 model: glm-5.3-flash
 branch:
-pr:
+pr: https://github.com/prikotov/todo-md/pull/39
 ---
 
 # TASK-todo-md-add-model-field: Добавить поле model для отслеживания LLM моделей
