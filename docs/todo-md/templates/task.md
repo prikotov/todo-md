@@ -15,7 +15,7 @@ depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; п�
 epic: <EPIC-ID>  # plain ID эпика; пусто, если нет эпика
 author: <роль> (<агент>)  # формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
 assignee:  # исполнитель задачи, формат: Роль (агент); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md); может быть пустым для backlog, todo и cancelled
-model:  # LLM-модель, выполнявшая задачу; опционально; см. [MODELS.md](../reference/MODELS.md), [CONFIG.md](../reference/CONFIG.md)
+model:  # модель исполнителя (assignee); опционально; см. [MODELS.md](../reference/MODELS.md)
 consultants: []  # консультанты подготовки постановки; см. [PARTICIPANTS.md](../reference/PARTICIPANTS.md)
 reviewer:  # проверяющий постановку, формат: Роль (агент)
 approver:  # принимающий постановку, формат: Роль (агент)

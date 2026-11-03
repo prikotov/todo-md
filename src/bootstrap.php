@@ -932,7 +932,7 @@ function dashboardRenderHtml(array $tasks, string $title, ?string $base = null):
         <div class="chart-box tall"><canvas id="whoChart"></canvas></div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h2>Модели LLM <span class="muted">(done)</span></h2></div>
+        <div class="panel-head"><h2>Модели исполнителей <span class="muted">(done)</span></h2></div>
         <div class="chart-box tall"><canvas id="modelChart"></canvas></div>
       </div>
     </div>
@@ -1391,7 +1391,7 @@ let whoChartInst = null;
   build();
 })();
 
-// ── LLM models (done tasks, top-12 + "остальные") ──
+// ── Executor models (done tasks, top-12 + "остальные") ──
 const MODEL_PROVIDER_COLOR = { openai:"#10a37f", anthropic:"#d97757", google:"#4285f4", meta:"#0668e1", mistral:"#fa520f", zhipu:"#3b6ce8", other:"#64748b" };
 function providerOf(model) {
   const id = String(model);

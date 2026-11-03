@@ -37,9 +37,13 @@ final class Parser
         // Mistral
         'mistral-large', 'mistral-small',
         // Zhipu (GLM)
-        'glm-4.6', 'glm-5.3-flash',
+        'glm-4.6', 'glm-5.3', 'glm-5.3-flash',
+        // Kimi
+        'kimi-k2', 'k3.1-pro',
+        // Xiaomi (MiMo)
+        'mimo-v2.6-pro',
         // Others
-        'deepseek-r1', 'qwen-3', 'kimi-k2',
+        'deepseek-r1', 'deepseek-flash', 'qwen-3',
     ];
     public const PARTICIPANT_LISTS = ['consultants', 'informed'];
     public const PARTICIPANT_FIELDS = ['consultants', 'reviewer', 'approver', 'informed'];

@@ -521,7 +521,7 @@ final class Validator
         }
 
         $strict = (bool) ($config['strict'] ?? false);
-        if (!preg_match('/^[a-z0-9][a-z0-9._-]*$/', $value)) {
+        if (!preg_match('/^[a-z0-9][a-z0-9.:_-]*$/', $value)) {
             self::actorIssue($errors, $warnings, $strict, "`model` must be a lowercase model id like `gpt-4o` — got `$value`");
             return;
         }

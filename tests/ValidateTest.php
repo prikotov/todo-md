@@ -311,6 +311,16 @@ test('validate: bad model format fails in strict mode', function (): void {
     expectContains('`model` must be a lowercase model id like `gpt-4o`', $out, 'bad model format error');
 });
 
+test('validate: ollama tag with colon is a valid model format', function (): void {
+    $content = Fixture::taskFile('TASK-model-ollama', 'Ollama tag', ['model' => 'huihui-ai:pi-100k']);
+    $root    = Fixture::board(['todo/TASK-model-ollama.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, 'ollama tag should pass format check');
+    expectContains('`model` `huihui-ai:pi-100k` is not a known model', $out, 'unknown warning (canonical list)');
+    expectNotContains('must be a lowercase model id', $out, 'no format error for colon tag');
+});
+
 test('validate: --config models overrides canonical list', function (): void {
     $content = Fixture::taskFile('TASK-model-config', 'Model config', ['model' => 'levsha-mega']);
     $root    = Fixture::board(['todo/TASK-model-config.todo.md' => $content]);
