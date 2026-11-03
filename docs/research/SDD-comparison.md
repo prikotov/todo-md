@@ -1,8 +1,12 @@
-# Ресёрч — обзор SDD через три системы и позиция todo-md
+# Ресёрч — обзор SDD через четыре системы и позиция todo-md
 
-> Обзор Spec-Driven Development (далее — SDD), выведенный из трёх зрелых систем
-> (**BMAD Method**, **GitHub Spec Kit**, **OpenSpec**), и сравнение с подходом
-> **todo-md** / **task-agents-playbook**.
+> Обзор Spec-Driven Development (далее — SDD), выведенный из четырёх зрелых систем
+> (**BMAD Method**, **GitHub Spec Kit**, **OpenSpec**, **Kiro (Amazon)**), и сравнение с
+> подходом **todo-md** / **task-agents-playbook**.
+>
+> Kiro добавлен отдельной задачей (TASK-todo-md-sdd-comparison-add-kiro) поверх
+> первоначального обзора трёх систем — секции 2.4, 5 и сравнительные блоки дополнены,
+> выводы исходного анализа не переписывались.
 >
 > Цель: понять, что такое SDD, где находится todo-md относительно него и стоит ли
 > заимствовать практики.
@@ -14,7 +18,8 @@
 1. **SDD — это методология, в которой спецификация (specification) — отдельный
    от кода артефакт, описывающий ЧТО (intent), а не КАК (implementation), и
    являющийся контрактом / источником истины (source of truth) для реализации.**
-   Все три системы сходятся в этом ядре, но по-разному решают, *что именно*
+   Все четыре системы сходятся в этом ядре (Kiro — мягче: термин «source of
+   truth» не использует, см. §2.4), но по-разному решают, *что именно*
    специфицируется и *как долго* спецификация живёт.
 
 2. **Ключевое различение, без которого сравнение бессмысленно: два уровня
@@ -23,7 +28,8 @@
    - **Change Spec** — что *изменить* в следующей итерации.
 
 3. **SDD-инструменты заводят отдельный артефакт на *обоих* уровнях**
-   (`specs/` + change-папки). **todo-md — только на уровне Change Spec**
+   (`specs/` + change-папки; Kiro — steering-конвенции + спеки фич в
+   `.kiro/specs/`). **todo-md — только на уровне Change Spec**
    (задача = спецификация), а на уровне System Spec сознательно считает
    спецификацией **сам код** («code as spec»).
 
@@ -40,21 +46,21 @@
 
 ## 1. Что такое Spec-Driven Development (определение)
 
-### 1.1 Синтез из трёх систем
+### 1.1 Синтез из четырёх систем
 
 SDD — методология разработки, в которой **спецификация существует как отдельный
 артефакт, описывающий намерение (что должно быть), а не реализацию (как оно
 сделано), и является контрактом, направляющим и/или генерирующим код.**
 
-Это ядро видно во всех трёх проанализированных системах, несмотря на разницу
+Это ядро видно во всех четырёх проанализированных системах, несмотря на разницу
 в деталях:
 
-| Признак | BMAD | GitHub Spec Kit | OpenSpec |
-|---------|------|-----------------|----------|
-| Отдельный артефакт спецификации | `SPEC.md` | `spec.md` (+`plan.md`, `tasks.md`) | `specs/*.md` |
-| Описывает ЧТО, не КАК | «locks the WHAT before the HOW» | «the *what* before the *how*» | поведение системы (requirements) |
-| Создаётся до реализации | Phase 2 Planning → Phase 3 Solutioning → Build | specify → plan → implement (до кода) | propose → specs → tasks → apply |
-| Является контрактом / SoT | «canonical machine contract» | source of truth артефактов | «source of truth — how system currently behaves» |
+| Признак | BMAD | GitHub Spec Kit | OpenSpec | Kiro |
+|---------|------|-----------------|----------|------|
+| Отдельный артефакт спецификации | `SPEC.md` | `spec.md` (+`plan.md`, `tasks.md`) | `specs/*.md` | `.kiro/specs/<feature>/` (requirements + design + tasks) |
+| Описывает ЧТО, не КАК | «locks the WHAT before the HOW» | «the *what* before the *how*» | поведение системы (requirements) | EARS-требования: «WHEN … THE SYSTEM SHALL …» |
+| Создаётся до реализации | Phase 2 Planning → Phase 3 Solutioning → Build | specify → plan → implement (до кода) | propose → specs → tasks → apply | three-phase workflow с approval-гейтами между фазами |
+| Является контрактом / SoT | «canonical machine contract» | source of truth артефактов | «source of truth — how system currently behaves» | «structured, testable requirements» + «reliable foundation» (SoT не заявлен) |
 
 ### 1.2 Признаки SDD (согласованные)
 
@@ -82,6 +88,9 @@ SDD — методология разработки, в которой **спе�
 - **BMAD:** `SPEC.md` как «machine contract» пяти полей (Why, Capabilities,
   Constraints, Non-goals, Success signal) на уровне продукта/эпика; плюс
   «solutioning» (HOW) отдельной фазой.
+- **Kiro:** поведение фичи после изменения (EARS-requirements) + дизайн + задачи
+  в `.kiro/specs/<feature>/`; текущее поведение системы в целом не агрегируется
+  (как у spec-kit); конвенции проекта вынесены в steering-файлы (см. §2.4).
 
 **Как долго живёт спецификация (временна́я модель):**
 
@@ -93,6 +102,10 @@ GitHub Spec Kit явно опирается на таксономию Марти
   будущих изменений.
 - **Spec-as-source** — спецификация = единственный человеко-редактируемый
   источник, реализации *регенерируются* из неё.
+
+**Kiro** по этой таксономии — **spec-anchored** по факту: спеки «designed for
+continuous refinement» и хранятся в репо рядом с кодом; regen-модель отсутствует
+(Sync Files досоздаёт задачи под изменившиеся требования).
 
 ### 1.4 Модели эволюции артефактов (Spec Kit)
 
@@ -111,7 +124,7 @@ Spec Kit отдельно задаёт вопрос: что происходит
 
 ---
 
-## 2. Три системы SDD: определения и ключевые формулировки
+## 2. Четыре системы SDD: определения и ключевые формулировки
 
 ### 2.1 GitHub Spec Kit (`github/spec-kit`)
 
@@ -206,6 +219,81 @@ Design → Tasks → Apply → Archive.
 - Артефакты — **«enablers, not gates»** (помогают, а не блокируют): гибкость,
   формальность не ради формальности.
 
+### 2.4 Kiro (Amazon, `kiro.dev`)
+
+**Определение (из `docs/specs/`):**
+
+> «Specs or specifications are **structured artifacts** that formalize the
+> development process for features and bug fixes in your application. They
+> provide a systematic approach to transform high-level ideas into detailed
+> implementation plans with clear tracking and accountability.»
+
+Позиционирование лендинга: «Kiro: Move beyond AI coding to agentic engineering»;
+«Most tools are great at generating code, but Kiro gives structure to the chaos
+before you write a single line». Kiro — единственный из четырёх **закрытый
+продукт** (agentic IDE/CLI/Web от Amazon), а не опенсорс-методология: SDD
+встроен в инструмент как UX-флоу (spec-сессии, UI-гейты, «Run all Tasks»).
+
+**Три-фазный workflow спеки:**
+
+| Фаза | Вопрос | Артефакт |
+|------|--------|----------|
+| **1. Requirements** (или Bug Analysis) | WHAT? | `requirements.md` — EARS-нотация |
+| **2. Design** | HOW? | `design.md` — архитектура, sequence-диаграммы, implementation considerations |
+| **3. Tasks** | Какие единицы работы? | `tasks.md` — «discrete, executable implementation tasks» |
+
+Спека живёт в `.kiro/specs/<feature>/`, version-controlled, рядом с кодом:
+> «Store specs directly in your project repository alongside the code they
+> describe.»
+
+**Формат требований — EARS** (Easy Approach to Requirements Syntax):
+> «The `requirements.md` file uses EARS (Easy Approach to Requirements Syntax)
+> notation to provide structured, testable requirements.»
+
+Паттерн: «WHEN [condition/event] THE SYSTEM SHALL [expected behavior]».
+
+**Два варианта воркфлоу + Quick Spec:** Requirements-First (Requirements →
+Design → Tasks) и Design-First (Design → Requirements → Tasks); между фазами —
+**approval-гейты**: «Both produce the same artifacts (requirements.md,
+design.md, tasks.md). The difference is whether you review each one before the
+next is generated». Для понятных фич — Quick Spec: «auto-generate all three
+artifacts without approval gates». Дополнительно **Analyze Requirements** —
+Q&A-анализ до перехода к дизайну: «analyze your requirements for logical
+inconsistencies, ambiguities, conflicting constraints, and gaps».
+
+**Исполнение:** dependency graph задач, независимые задачи группируются в
+**waves**: «Waves execute sequentially; tasks within a wave execute
+concurrently». **Sync Files** досоздаёт задачи под изменившиеся требования.
+
+**Steering (системный уровень):**
+> «Steering gives Kiro persistent knowledge about your project through markdown
+> files.»
+
+Foundation-файлы (product, technical stack, structure) включаются в каждую
+сессию; режимы включения через YAML front matter: always / fileMatch / manual
+(`#steering-file-name`) / auto. AGENTS.md упоминается напрямую: «AGENTS.md
+files are in markdown format, similar to Kiro steering files; however,
+AGENTS.md files do not support inclusion modes and are always included».
+
+**Hooks:** «Hooks run shell commands or agent prompts automatically when
+specific events happen in your session — the agent modifies a file, invokes a
+tool, or completes a task» — JSON-конфиги в `.kiro/hooks/` (триггеры типа
+PostFileSave, Stop, PreToolUse/PostToolUse).
+
+**Spec correctness (уникально для четвёрки):** property-based testing —
+> «automatically translating natural language specifications into executable
+> properties and generating test cases from them… maintains a clear, traceable
+> link between your requirements and the tests that validate them.»
+> «While not formal verification, PBT provides evidence for correctness across
+> scenarios you'd never write manually».
+
+**Что важно для сравнения:** Kiro **не** использует ни «source of truth»
+(OpenSpec), ни «executable specifications» (spec-kit): «executable» у него
+привязано к задачам (`tasks.md`), а спека — «reliable foundation»,
+«designed for continuous refinement». Текущее поведение системы не агрегируется
+(как у spec-kit); рассинхрон закрывается верификацией (PBT против требований
+фичи), а не merge-моделью OpenSpec.
+
 ---
 
 ## 3. Контекст: todo-md как часть task-agents-playbook
@@ -270,16 +358,18 @@ Traceability изменений: задача ↔ ветка ↔ PR ↔ комм
 
 | Уровень | Вопрос | SDD-инструменты | todo-md |
 |---------|--------|-----------------|---------|
-| **System Spec** | Как система работает *сейчас*? | Отдельный артефакт: `specs/` (OpenSpec), `SPEC.md` (BMAD), living-модель (spec-kit) | **Сам код** (code as spec) — отдельного артефакта нет |
-| **Change Spec** | Что *изменить*? | Change-папка с delta specs (OpenSpec), `changes/` (BMAD), feature-директория `spec.md` (spec-kit) | **Задача** (task = spec): цель, scope/out-of-scope, DoD, MoSCoW, User Story |
+| **System Spec** | Как система работает *сейчас*? | Отдельный артефакт: `specs/` (OpenSpec), `SPEC.md` (BMAD), living-модель (spec-kit); Kiro — только steering-конвенции, поведение не агрегируется | **Сам код** (code as spec) — отдельного артефакта нет |
+| **Change Spec** | Что *изменить*? | Change-папка с delta specs (OpenSpec), `changes/` (BMAD), feature-директория `spec.md` (spec-kit), `.kiro/specs/<feature>/` (Kiro) | **Задача** (task = spec): цель, scope/out-of-scope, DoD, MoSCoW, User Story |
 
 ### 4.1 На уровне Change Spec — согласие
 
-Все три SDD-системы и todo-md имеют спецификацию изменения, создаваемую *до*
+Все четыре SDD-системы и todo-md имеют спецификацию изменения, создаваемую *до*
 реализации: WHAT (intent) прежде HOW. Разница лишь в носителе:
 - OpenSpec — `changes/<id>/` с proposal/design/delta specs/tasks.
 - BMAD — эпик/история + `SPEC.md`-contract для эпика.
 - spec-kit — `spec.md` + `tasks.md` фичи.
+- Kiro — `.kiro/specs/<feature>/` (requirements/design/tasks с approval-гейтами
+  между фазами).
 - **todo-md — задача** с front matter и секциями (goal/scope/DoD).
 
 ### 4.2 На уровне System Spec — фундаментальное расхождение
@@ -287,28 +377,34 @@ Traceability изменений: задача ↔ ветка ↔ PR ↔ комм
 Здесь пути расходятся:
 - **SDD-инструменты** поддерживают отдельный артефакт текущего поведения системы
   и считают рассинхрон с кодом *проблемой*, требующей reconcile / merge /
-  regeneration.
+  regeneration. Строго про «текущее поведение» это верно для OpenSpec (и отчасти
+  BMAD); spec-kit и Kiro специфицируют поведение на уровне фичи, не агрегируя
+  систему, — Kiro дополнительно закрывает рассинхрон верификацией:
+  property-based testing против требований фичи («spec correctness»).
 - **todo-md сознательно отказывается** от такого артефакта: спецификация текущего
   поведения системы — это **сам код**. Это и есть тезис **«code as spec»**.
 
 ---
 
-## 5. Сравнение трёх систем между собой
+## 5. Сравнение четырёх систем между собой
 
-| Критерий | GitHub Spec Kit | BMAD Method | OpenSpec |
-|----------|-----------------|-------------|----------|
-| Самоопределение | «specifications become **executable**» | «**Agile** Ai Driven Development» | «specs are the **source of truth**» |
-| Отношение к «code as king» | **Критикует** («flips the script») | Не критикует, дополняет явными решениями | Не критикует, спецификация отдельно |
-| Что специфицирует | намерение фичи (intent) | WHAT-контракт + HOW-solutioning | текущее поведение системы |
-| Временна́я модель (Fowler) | выбор команды (first/anchored/as-source) | right-sized (зависит от размера работы) | spec-as-source (строго: merge в main specs) |
-| Роли / перспективы | Bundles (role-based setups) | named agents (PM, Architect, Dev, QA, ...) | роли слабо выражены |
-| Durable context | guardrails | brief + PRD + SPEC несутся вперёд | архив = decision history |
-| Ригидность | гибкая (модели на выбор) | right-sized (skip для мелочи) | «enablers, not gates» |
-| Радикальность | высокая (исполняемые спеки) | средняя (agile-обёртка) | средняя (классический SDD) |
+| Критерий | GitHub Spec Kit | BMAD Method | OpenSpec | Kiro (Amazon) |
+|----------|-----------------|-------------|----------|---------------|
+| Самоопределение | «specifications become **executable**» | «**Agile** Ai Driven Development» | «specs are the **source of truth**» | «**structured artifacts** that formalize the development process»; «agentic engineering» |
+| Отношение к «code as king» | **Критикует** («flips the script») | Не критикует, дополняет явными решениями | Не критикует, спецификация отдельно | Не критикует («gives structure to the chaos before you write a single line») |
+| Что специфицирует | намерение фичи (intent) | WHAT-контракт + HOW-solutioning | текущее поведение системы | поведение фичи (EARS) + дизайн + задачи; система не агрегируется |
+| Временна́я модель (Fowler) | выбор команды (first/anchored/as-source) | right-sized (зависит от размера работы) | spec-as-source (строго: merge в main specs) | spec-anchored («continuous refinement», в репо рядом с кодом) |
+| Роли / перспективы | Bundles (role-based setups) | named agents (PM, Architect, Dev, QA, ...) | роли слабо выражены | нет named-ролей; человек — approval-гейты между фазами |
+| Durable context | guardrails | brief + PRD + SPEC несутся вперёд | архив = decision history | steering-файлы (foundation + 4 режима включения) — самый развитый механизм из четырёх |
+| Ригидность | гибкая (модели на выбор) | right-sized (skip для мелочи) | «enablers, not gates» | right-sized: Quick Spec без гейтов ↔ Feature Spec с гейтами |
+| Радикальность | высокая (исполняемые спеки) | средняя (agile-обёртка) | средняя (классический SDD) | умеренная позиция («reliable foundation»), но максимальная автоматизация исполнения (waves, PBT) |
 
-**Вывод по трём:** спектр идёт от радикального «спецификации генерируют код»
-(spec-kit) через pragmatic-agile «явные решения, несущиеся вперёд» (BMAD) к
-классическому «спецификация поведения = источник истины» (OpenSpec).
+**Вывод по четырём:** спектр идёт от радикального «спецификации генерируют код»
+(spec-kit) через pragmatic-agile «явные решения, несущиеся вперёд» (BMAD) и
+классическое «спецификация поведения = источник истины» (OpenSpec) к продуктовому
+«SDD как UX закрытого инструмента» (Kiro) — с самой мягкой заявленной позицией
+(ни «executable», ни «source of truth»), но самой развитой механикой исполнения
+(approval-гейты, waves, PBT-correctness).
 
 ---
 
@@ -431,7 +527,7 @@ Spec **ни один уровень не применим к todo-md напря�
 
 ---
 
-## 9. Фичи-кандидаты для todo-md (из трёх систем)
+## 9. Фичи-кандидаты для todo-md (из четырёх систем)
 
 Отобрано по принципу: усилия малы / ценность высока при сохранении идеологии
 code-as-spec для System Spec. Полный отказ от идеологии не предлагается.
@@ -451,6 +547,9 @@ code-as-spec для System Spec. Полный отказ от идеологии
 - **Модель персистентности как явный выбор** (из spec-kit): документировать в
   AGENTS.md, что завершённые задачи иммутабельны (flow-forward) — зафиксировать
   то, что уже де-факто делается.
+- **EARS-формат для критериев приёмки** (из Kiro): поведенческие критерии DoD в
+  проверяемой форме «WHEN … THE SYSTEM SHALL …» — опционально для задач с
+  поведенческими изменениями (усиливает самопроверку агента в §3.4).
 
 ### Низкий приоритет / отклонено
 
@@ -458,13 +557,18 @@ code-as-spec для System Spec. Полный отказ от идеологии
   идеологии code-as-spec.
 - **Living-spec регенерация задач из спецификации** — отклонено: задачи —
   первичный артефакт в task-driven, а не производная.
+- **Property-based testing из задачи** (из Kiro «spec correctness») — вне scope
+  пакета (это tooling верификации кода, не артефакт задачи); наблюдение
+  фиксируется: Kiro закрывает тем самым рассинхрон на уровне фичи.
 
 ---
 
 ## 10. Вывод
 
 1. **SDD = спецификация как отдельный артефакт (intent, not implementation),
-   контракт, создаваемый до кода.** Все три системы сходятся в этом ядре.
+   контракт, создаваемый до кода.** Все четыре системы сходятся в этом ядре
+   (Kiro — с самой мягкой формулировкой: «reliable foundation» вместо
+   «source of truth»).
 2. **todo-md / task-agents-playbook — это task-driven development**, отдельная
    методология, которая:
    - **сходится с SDD** на уровне спецификации изменений (задача = spec,
@@ -478,8 +582,9 @@ code-as-spec для System Spec. Полный отказ от идеологии
    осознанным выбором, а не недостатком. Это и есть фундаментальная оппозиция.
 5. **Практический итог:** todo-md не нужно «становиться SDD». Целесообразные
    заимствования — точечные (decision history, явный solutioning для сложного,
-   формализация модели персистентности) — сохраняют идеологию и усиливают слабые
-   места (rationale, архитектурные решения для крупных задач).
+   формализация модели персистентности, EARS-формат критериев) — сохраняют
+   идеологию и усиливают слабые места (rationale, архитектурные решения для
+   крупных задач).
 
 ---
 
@@ -496,6 +601,12 @@ code-as-spec для System Spec. Полный отказ от идеологии
   - (TasK-загрузка застряла в processing — репозиторий велик; читалось напрямую)
 - **OpenSpec** — `Fission-AI/OpenSpec`:
   - доки запрошены через TasK (чат-сессии), статус source: ready
+- **Kiro (Amazon)** — `kiro.dev`:
+  - `/docs/specs/`, `/docs/specs/feature-specs/`, `/docs/specs/analyze-requirements/`,
+    `/docs/specs/plan/`, `/docs/specs/correctness/`, `/docs/specs/best-practices/`,
+    `/docs/steering/`, `/docs/hooks/`, лендинг `kiro.dev/`
+  - (TasK-загрузка: проект `sdd-kiro-research`, все source ready; цитаты
+    верифицированы чанками через диалог)
 
 ### Контекст методологии
 
@@ -523,8 +634,14 @@ code-as-spec для System Spec. Полный отказ от идеологии
 - **GitHub Spec Kit и BMAD** не были успешно загружены в TasK (processing не
   завершён). Анализ основан на прямом чтении ключевых доков через raw GitHub.
   Для OpenSpec использовался TasK-чат с source ready.
-- **В ресёрч намеренно включены только 3 системы** (по требованию задачи).
-  Ранее исследовавшиеся sdd (z-hua), Helix, superspec, plaesy/spec-kit исключены.
+- **В исходный ресёрч намеренно включены только 3 системы** (по требованию
+  задачи). Kiro добавлен позже отдельной задачей
+  (TASK-todo-md-sdd-comparison-add-kiro). Ранее исследовавшиеся sdd (z-hua),
+  Helix, superspec, plaesy/spec-kit исключены.
+- **Kiro анализировался по публичной документации kiro.dev** — сам продукт
+  (IDE/CLI) не использовался: UI-поведение (approval-гейты, waves, PBT) описано
+  по документации, не проверялось на реальном проекте. Продукт закрытый и
+  быстро меняется — формулировки могут устареть.
 - **GitHub Spec Kit** анализировался по официальному репо `github/spec-kit`
   (v0.12.x); поведение CLI проверялось по документации, не на реальном проекте.
 
