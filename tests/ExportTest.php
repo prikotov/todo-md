@@ -26,7 +26,7 @@ test('export: produces valid JSONL', function (): void {
 
 test('export: record fields', function (): void {
     $root = Fixture::board([
-        'todo/TASK-exp-fields.todo.md' => Fixture::taskFile('TASK-exp-fields', 'Fields', ['priority' => 'P1']),
+        'todo/TASK-exp-fields.todo.md' => Fixture::taskFile('TASK-exp-fields', 'Fields', ['priority' => 'P1', 'model' => 'gpt-4o']),
     ]);
     [$code, $out] = Fixture::runBin('todo-md', ['export-jsonl', $root]);
     expectEquals(0, $code, 'export ok');
@@ -38,6 +38,7 @@ test('export: record fields', function (): void {
     expectEquals('todo', $rec['status'], 'status');
     expectEquals('P1', $rec['priority'], 'priority');
     expectEquals('active', $rec['folder'], 'folder=active for todo/');
+    expectEquals('gpt-4o', $rec['model'], 'model field exported');
 });
 
 test('export: folder detection', function (): void {

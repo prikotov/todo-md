@@ -24,6 +24,21 @@ final class Parser
     public const ACTIVE_STATUSES = ['todo', 'in_progress', 'paused', 'blocked', 'review'];
     /** Canonical AI agents for `author`/`assignee`; see reference/AI_AGENTS.md. */
     public const AI_AGENTS = ['gemini-cli', 'codex-cli', 'codex', 'opencode', 'roocode', 'kilocode', 'pi'];
+    /** Canonical LLM models for `model`; see reference/MODELS.md. Overridable via config['models']. */
+    public const MODELS = [
+        // OpenAI
+        'gpt-5', 'gpt-4.1', 'gpt-4o', 'o3', 'o4-mini',
+        // Anthropic
+        'claude-opus-4', 'claude-sonnet-4', 'claude-haiku-4',
+        // Google
+        'gemini-2.5-pro', 'gemini-2.5-flash',
+        // Meta
+        'llama-4',
+        // Mistral
+        'mistral-large', 'mistral-small',
+        // Others
+        'deepseek-r1', 'qwen-3', 'kimi-k2',
+    ];
     public const PARTICIPANT_LISTS = ['consultants', 'informed'];
     public const PARTICIPANT_FIELDS = ['consultants', 'reviewer', 'approver', 'informed'];
 

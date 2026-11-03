@@ -20,7 +20,7 @@ final class Validator
 
     /**
      * @param array<string, array{kind: string, status: string, file?: string}> $idIndex
-     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
      * @return array{errors: list<string>, warnings: list<string>}
      */
     public static function validateFile(string $file, array $idIndex, array $config = []): array
@@ -118,6 +118,7 @@ final class Validator
         self::validateOptionalDate('completed', $frontMatter['completed'] ?? '', $errors);
         self::validateOptionalDate('cancelled', $frontMatter['cancelled'] ?? '', $errors);
         self::validateActor('author', $frontMatter['author'] ?? '', $config, $errors, $warnings);
+        self::validateModel($frontMatter['model'] ?? '', $config, $errors, $warnings);
         self::validateAssignee(
             $frontMatter['assignee'] ?? '',
             $frontMatter['status'] ?? '',
@@ -462,7 +463,7 @@ final class Validator
     /**
      * Load the project config from <root>/.todo-md.php (missing file → defaults).
      *
-     * @return array{roles: list<string>, agents: list<string>, strict: bool}
+     * @return array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool}
      */
     public static function loadConfig(string $root): array
     {
@@ -472,11 +473,11 @@ final class Validator
     /**
      * Load and normalise a config file. Missing or malformed file → safe defaults.
      *
-     * @return array{roles: list<string>, agents: list<string>, strict: bool}
+     * @return array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool}
      */
     public static function loadConfigFile(string $file): array
     {
-        $config = ['roles' => [], 'agents' => [], 'strict' => false];
+        $config = ['roles' => [], 'agents' => [], 'models' => [], 'strict' => false];
         if (!is_file($file)) {
             return $config;
         }
@@ -492,6 +493,9 @@ final class Validator
         if (isset($loaded['agents']) && is_array($loaded['agents'])) {
             $config['agents'] = array_values(array_filter($loaded['agents'], 'is_string'));
         }
+        if (isset($loaded['models']) && is_array($loaded['models'])) {
+            $config['models'] = array_values(array_filter($loaded['models'], 'is_string'));
+        }
         if (isset($loaded['strict']) && is_bool($loaded['strict'])) {
             $config['strict'] = $loaded['strict'];
         }
@@ -502,10 +506,37 @@ final class Validator
     // ── Author / assignee ────────────────────────────────────────────────────
 
     /**
+     * Validate the optional `model` field against the canonical LLM model list.
+     * config['models'] overrides Parser::MODELS; an empty value is allowed.
+     *
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
+     * @param list<string> $errors
+     * @param list<string> $warnings
+     */
+    private static function validateModel(string $value, array $config, array &$errors, array &$warnings): void
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return;
+        }
+
+        $strict = (bool) ($config['strict'] ?? false);
+        if (!preg_match('/^[a-z0-9][a-z0-9._-]*$/', $value)) {
+            self::actorIssue($errors, $warnings, $strict, "`model` must be a lowercase model id like `gpt-4o` — got `$value`");
+            return;
+        }
+
+        $models = !empty($config['models']) ? $config['models'] : Parser::MODELS;
+        if (!in_array($value, $models, true)) {
+            self::actorIssue($errors, $warnings, $strict, "`model` `$value` is not a known model: " . implode(', ', $models));
+        }
+    }
+
+    /**
      * Allow an empty assignee before work starts or when cancelled, and require
      * one for statuses that represent actual or completed work.
      *
-     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
      * @param list<string> $errors
      * @param list<string> $warnings
      */
@@ -538,7 +569,7 @@ final class Validator
      * Validate an actor against the canonical `<роль> (<агент>)` format and,
      * when lists are available, the known roles and agents.
      *
-     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
      * @param list<string> $errors
      * @param list<string> $warnings
      */

@@ -610,6 +610,7 @@ function exportExtractRecord(string $file, string $cwd): ?array
         'epic'       => Parser::valueOrNull($frontMatter['epic'] ?? null),
         'depends_on' => $dependsOnList,
         'assignee'   => Parser::valueOrNull($frontMatter['assignee'] ?? null),
+        'model'      => Parser::valueOrNull($frontMatter['model'] ?? null),
         'author'     => Parser::valueOrNull($frontMatter['author'] ?? null),
         'consultants' => $frontMatter['consultants'] ?? [],
         'reviewer'    => Parser::valueOrNull($frontMatter['reviewer'] ?? null),
@@ -929,6 +930,10 @@ function dashboardRenderHtml(array $tasks, string $title, ?string $base = null):
       <div class="panel">
         <div class="panel-head"><h2>Кто делает <span class="muted">(done)</span></h2><select id="whoDim" class="board-sort"></select></div>
         <div class="chart-box tall"><canvas id="whoChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Модели LLM <span class="muted">(done)</span></h2></div>
+        <div class="chart-box tall"><canvas id="modelChart"></canvas></div>
       </div>
     </div>
   </section>
@@ -1386,6 +1391,36 @@ let whoChartInst = null;
   build();
 })();
 
+// ── LLM models (done tasks, top-12 + "остальные") ──
+const MODEL_PROVIDER_COLOR = { openai:"#10a37f", anthropic:"#d97757", google:"#4285f4", meta:"#0668e1", mistral:"#fa520f", other:"#64748b" };
+function providerOf(model) {
+  const id = String(model);
+  if (/^(gpt-|o[134](-|$))/.test(id)) return "openai";
+  if (id.startsWith("claude-")) return "anthropic";
+  if (id.startsWith("gemini-")) return "google";
+  if (id.startsWith("llama-")) return "meta";
+  if (id.startsWith("mistral-")) return "mistral";
+  return "other";
+}
+let modelChartInst = null;
+(function () {
+  const sel = document.getElementById("modelChart");
+  if (!sel) return;
+  const TOP = 12;
+  const m = {};
+  for (const t of TASKS) {
+    if (t.kind === "EPIC" || t.status !== "done") continue;
+    const key = t.model ? String(t.model) : "(без модели)";
+    m[key] = (m[key]||0)+1;
+  }
+  const entries = Object.entries(m).sort((a,b)=>b[1]-a[1] || String(a[0]).localeCompare(String(b[0]),"ru"));
+  let labels, data;
+  if (entries.length <= TOP) { labels = entries.map(e=>e[0]); data = entries.map(e=>e[1]); }
+  else { const top = entries.slice(0, TOP); labels = top.map(e=>e[0]).concat(["остальные"]); data = top.map(e=>e[1]).concat([entries.slice(TOP).reduce((s,e)=>s+e[1],0)]); }
+  const colors = labels.map((l,i) => l === "остальные" || l === "(без модели)" ? "#cbd5e1" : MODEL_PROVIDER_COLOR[providerOf(l)] || PALETTE[i % PALETTE.length]);
+  modelChartInst = new Chart(sel, { type:"bar", data:{ labels, datasets:[{ label:"Done", data, backgroundColor: colors, borderRadius:3 }] }, options:{ indexAxis:"y", maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true, ticks:{precision:0}} } } });
+})();
+
 function esc(s){ return String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 
 // ── Kanban board (groupable: status / epic) ──
@@ -1717,6 +1752,10 @@ return [
     // Канонические агенты (lowercase-идентификатор в скобках). Пусто/отсутствует —
     // используется пакетный список из reference/AI_AGENTS.md.
     // 'agents' => ['codex-cli', 'codex', 'pi', 'kilocode'],
+
+    // Канонические LLM-модели для поля model задач (см. reference/MODELS.md).
+    // Пусто/отсутствует — используется пакетный список из Parser::MODELS.
+    // 'models' => ['gpt-4o', 'claude-sonnet-4', 'gemini-2.5-pro'],
 
     // Считать нарушения формата и справочников участников ошибками (аналог --strict).
     'strict' => false,

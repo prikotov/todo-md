@@ -49,6 +49,7 @@ depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; п�
 epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет эпика
 author: <роль> (<агент>)  # формат: Роль (агент); роль — функциональная обязанность (Бэкендер, Продакт), агент — исполнитель (codex, pi); см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md)
 assignee:  # исполнитель задачи, формат: Роль (агент); см. [STATUSES.md](./reference/STATUSES.md), [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md); может быть пустым для backlog, todo и cancelled
+model:  # LLM-модель, выполнявшая задачу; опционально; см. [MODELS.md](./reference/MODELS.md)
 consultants: []  # консультанты подготовки постановки
 reviewer:  # проверяющий постановку, формат: Роль (агент)
 approver:  # принимающий постановку, формат: Роль (агент)
@@ -71,6 +72,7 @@ status: <статус>
 - **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](./reference/PRIORITIES.md)
 - **Стоимость в токенах — `cost_plan`, `cost_fact`**: плановый и фактический расход токенов. Поля опциональные. См. [COST.md](./reference/COST.md)
 - **Даты жизненного цикла — `due`, `started`, `completed`**: плановый срок и фактические даты начала/завершения. Поля опциональные. См. [DATES.md](./reference/DATES.md)
+- **LLM-модель — `model`**: модель, выполнявшая задачу. Поле опциональное. См. [MODELS.md](./reference/MODELS.md)
 ### Роли и агенты
 
 Поля `author` и `assignee` используют формат `<роль> (<агент>)`:
@@ -90,6 +92,22 @@ status: <статус>
 - `Бэкендер (codex-cli)`
 - `Продакт (pi)`
 - `Team Lead (opencode)`
+
+### Модель LLM
+
+Поле `model` фиксирует LLM-модель, выполнявшую задачу или эпик:
+
+- опциональное, заполняется вручную (автоматического определения нет);
+- формат — lowercase-идентификатор: `gpt-4o`, `claude-sonnet-4`;
+- не участвует в workflow (в отличие от `author`/`assignee`);
+- канонический список — [MODELS.md](./reference/MODELS.md); проект может заменить или расширить список через `.todo-md.php` — см. [CONFIG.md](./reference/CONFIG.md);
+- нарушение формата или списка — warning, в strict-режиме — error;
+- используется для аналитики в дашборде (распределение done-задач по моделям).
+
+Примеры значений:
+- `gpt-4o`
+- `claude-sonnet-4`
+- `gemini-2.5-pro`
 
 ---
 
@@ -224,6 +242,7 @@ ID должен быть уникальным.
    - `pr`: (пусто при создании)
    - `author`: заполнить при создании
    - `assignee`: оставить пустым до начала работы; для `in_progress`, `paused`, `blocked`, `review` и `done` указать исполнителя
+   - `model`: опционально; указать LLM-модель, выполнявшую задачу; см. [MODELS.md](./reference/MODELS.md)
    - Остальные поля: `created`, `status` и т.д.
 
 1. **Шаг 1 — написать простое описание (Human Brief)**

@@ -274,3 +274,50 @@ test('validate: --config validates roles and agents', function (): void {
     expectContains('`author` agent `codex-cli` is not a known agent', $out, 'config agent check');
     expectContains('`author` role `Бэкендер` is not in the project roles list', $out, 'config role check');
 });
+
+test('validate: model accepts canonical value and empty', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-model-ok.todo.md'    => Fixture::taskFile('TASK-model-ok', 'Model ok', ['model' => 'gpt-4o']),
+        'todo/TASK-model-empty.todo.md' => Fixture::taskFile('TASK-model-empty', 'Model empty', ['model' => '']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "canonical model and empty model should pass\n$out");
+});
+
+test('validate: unknown model is a warning by default', function (): void {
+    $content = Fixture::taskFile('TASK-model-unknown', 'Model unknown', ['model' => 'my-custom-model']);
+    $root    = Fixture::board(['todo/TASK-model-unknown.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, 'unknown model should be a warning by default');
+    expectContains('`model` `my-custom-model` is not a known model', $out, 'unknown model warning');
+});
+
+test('validate: unknown model fails in strict mode', function (): void {
+    $content = Fixture::taskFile('TASK-model-strict', 'Model strict', ['model' => 'gpt-999']);
+    $root    = Fixture::board(['todo/TASK-model-strict.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'unknown model should fail in strict mode');
+    expectContains('error: `model` `gpt-999` is not a known model', $out, 'unknown model strict error');
+});
+
+test('validate: bad model format fails in strict mode', function (): void {
+    $content = Fixture::taskFile('TASK-model-bad-format', 'Bad format', ['model' => 'GPT-4o']);
+    $root    = Fixture::board(['todo/TASK-model-bad-format.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'uppercase model should fail in strict mode');
+    expectContains('`model` must be a lowercase model id like `gpt-4o`', $out, 'bad model format error');
+});
+
+test('validate: --config models overrides canonical list', function (): void {
+    $content = Fixture::taskFile('TASK-model-config', 'Model config', ['model' => 'levsha-mega']);
+    $root    = Fixture::board(['todo/TASK-model-config.todo.md' => $content]);
+    $configFile = $root . '/.todo-md.php';
+    file_put_contents($configFile, '<?php declare(strict_types=1); return ["models" => ["levsha-mega"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict', '--config=' . $configFile]);
+    expectEquals(0, $code, "custom models list should override canonical\n$out");
+    expectNotContains('is not a known model', $out, 'no unknown model complaint with custom list');
+});

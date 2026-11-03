@@ -3,14 +3,14 @@
 type: feat
 created: 2026-07-29
 due:
-started:
+started: 2026-11-03 12:47:27 (1793710047)
 completed:
 cancelled:
 value: V2
 complexity: C2
 priority: P1
 cost_plan:
-status: backlog
+status: in_progress
 depends_on:
 epic:
 author: Продакт (pi)
@@ -58,20 +58,20 @@ pr:
 ## 3. Требования, MoSCoW (Requirements)
 *Приоритизированный список требований. Must — обязательно, Won't — явно не делаем.*
 ### 🔴 Обязательно (Must Have)
-- [ ] Поле `model` в шаблонах task.md и epic.md после assignee.
-- [ ] Справочник MODELS.md с каноническим списком моделей (OpenAI, Anthropic, Google, Meta, Mistral, Others).
-- [ ] Константа Parser::MODELS с массивом идентификаторов моделей.
-- [ ] Валидация поля model в Validator::validateModel (опционально, проверка по списку).
-- [ ] Экспорт поля model в exportExtractRecord.
-- [ ] Панель "Модели LLM" в дашборде (горизонтальный bar chart, done-задачи, top-12 + "остальные").
-- [ ] Обновление CONFIG.md с секцией про model.
-- [ ] Обновление AGENTS_TASK_WRITING_GUIDE.md с описанием поля model.
+- [x] Поле `model` в шаблонах task.md и epic.md после assignee.
+- [x] Справочник MODELS.md с каноническим списком моделей (OpenAI, Anthropic, Google, Meta, Mistral, Others).
+- [x] Константа Parser::MODELS с массивом идентификаторов моделей.
+- [x] Валидация поля model в Validator::validateModel (опционально, проверка по списку).
+- [x] Экспорт поля model в exportExtractRecord.
+- [x] Панель "Модели LLM" в дашборде (горизонтальный bar chart, done-задачи, top-12 + "остальные").
+- [x] Обновление CONFIG.md с секцией про model.
+- [x] Обновление AGENTS_TASK_WRITING_GUIDE.md с описанием поля model.
 
 ### 🟡 Желательно (Should Have)
-- [ ] Поддержка кастомного списка моделей через `.todo-md.php` (config['models']).
+- [x] Поддержка кастомного списка моделей через `.todo-md.php` (config['models']).
 
 ### 🟢 Опционально (Could Have)
-- [ ] Цветовая кодировка по провайдеру (OpenAI/Anthropic/Google/etc).
+- [x] Цветовая кодировка по провайдеру (OpenAI/Anthropic/Google/etc).
 - [ ] Фильтр задач по модели в дашборде.
 
 ### ⚫ Не будем делать (Won't Have)
@@ -79,20 +79,22 @@ pr:
 
 ## 4. План реализации (Implementation Plan)
 *Пошаговый план работ. Заполняется исполнителем (агентом) перед стартом.*
-1. [ ] Добавить `model: <модель LLM>` в task.md и epic.md.
-2. [ ] Создать MODELS.md с каноническим списком моделей.
-3. [ ] Добавить Parser::MODELS константу.
-4. [ ] Добавить Validator::validateModel().
-5. [ ] Вызвать validateModel в validateFrontMatter.
-6. [ ] Добавить model в exportExtractRecord.
-7. [ ] Добавить панель и chart для моделей в dashboardRenderHtml.
-8. [ ] Обновить CONFIG.md и AGENTS_TASK_WRITING_GUIDE.md.
+1. [x] Добавить `model: <модель LLM>` в task.md и epic.md.
+2. [x] Создать MODELS.md с каноническим списком моделей.
+3. [x] Добавить Parser::MODELS константу.
+4. [x] Добавить Validator::validateModel().
+5. [x] Вызвать validateModel в validateFrontMatter.
+6. [x] Добавить model в exportExtractRecord.
+7. [x] Добавить панель и chart для моделей в dashboardRenderHtml.
+8. [x] Обновить CONFIG.md и AGENTS_TASK_WRITING_GUIDE.md.
+9. [x] Поле model в скелетонах Board::renderTaskSkeleton/renderEpicSkeleton и ключ models в init-конфиге (.todo-md.php).
+10. [x] Тесты: валидация model (canonical/unknown/strict/config) + экспорт model.
 
 ## 5. Критерии приёмки (Definition of Done)
 *Базовые критерии готовности задачи. Можно дополнять конкретными требованиями.*
-- [ ] Валидатор проверяет model (warning/strict mode).
-- [ ] Дашборд показывает распределение по моделям.
-- [ ] Документация обновлена (MODELS.md, CONFIG.md, AGENTS_TASK_WRITING_GUIDE.md).
+- [x] Валидатор проверяет model (warning/strict mode).
+- [x] Дашборд показывает распределение по моделям.
+- [x] Документация обновлена (MODELS.md, CONFIG.md, AGENTS_TASK_WRITING_GUIDE.md).
 
 ## 6. Самопроверка (Verification)
 *Укажите команды для самопроверки. Пример:*
@@ -108,7 +110,7 @@ php vendor/bin/todo-md dashboard todo/ -o /tmp/dashboard.html
 
 ## 8. Источники (Sources)
 *Ссылки на документацию, RFC, связанные задачи.*
-- [ ] [CONFIG.md](../../docs/todo-md/reference/CONFIG.md)
+- [ ] [CONFIG.md](../docs/todo-md/reference/CONFIG.md)
 
 ## 9. Комментарии (Comments)
 *Дополнительная информация, примечания, важные нюансы.*
@@ -117,5 +119,6 @@ php vendor/bin/todo-md dashboard todo/ -o /tmp/dashboard.html
 
 ## История изменений (Change History)
 | Дата | Автор (роль) | Изменение |
-*Формат автора: Роль (агент); см. [ROLES.md](../../docs/todo-md/reference/ROLES.md), [AI_AGENTS.md](../../docs/todo-md/reference/AI_AGENTS.md), [CONFIG.md](../../docs/todo-md/reference/CONFIG.md)*
+*Формат автора: Роль (агент); см. [ROLES.md](../docs/todo-md/reference/ROLES.md), [AI_AGENTS.md](../docs/todo-md/reference/AI_AGENTS.md), [CONFIG.md](../docs/todo-md/reference/CONFIG.md)*
 | 2026-07-29 10:00:00 (1785294000) | Продакт (pi) | Создание задачи |
+| 2026-11-03 20:15:58 (1793711758) | Бэкендер (pi) | Реализация поля model: Parser::MODELS, Validator::validateModel, экспорт, панель дашборда, MODELS.md, обновление CONFIG.md и гайда, тесты |
