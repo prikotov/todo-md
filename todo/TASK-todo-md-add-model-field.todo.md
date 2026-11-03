@@ -122,4 +122,4 @@ php vendor/bin/todo-md dashboard todo/ -o /tmp/dashboard.html
 *Формат автора: Роль (агент); см. [ROLES.md](../docs/todo-md/reference/ROLES.md), [AI_AGENTS.md](../docs/todo-md/reference/AI_AGENTS.md), [CONFIG.md](../docs/todo-md/reference/CONFIG.md)*
 | 2026-07-29 10:00:00 (1785294000) | Продакт (pi) | Создание задачи |
 | 2026-11-03 20:15:58 (1793711758) | Бэкендер (pi) | Реализация поля model: Parser::MODELS, Validator::validateModel, экспорт, панель дашборда, MODELS.md, обновление CONFIG.md и гайда, тесты |
-| 2026-11-03 20:25:34 (1793713534) | Бэкендер (pi) | Исправить model: gpt-4o → glm-5.3-flash (по PI_MODEL); добавить Zhipu GLM в канонический список; правило «источник истины — env харнесса» в гайд |
+| 2026-11-04 04:42:27 (1793742147) | Бэкендер (pi) | Исправить model: gpt-4o → glm-5.3-flash (по PI_MODEL); добавить Zhipu GLM в канонический список; правило «источник истины — env харнесса» в гайд |
