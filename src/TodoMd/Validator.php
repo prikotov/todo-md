@@ -118,7 +118,6 @@ final class Validator
         self::validateOptionalDate('completed', $frontMatter['completed'] ?? '', $errors);
         self::validateOptionalDate('cancelled', $frontMatter['cancelled'] ?? '', $errors);
         self::validateActor('author', $frontMatter['author'] ?? '', $config, $errors, $warnings);
-        self::validateModel($frontMatter['model'] ?? '', $config, $errors, $warnings);
         self::validateAssignee(
             $frontMatter['assignee'] ?? '',
             $frontMatter['status'] ?? '',
@@ -506,33 +505,6 @@ final class Validator
     // ── Author / assignee ────────────────────────────────────────────────────
 
     /**
-     * Validate the optional `model` field against the canonical LLM model list.
-     * config['models'] overrides Parser::MODELS; an empty value is allowed.
-     *
-     * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
-     * @param list<string> $errors
-     * @param list<string> $warnings
-     */
-    private static function validateModel(string $value, array $config, array &$errors, array &$warnings): void
-    {
-        $value = trim($value);
-        if ($value === '') {
-            return;
-        }
-
-        $strict = (bool) ($config['strict'] ?? false);
-        if (!preg_match('/^[a-z0-9][a-z0-9.:_-]*$/', $value)) {
-            self::actorIssue($errors, $warnings, $strict, "`model` must be a lowercase model id like `gpt-4o` — got `$value`");
-            return;
-        }
-
-        $models = !empty($config['models']) ? $config['models'] : Parser::MODELS;
-        if (!in_array($value, $models, true)) {
-            self::actorIssue($errors, $warnings, $strict, "`model` `$value` is not a known model: " . implode(', ', $models));
-        }
-    }
-
-    /**
      * Allow an empty assignee before work starts or when cancelled, and require
      * one for statuses that represent actual or completed work.
      *
@@ -567,7 +539,9 @@ final class Validator
 
     /**
      * Validate an actor against the canonical `<роль> (<агент>)` format and,
-     * when lists are available, the known roles and agents.
+     * when lists are available, the known roles, agents and models.
+     *
+     * Format: `<роль> (<агент>[@<модель>])` — the model part is optional.
      *
      * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
      * @param list<string> $errors
@@ -583,17 +557,25 @@ final class Validator
             return;
         }
 
-        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)\)\s*$/u', $value, $m)) {
-            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>)` with a lowercase agent id, e.g. `Бэкендер (codex-cli)` — got `$value`");
+        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_-]*))?\)\s*$/u', $value, $m)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>[@<модель>])` with a lowercase agent id and optional model, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@gpt-4o)` — got `$value`");
             return;
         }
 
         $role  = trim($m[1]);
         $agent = $m[2];
+        $model = $m[3] ?? '';
 
         $agents = !empty($config['agents']) ? $config['agents'] : Parser::AI_AGENTS;
         if (!in_array($agent, $agents, true)) {
             self::actorIssue($errors, $warnings, $strict, "`$field` agent `$agent` is not a known agent: " . implode(', ', $agents));
+        }
+
+        if ($model !== '') {
+            $models = !empty($config['models']) ? $config['models'] : Parser::MODELS;
+            if (!in_array($model, $models, true)) {
+                self::actorIssue($errors, $warnings, $strict, "`$field` model `$model` is not a known model: " . implode(', ', $models));
+            }
         }
 
         if (!empty($config['roles']) && !in_array($role, $config['roles'], true)) {

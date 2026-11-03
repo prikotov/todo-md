@@ -275,54 +275,60 @@ test('validate: --config validates roles and agents', function (): void {
     expectContains('`author` role `Бэкендер` is not in the project roles list', $out, 'config role check');
 });
 
-test('validate: model accepts canonical value and empty', function (): void {
+test('validate: actor without model still passes', function (): void {
     $root = Fixture::board([
-        'todo/TASK-model-ok.todo.md'    => Fixture::taskFile('TASK-model-ok', 'Model ok', ['model' => 'gpt-4o']),
-        'todo/TASK-model-empty.todo.md' => Fixture::taskFile('TASK-model-empty', 'Model empty', ['model' => '']),
+        'todo/TASK-actor-nomodel.todo.md' => Fixture::taskFile('TASK-actor-nomodel', 'No model', ['assignee' => 'Бэкендер (pi)']),
     ]);
     [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
-    expectEquals(0, $code, "canonical model and empty model should pass\n$out");
+    expectEquals(0, $code, "actor without model should pass\n$out");
 });
 
-test('validate: unknown model is a warning by default', function (): void {
-    $content = Fixture::taskFile('TASK-model-unknown', 'Model unknown', ['model' => 'my-custom-model']);
-    $root    = Fixture::board(['todo/TASK-model-unknown.todo.md' => $content]);
+test('validate: actor with canonical model passes', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-actor-model.todo.md' => Fixture::taskFile('TASK-actor-model', 'Actor model', ['assignee' => 'Бэкендер (pi@glm-5.3-flash)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "actor with canonical model should pass\n$out");
+});
+
+test('validate: unknown model in actor is a warning by default', function (): void {
+    $content = Fixture::taskFile('TASK-actor-unknown-model', 'Unknown model', ['assignee' => 'Бэкендер (pi@my-custom-model)']);
+    $root    = Fixture::board(['todo/TASK-actor-unknown-model.todo.md' => $content]);
 
     [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
     expectEquals(0, $code, 'unknown model should be a warning by default');
-    expectContains('`model` `my-custom-model` is not a known model', $out, 'unknown model warning');
+    expectContains('`assignee` model `my-custom-model` is not a known model', $out, 'unknown model warning');
 });
 
-test('validate: unknown model fails in strict mode', function (): void {
-    $content = Fixture::taskFile('TASK-model-strict', 'Model strict', ['model' => 'gpt-999']);
-    $root    = Fixture::board(['todo/TASK-model-strict.todo.md' => $content]);
+test('validate: unknown model in actor fails in strict mode', function (): void {
+    $content = Fixture::taskFile('TASK-actor-strict-model', 'Strict model', ['assignee' => 'Бэкендер (pi@gpt-999)']);
+    $root    = Fixture::board(['todo/TASK-actor-strict-model.todo.md' => $content]);
 
     [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
     expectEquals(1, $code, 'unknown model should fail in strict mode');
-    expectContains('error: `model` `gpt-999` is not a known model', $out, 'unknown model strict error');
+    expectContains('error: `assignee` model `gpt-999` is not a known model', $out, 'unknown model strict error');
 });
 
-test('validate: bad model format fails in strict mode', function (): void {
-    $content = Fixture::taskFile('TASK-model-bad-format', 'Bad format', ['model' => 'GPT-4o']);
-    $root    = Fixture::board(['todo/TASK-model-bad-format.todo.md' => $content]);
-
-    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
-    expectEquals(1, $code, 'uppercase model should fail in strict mode');
-    expectContains('`model` must be a lowercase model id like `gpt-4o`', $out, 'bad model format error');
-});
-
-test('validate: ollama tag with colon is a valid model format', function (): void {
-    $content = Fixture::taskFile('TASK-model-ollama', 'Ollama tag', ['model' => 'huihui-ai:pi-100k']);
-    $root    = Fixture::board(['todo/TASK-model-ollama.todo.md' => $content]);
+test('validate: ollama tag with colon is a valid model in actor', function (): void {
+    $content = Fixture::taskFile('TASK-actor-ollama', 'Ollama tag', ['assignee' => 'Ревьюер (pi@huihui-ai:pi-100k)']);
+    $root    = Fixture::board(['todo/TASK-actor-ollama.todo.md' => $content]);
 
     [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
     expectEquals(0, $code, 'ollama tag should pass format check');
-    expectContains('`model` `huihui-ai:pi-100k` is not a known model', $out, 'unknown warning (canonical list)');
-    expectNotContains('must be a lowercase model id', $out, 'no format error for colon tag');
+    expectContains('`assignee` model `huihui-ai:pi-100k` is not a known model', $out, 'unknown warning (canonical list)');
+});
+
+test('validate: bad model format in actor fails in strict mode', function (): void {
+    $content = Fixture::taskFile('TASK-actor-bad-model', 'Bad model', ['assignee' => 'Бэкендер (pi@GPT-4o)']);
+    $root    = Fixture::board(['todo/TASK-actor-bad-model.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'uppercase model should fail format check');
+    expectContains('`assignee` must use format `<роль> (<агент>[@<модель>])`', $out, 'bad actor format error');
 });
 
 test('validate: --config models overrides canonical list', function (): void {
-    $content = Fixture::taskFile('TASK-model-config', 'Model config', ['model' => 'levsha-mega']);
+    $content = Fixture::taskFile('TASK-model-config', 'Model config', ['assignee' => 'Бэкендер (pi@levsha-mega)']);
     $root    = Fixture::board(['todo/TASK-model-config.todo.md' => $content]);
     $configFile = $root . '/.todo-md.php';
     file_put_contents($configFile, '<?php declare(strict_types=1); return ["models" => ["levsha-mega"]];');

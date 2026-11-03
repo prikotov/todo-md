@@ -610,7 +610,6 @@ function exportExtractRecord(string $file, string $cwd): ?array
         'epic'       => Parser::valueOrNull($frontMatter['epic'] ?? null),
         'depends_on' => $dependsOnList,
         'assignee'   => Parser::valueOrNull($frontMatter['assignee'] ?? null),
-        'model'      => Parser::valueOrNull($frontMatter['model'] ?? null),
         'author'     => Parser::valueOrNull($frontMatter['author'] ?? null),
         'consultants' => $frontMatter['consultants'] ?? [],
         'reviewer'    => Parser::valueOrNull($frontMatter['reviewer'] ?? null),
@@ -1347,22 +1346,27 @@ let typeChartInst = null;
   build();
 })();
 
-// ── Who does the work (assignee / role / agent) for done tasks ──
-const _knownAgents = new Set(), _knownRoles = new Set();
-for (const t of TASKS) {
-  if (!t.assignee) continue;
-  const m = String(t.assignee).match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-  if (m) { _knownRoles.add(m[1].trim()); _knownAgents.add(m[2].trim()); }
+// ── Who does the work (assignee / role / agent / model) for done tasks ──
+// Actor format: <роль> (<агент>[@<модель>]) — model part is optional.
+function actorParts(v) {
+  if (!v) return null;
+  const m = String(v).match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (!m) return null;
+  const at = m[2].indexOf("@");
+  return at === -1
+    ? { role: m[1].trim(), agent: m[2].trim(), model: null }
+    : { role: m[1].trim(), agent: m[2].slice(0, at).trim(), model: m[2].slice(at + 1).trim() || null };
 }
-const roleOf = v => { if (!v) return null; const s = String(v); const m = s.match(/^(.+?)\s*\(([^)]+)\)\s*$/); if (m) return m[1].trim() || null; const k = s.trim(); return _knownAgents.has(k) ? null : k; };
-const agentOf = v => { if (!v) return null; const s = String(v); const m = s.match(/^(.+?)\s*\(([^)]+)\)\s*$/); if (m) return m[2].trim(); const k = s.trim(); return _knownRoles.has(k) ? null : k; };
+const roleOf = v => { const p = actorParts(v); return p ? p.role : null; };
+const agentOf = v => { const p = actorParts(v); return p ? p.agent : null; };
+const modelOf = v => { const p = actorParts(v); return p ? p.model : null; };
 const whoDimEl = document.getElementById("whoDim");
 let whoChartInst = null;
 (function () {
   if (!whoDimEl) return;
   const sel = document.getElementById("whoChart");
   if (!sel) return;
-  [["role","По роли"],["agent","По агенту"],["assignee","По исполнителю"]].forEach(([v,l]) => { const o=document.createElement("option"); o.value=v; o.textContent=l; whoDimEl.appendChild(o); });
+  [["role","По роли"],["agent","По агенту"],["model","По модели"],["assignee","По исполнителю"]].forEach(([v,l]) => { const o=document.createElement("option"); o.value=v; o.textContent=l; whoDimEl.appendChild(o); });
   whoDimEl.value = "role";
   const TOP = 12;
   function build() {
@@ -1373,6 +1377,7 @@ let whoChartInst = null;
       let key;
       if (dim === "role") key = roleOf(t.assignee) || "(без роли)";
       else if (dim === "agent") key = agentOf(t.assignee) || "(без агента)";
+      else if (dim === "model") key = modelOf(t.assignee) || "(без модели)";
       else key = t.assignee || "(без исполнителя)";
       m[key] = (m[key]||0)+1;
     }
@@ -1392,7 +1397,7 @@ let whoChartInst = null;
 })();
 
 // ── Executor models (done tasks, top-12 + "остальные") ──
-const MODEL_PROVIDER_COLOR = { openai:"#10a37f", anthropic:"#d97757", google:"#4285f4", meta:"#0668e1", mistral:"#fa520f", zhipu:"#3b6ce8", other:"#64748b" };
+const MODEL_PROVIDER_COLOR = { openai:"#10a37f", anthropic:"#d97757", google:"#4285f4", meta:"#0668e1", mistral:"#fa520f", zhipu:"#3b6ce8", kimi:"#16b5a6", mimo:"#f59e0b", other:"#64748b" };
 function providerOf(model) {
   const id = String(model);
   if (/^(gpt-|o[134](-|$))/.test(id)) return "openai";
@@ -1401,6 +1406,8 @@ function providerOf(model) {
   if (id.startsWith("llama-")) return "meta";
   if (id.startsWith("mistral-")) return "mistral";
   if (id.startsWith("glm-")) return "zhipu";
+  if (/^(kimi-|k\d)/.test(id)) return "kimi";
+  if (id.startsWith("mimo-")) return "mimo";
   return "other";
 }
 let modelChartInst = null;
@@ -1411,7 +1418,7 @@ let modelChartInst = null;
   const m = {};
   for (const t of TASKS) {
     if (t.kind === "EPIC" || t.status !== "done") continue;
-    const key = t.model ? String(t.model) : "(без модели)";
+    const key = modelOf(t.assignee) || "(без модели)";
     m[key] = (m[key]||0)+1;
   }
   const entries = Object.entries(m).sort((a,b)=>b[1]-a[1] || String(a[0]).localeCompare(String(b[0]),"ru"));
@@ -1754,9 +1761,9 @@ return [
     // используется пакетный список из reference/AI_AGENTS.md.
     // 'agents' => ['codex-cli', 'codex', 'pi', 'kilocode'],
 
-    // Канонические LLM-модели для поля model задач (см. reference/MODELS.md).
+    // Канонические LLM-модели для моделей в составе участников (см. reference/MODELS.md).
     // Пусто/отсутствует — используется пакетный список из Parser::MODELS.
-    // 'models' => ['gpt-4o', 'claude-sonnet-4', 'gemini-2.5-pro'],
+    // 'models' => ['gpt-4o', 'claude-sonnet-4', 'glm-5.3-flash'],
 
     // Считать нарушения формата и справочников участников ошибками (аналог --strict).
     'strict' => false,
