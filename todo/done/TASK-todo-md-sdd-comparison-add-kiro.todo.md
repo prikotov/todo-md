@@ -4,7 +4,7 @@ type: chore
 created: 2026-08-05
 due:
 started: 2026-11-03 12:32:26 (1793709146)
-completed:
+completed: 2026-11-03 12:42:33 (1793709753)
 cancelled:
 value: V2
 complexity: C1
@@ -16,8 +16,8 @@ epic:
 author: Владелец проекта (pi)
 assignee: Архитектор (pi)
 branch: task/sdd-comparison-add-kiro
-pr:
-status: in_progress
+pr: https://github.com/prikotov/todo-md/pull/38
+status: done
 ---
 
 # TASK-todo-md-sdd-comparison-add-kiro: Добавить Kiro (Amazon) в SDD-comparison research
