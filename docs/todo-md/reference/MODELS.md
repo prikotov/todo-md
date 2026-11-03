@@ -40,6 +40,11 @@ package: prikotov/todo-md
 - `mistral-large`
 - `mistral-small`
 
+## Zhipu (GLM)
+
+- `glm-4.6`
+- `glm-5.3-flash`
+
 ## Others
 
 - `deepseek-r1`

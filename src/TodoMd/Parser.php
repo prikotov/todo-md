@@ -36,6 +36,8 @@ final class Parser
         'llama-4',
         // Mistral
         'mistral-large', 'mistral-small',
+        // Zhipu (GLM)
+        'glm-4.6', 'glm-5.3-flash',
         // Others
         'deepseek-r1', 'qwen-3', 'kimi-k2',
     ];

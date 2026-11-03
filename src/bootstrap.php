@@ -1392,7 +1392,7 @@ let whoChartInst = null;
 })();
 
 // ── LLM models (done tasks, top-12 + "остальные") ──
-const MODEL_PROVIDER_COLOR = { openai:"#10a37f", anthropic:"#d97757", google:"#4285f4", meta:"#0668e1", mistral:"#fa520f", other:"#64748b" };
+const MODEL_PROVIDER_COLOR = { openai:"#10a37f", anthropic:"#d97757", google:"#4285f4", meta:"#0668e1", mistral:"#fa520f", zhipu:"#3b6ce8", other:"#64748b" };
 function providerOf(model) {
   const id = String(model);
   if (/^(gpt-|o[134](-|$))/.test(id)) return "openai";
@@ -1400,6 +1400,7 @@ function providerOf(model) {
   if (id.startsWith("gemini-")) return "google";
   if (id.startsWith("llama-")) return "meta";
   if (id.startsWith("mistral-")) return "mistral";
+  if (id.startsWith("glm-")) return "zhipu";
   return "other";
 }
 let modelChartInst = null;
