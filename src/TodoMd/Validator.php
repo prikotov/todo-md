@@ -560,33 +560,41 @@ final class Validator
             return;
         }
 
-        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_-]*)(?:~([a-z]+))?)?\)\s*$/u', $value, $m)) {
+        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_~-]*(?:~[a-z]+)*))?\)\s*$/u', $value, $m)) {
             self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])` with a lowercase agent id and optional model/thinking, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@gpt-4o~high)` — got `$value`");
             return;
         }
 
         $role     = trim($m[1]);
         $agent    = $m[2];
-        $model    = $m[3] ?? '';
-        $thinking = $m[4] ?? '';
+        $spec     = $m[3] ?? '';
+        $models   = !empty($config['models']) ? $config['models'] : Parser::MODELS;
+        $levels   = !empty($config['thinking_levels']) ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
+
+        // Split "model[~thinking]" by meaning, not by syntax: a trailing ~suffix is a
+        // thinking level only when it names a known level; otherwise the whole token
+        // is a model id (tildes are allowed inside model ids). If the prefix is a
+        // known model, an unknown suffix is reported as a mistyped thinking level.
+        $model    = $spec;
+        $thinking = '';
+        if ($spec !== '' && preg_match('#~([a-z]+)$#D', $spec, $tm)) {
+            $prefix = substr($spec, 0, -strlen($tm[0]));
+            if (in_array($tm[1], $levels, true)) {
+                $model    = $prefix;
+                $thinking = $tm[1];
+            } elseif (in_array($prefix, $models, true)) {
+                self::actorIssue($errors, $warnings, $strict, "`$field` thinking level `{$tm[1]}` is not a known level: " . implode(', ', $levels));
+                $model = $prefix;
+            }
+        }
 
         $agents = !empty($config['agents']) ? $config['agents'] : Parser::AI_AGENTS;
         if (!in_array($agent, $agents, true)) {
             self::actorIssue($errors, $warnings, $strict, "`$field` agent `$agent` is not a known agent: " . implode(', ', $agents));
         }
 
-        if ($model !== '') {
-            $models = !empty($config['models']) ? $config['models'] : Parser::MODELS;
-            if (!in_array($model, $models, true)) {
-                self::actorIssue($errors, $warnings, $strict, "`$field` model `$model` is not a known model: " . implode(', ', $models));
-            }
-        }
-
-        if ($thinking !== '') {
-            $levels = !empty($config['thinking_levels']) ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
-            if (!in_array($thinking, $levels, true)) {
-                self::actorIssue($errors, $warnings, $strict, "`$field` thinking level `$thinking` is not a known level: " . implode(', ', $levels));
-            }
+        if ($model !== '' && !in_array($model, $models, true)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` model `$model` is not a known model: " . implode(', ', $models));
         }
 
         if (!empty($config['roles']) && !in_array($role, $config['roles'], true)) {

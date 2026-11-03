@@ -1348,6 +1348,9 @@ let typeChartInst = null;
 
 // ── Who does the work (assignee / role / agent / model) for done tasks ──
 // Actor format: <роль> (<агент>[@<модель>[~<thinking>]]) — model/thinking parts are optional.
+// A trailing ~suffix counts as thinking only if it is a known level; otherwise the
+// whole token after @ is a model id (tildes are allowed inside model ids).
+const THINKING_LEVELS = new Set(["off", "low", "medium", "high", "max"]);
 function actorParts(v) {
   if (!v) return null;
   const m = String(v).match(/^(.+?)\s*\(([^)]+)\)\s*$/);
@@ -1355,10 +1358,12 @@ function actorParts(v) {
   const at = m[2].indexOf("@");
   if (at === -1) return { role: m[1].trim(), agent: m[2].trim(), model: null, thinking: null };
   const raw = m[2].slice(at + 1).trim();
-  const tilde = raw.indexOf("~");
-  return tilde === -1
-    ? { role: m[1].trim(), agent: m[2].slice(0, at).trim(), model: raw || null, thinking: null }
-    : { role: m[1].trim(), agent: m[2].slice(0, at).trim(), model: raw.slice(0, tilde) || null, thinking: raw.slice(tilde + 1) || null };
+  const role = m[1].trim(), agent = m[2].slice(0, at).trim();
+  const tm = raw.match(/~([a-z]+)$/);
+  if (tm && THINKING_LEVELS.has(tm[1])) {
+    return { role, agent, model: raw.slice(0, -tm[0].length) || null, thinking: tm[1] };
+  }
+  return { role, agent, model: raw || null, thinking: null };
 }
 const roleOf = v => { const p = actorParts(v); return p ? p.role : null; };
 const agentOf = v => { const p = actorParts(v); return p ? p.agent : null; };

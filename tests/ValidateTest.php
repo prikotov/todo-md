@@ -372,6 +372,26 @@ test('validate: ollama tag with thinking level passes', function (): void {
     expectNotContains('thinking level', $out, 'medium is a canonical level');
 });
 
+test('validate: tilde inside model id is not mistaken for thinking level', function (): void {
+    $content = Fixture::taskFile('TASK-actor-tilde-model', 'Tilde model', ['assignee' => 'Бэкендер (pi@local~model)']);
+    $root    = Fixture::board(['todo/TASK-actor-tilde-model.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, 'tilde inside model id should pass format check');
+    expectContains('`assignee` model `local~model` is not a known model', $out, 'whole token treated as model id');
+    expectNotContains('thinking level', $out, 'no thinking complaint');
+});
+
+test('validate: unknown suffix after known model is reported as bad thinking level', function (): void {
+    $content = Fixture::taskFile('TASK-actor-typos-level', 'Typo level', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~hight)']);
+    $root    = Fixture::board(['todo/TASK-actor-typos-level.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, 'mistyped thinking level should be a warning by default');
+    expectContains('`assignee` thinking level `hight` is not a known level', $out, 'typo level warning');
+    expectNotContains('is not a known model', $out, 'known model prefix is not reported as unknown model');
+});
+
 test('validate: --config models overrides canonical list', function (): void {
     $content = Fixture::taskFile('TASK-model-config', 'Model config', ['assignee' => 'Бэкендер (pi@levsha-mega)']);
     $root    = Fixture::board(['todo/TASK-model-config.todo.md' => $content]);
