@@ -3,7 +3,7 @@
 type: chore
 created: 2026-08-05
 due:
-started:
+started: 2026-11-03 12:32:26 (1793709146)
 completed:
 cancelled:
 value: V2
@@ -15,9 +15,9 @@ depends_on: TASK-todo-md-sdd-comparison-research
 epic:
 author: Владелец проекта (pi)
 assignee: Архитектор (pi)
-branch:
+branch: task/sdd-comparison-add-kiro
 pr:
-status: todo
+status: in_progress
 ---
 
 # TASK-todo-md-sdd-comparison-add-kiro: Добавить Kiro (Amazon) в SDD-comparison research
@@ -59,18 +59,18 @@ status: todo
 ## 3. Требования, MoSCoW (Requirements)
 
 ### 🔴 Обязательно (Must Have)
-- [ ] Добавить Kiro в секцию "Обзор инструментов" в `docs/research/SDD-comparison.md`.
-- [ ] Заполнить карточку Kiro по той же структуре, что остальные инструменты: концепция / устройство / роль AI / область применения / плюсы-минусы.
-- [ ] Добавить Kiro в сравнительную таблицу todo-md vs инструменты.
-- [ ] Обновить блоки "сходство / отличие" если нужно.
-- [ ] Документ проходит `make check` после изменений.
+- [x] Добавить Kiro в секцию "Обзор инструментов" в `docs/research/SDD-comparison.md` (секция 2.4).
+- [x] Заполнить карточку Kiro по той же структуре, что остальные инструменты: концепция / устройство / роль AI / область применения / плюсы-минусы.
+- [x] Добавить Kiro в сравнительную таблицу todo-md vs инструменты (§1.1, §5).
+- [x] Обновить блоки "сходство / отличие" если нужно (§0, §4, вывод §5, §10).
+- [x] Документ проходит `make check` после изменений (85/85 тестов).
 
 ### 🟡 Желательно (Should Have)
-- [ ] Добавить ссылку на репозиторий/документацию Kiro в секции Sources.
-- [ ] Обновить Change History в TASK-todo-md-sdd-comparison-research (опционально).
+- [x] Добавить ссылку на репозиторий/документацию Kiro в секции Sources (§11).
+- [x] Обновить Change History в TASK-todo-md-sdd-comparison-research (строка о добавлении Kiro).
 
 ### 🟢 Опционально (Could Have)
-- [ ] Добавить Kiro в ментальную карту/диаграмму "ландшафт SDD-инструментов" (если есть).
+- [ ] Добавить Kiro в ментальную карту/диаграмму "ландшафт SDD-инструментов" — ментальной карты в документе нет, добавлять нечего (N/A).
 
 ### ⚫ Не будем делать (Won't Have)
 - [ ] Переписывать весь документ.
@@ -78,20 +78,22 @@ status: todo
 
 ## 4. План реализации (Implementation Plan)
 
-1. [ ] Найти репозиторий/документацию Kiro (Amazon) — использовать YouTube-видео из sources задачи-предшественника.
-2. [ ] Прочитать существующий `docs/research/SDD-comparison.md` — понять структуру карточек инструментов.
-3. [ ] Добавить секцию про Kiro в "Обзор инструментов" по существующей структуре.
-4. [ ] Добавить Kiro в сравнительную таблицу.
-5. [ ] Проверить валидность: `make check`.
-6. [ ] (Опционально) Обновить Change History в TASK-todo-md-sdd-comparison-research.
+1. [x] Найти репозиторий/документацию Kiro (Amazon) — вместо видео использована официальная документация kiro.dev (9 страниц, полнее видео).
+2. [x] Прочитать существующий `docs/research/SDD-comparison.md` — понять структуру карточек инструментов.
+3. [x] Добавить секцию про Kiro в "Обзор инструментов" по существующей структуре (§2.4).
+4. [x] Добавить Kiro в сравнительные таблицы (§1.1, §5).
+5. [x] Проверить валидность: `make check` (85/85).
+6. [x] (Опционально) Обновить Change History в TASK-todo-md-sdd-comparison-research.
+
+Материал извлечён через скилл knowledge-extraction (TasK): проект `sdd-kiro-research`, 9 source + свод результатов; ключевые цитаты верифицированы чанками.
 
 ## 5. Критерии приёмки (Definition of Done)
 
-- [ ] Kiro добавлен в документ `docs/research/SDD-comparison.md`.
-- [ ] Карточка Kiro соответствует структуре остальных инструментов.
-- [ ] Kiro присутствует в сравнительной таблице.
-- [ ] `make check` проходит.
-- [ ] (Опционально) Change History в TASK-todo-md-sdd-comparison-research обновлён.
+- [x] Kiro добавлен в документ `docs/research/SDD-comparison.md`.
+- [x] Карточка Kiro соответствует структуре остальных инструментов (§2.4: определение-цитата, позиционирование, таблица фаз, ключевые тезисы).
+- [x] Kiro присутствует в сравнительных таблицах (§1.1, §5).
+- [x] `make check` проходит (85/85 тестов).
+- [x] (Опционально) Change History в TASK-todo-md-sdd-comparison-research обновлён.
 
 ## 6. Самопроверка (Verification)
 
@@ -109,9 +111,8 @@ php bin/todo-md validate todo/TASK-todo-md-sdd-comparison-add-kiro.todo.md
 
 ## 8. Источники (Sources)
 
-- Видео из задачи-предшественника: https://www.youtube.com/watch?v=JU13uM2b7WM
-- Видео из задачи-предшественника: https://www.youtube.com/watch?v=EZwcBSX_Rbs
-- Репозиторий/документация Kiro (Amazon) — найти из видео.
+- Официальная документация Kiro (Amazon): `kiro.dev` — `/docs/specs/`, `/docs/specs/feature-specs/`, `/docs/specs/analyze-requirements/`, `/docs/specs/plan/`, `/docs/specs/correctness/`, `/docs/specs/best-practices/`, `/docs/steering/`, `/docs/hooks/`, лендинг
+- (Извлечение через скилл knowledge-extraction: проект `sdd-kiro-research`, 9 source ready + свод результатов; вместо YouTube-видео предшественника — первоисточник-документация)
 
 ## 9. Комментарии (Comments)
 
@@ -126,3 +127,4 @@ php bin/todo-md validate todo/TASK-todo-md-sdd-comparison-add-kiro.todo.md
 | :--- | :--- | :--- |
 | 2026-08-05 | Владелец проекта (pi) | Создание задачи |
 | 2026-08-20 | Владелец проекта (pi) | Восстановлен `depends_on` на TASK-todo-md-sdd-comparison-research: валидатор резолвит зависимости по всему дереву задач (v0.0.11) |
+| 2026-11-03 19:38:07 (1793709487) | Архитектор (pi) | Ресёрч Kiro через knowledge-extraction (kiro.dev, 9 страниц): карточка §2.4, таблицы §1.1/§5, выводы; MoSCoW и план закрыты |
