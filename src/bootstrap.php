@@ -1347,23 +1347,26 @@ let typeChartInst = null;
 })();
 
 // ── Who does the work (assignee / role / agent / model) for done tasks ──
-// Actor format: <роль> (<агент>[@<модель>[~<thinking>]]) — model/thinking parts are optional.
-// A trailing ~suffix counts as thinking only if it is a known level; otherwise the
-// whole token after @ is a model id (tildes are allowed inside model ids).
+// Actor format: <роль> (<агент>@<модель>[~<thinking>][|<модель>[~<thinking>]]...) — model part optional;
+// the first model is primary, the rest are reserves. A trailing ~suffix counts as thinking only if
+// it is a known level; otherwise the whole segment is a model id (tildes are allowed inside ids).
 const THINKING_LEVELS = new Set(["off", "low", "medium", "high", "max"]);
 function actorParts(v) {
   if (!v) return null;
   const m = String(v).match(/^(.+?)\s*\(([^)]+)\)\s*$/);
   if (!m) return null;
-  const at = m[2].indexOf("@");
-  if (at === -1) return { role: m[1].trim(), agent: m[2].trim(), model: null, thinking: null };
-  const raw = m[2].slice(at + 1).trim();
-  const role = m[1].trim(), agent = m[2].slice(0, at).trim();
-  const tm = raw.match(/~([a-z]+)$/);
+  const role = m[1].trim();
+  const inner = m[2];
+  const at = inner.indexOf("@");
+  if (at === -1) return { role, agent: inner.trim(), model: null, thinking: null, reserves: [] };
+  const agent = inner.slice(0, at).trim();
+  const primarySeg = inner.slice(at + 1).split("|")[0].trim();
+  const reserves = inner.slice(at + 1).split("|").slice(1).map(s => s.trim()).filter(Boolean);
+  const tm = primarySeg.match(/~([a-z]+)$/);
   if (tm && THINKING_LEVELS.has(tm[1])) {
-    return { role, agent, model: raw.slice(0, -tm[0].length) || null, thinking: tm[1] };
+    return { role, agent, model: primarySeg.slice(0, -tm[0].length) || null, thinking: tm[1], reserves };
   }
-  return { role, agent, model: raw || null, thinking: null };
+  return { role, agent, model: primarySeg || null, thinking: null, reserves };
 }
 const roleOf = v => { const p = actorParts(v); return p ? p.role : null; };
 const agentOf = v => { const p = actorParts(v); return p ? p.agent : null; };

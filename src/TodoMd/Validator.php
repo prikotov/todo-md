@@ -544,7 +544,8 @@ final class Validator
      * Validate an actor against the canonical `<роль> (<агент>)` format and,
      * when lists are available, the known roles, agents and models.
      *
-     * Format: `<роль> (<агент>[@<модель>[~<thinking>]])` — model and thinking parts are optional.
+     * Format: `<роль> (<агент>@<модель>[~<thinking>][|<модель>[~<thinking>]]...)` — the model
+     * part is optional; the first model is primary, the rest are reserves.
      *
      * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
      * @param list<string> $errors
@@ -560,41 +561,50 @@ final class Validator
             return;
         }
 
-        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_~-]*(?:~[a-z]+)*))?\)\s*$/u', $value, $m)) {
-            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])` with a lowercase agent id and optional model/thinking, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@gpt-4o~high)` — got `$value`");
+        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_~|-]*))?\)\s*$/u', $value, $m)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>@<модель>[~<уровень>][|<модель>[~<уровень>]]...)` with a lowercase agent id, optional primary/reserve models and thinking levels, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@gpt-4o~high|claude-sonnet-4)` — got `$value`");
             return;
         }
 
-        $role     = trim($m[1]);
-        $agent    = $m[2];
-        $spec     = $m[3] ?? '';
-        $models   = !empty($config['models']) ? $config['models'] : Parser::MODELS;
-        $levels   = !empty($config['thinking_levels']) ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
-
-        // Split "model[~thinking]" by meaning, not by syntax: a trailing ~suffix is a
-        // thinking level only when it names a known level; otherwise the whole token
-        // is a model id (tildes are allowed inside model ids). If the prefix is a
-        // known model, an unknown suffix is reported as a mistyped thinking level.
-        $model    = $spec;
-        $thinking = '';
-        if ($spec !== '' && preg_match('#~([a-z]+)$#D', $spec, $tm)) {
-            $prefix = substr($spec, 0, -strlen($tm[0]));
-            if (in_array($tm[1], $levels, true)) {
-                $model    = $prefix;
-                $thinking = $tm[1];
-            } elseif (in_array($prefix, $models, true)) {
-                self::actorIssue($errors, $warnings, $strict, "`$field` thinking level `{$tm[1]}` is not a known level: " . implode(', ', $levels));
-                $model = $prefix;
-            }
-        }
+        $role   = trim($m[1]);
+        $agent  = $m[2];
+        $spec   = $m[3] ?? '';
+        $models = !empty($config['models']) ? $config['models'] : Parser::MODELS;
+        $levels = !empty($config['thinking_levels']) ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
 
         $agents = !empty($config['agents']) ? $config['agents'] : Parser::AI_AGENTS;
         if (!in_array($agent, $agents, true)) {
             self::actorIssue($errors, $warnings, $strict, "`$field` agent `$agent` is not a known agent: " . implode(', ', $agents));
         }
 
-        if ($model !== '' && !in_array($model, $models, true)) {
-            self::actorIssue($errors, $warnings, $strict, "`$field` model `$model` is not a known model: " . implode(', ', $models));
+        // Spec is one or more "model[~thinking]" segments separated by | (primary first,
+        // the rest are reserves). A trailing ~suffix is a thinking level only when it
+        // names a known level; otherwise the whole segment is a model id (tildes are
+        // allowed inside model ids). A known model with an unknown suffix is reported
+        // as a mistyped thinking level.
+        $segments = $spec === '' ? [] : explode('|', $spec);
+        foreach ($segments as $segment) {
+            if ($segment === '') {
+                self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>@<модель>[~<уровень>][|<модель>[~<уровень>]]...)` — empty model segment in `$spec`");
+                continue;
+            }
+
+            $segModel    = $segment;
+            $segThinking = '';
+            if (preg_match('#~([a-z]+)$#D', $segment, $tm)) {
+                $prefix = substr($segment, 0, -strlen($tm[0]));
+                if (in_array($tm[1], $levels, true)) {
+                    $segModel    = $prefix;
+                    $segThinking = $tm[1];
+                } elseif (in_array($prefix, $models, true)) {
+                    self::actorIssue($errors, $warnings, $strict, "`$field` thinking level `{$tm[1]}` is not a known level: " . implode(', ', $levels));
+                    $segModel = $prefix;
+                }
+            }
+
+            if ($segModel !== '' && !in_array($segModel, $models, true)) {
+                self::actorIssue($errors, $warnings, $strict, "`$field` model `$segModel` is not a known model: " . implode(', ', $models));
+            }
         }
 
         if (!empty($config['roles']) && !in_array($role, $config['roles'], true)) {

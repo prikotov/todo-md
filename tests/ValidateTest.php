@@ -324,7 +324,7 @@ test('validate: bad model format in actor fails in strict mode', function (): vo
 
     [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
     expectEquals(1, $code, 'uppercase model should fail format check');
-    expectContains('`assignee` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])`', $out, 'bad actor format error');
+    expectContains('`assignee` must use format `<роль> (<агент>@<модель>[~<уровень>][|<модель>[~<уровень>]]...)`', $out, 'bad actor format error');
 });
 
 test('validate: actor with model and thinking level passes', function (): void {
@@ -359,7 +359,7 @@ test('validate: thinking without model fails format', function (): void {
 
     [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
     expectEquals(1, $code, 'thinking without model should fail format check');
-    expectContains('must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])`', $out, 'thinking without model error');
+    expectContains('must use format `<роль> (<агент>@<модель>[~<уровень>][|<модель>[~<уровень>]]...)`', $out, 'thinking without model error');
 });
 
 test('validate: ollama tag with thinking level passes', function (): void {
@@ -390,6 +390,32 @@ test('validate: unknown suffix after known model is reported as bad thinking lev
     expectEquals(0, $code, 'mistyped thinking level should be a warning by default');
     expectContains('`assignee` thinking level `hight` is not a known level', $out, 'typo level warning');
     expectNotContains('is not a known model', $out, 'known model prefix is not reported as unknown model');
+});
+
+test('validate: actor with reserve models passes', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-actor-reserve.todo.md' => Fixture::taskFile('TASK-actor-reserve', 'Reserve models', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~max|k3.1-pro~high)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "actor with primary+reserve models should pass\n$out");
+});
+
+test('validate: unknown reserve model is reported', function (): void {
+    $content = Fixture::taskFile('TASK-actor-reserve-unknown', 'Unknown reserve', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~max|no-such-model)']);
+    $root    = Fixture::board(['todo/TASK-actor-reserve-unknown.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, 'unknown reserve model should be a warning by default');
+    expectContains('`assignee` model `no-such-model` is not a known model', $out, 'unknown reserve model warning');
+});
+
+test('validate: empty model segment fails in strict mode', function (): void {
+    $content = Fixture::taskFile('TASK-actor-empty-segment', 'Empty segment', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~max|)']);
+    $root    = Fixture::board(['todo/TASK-actor-empty-segment.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'empty reserve segment should fail in strict mode');
+    expectContains('empty model segment', $out, 'empty segment error');
 });
 
 test('validate: --config models overrides canonical list', function (): void {
