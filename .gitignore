@@ -7,6 +7,7 @@
 
 # .agents/ — локальные skills/tools агента (напр. knowledge-extraction); не входят в публикуемый пакет
 /.task_token.json
+/.knowledge-extraction.json
 /.task_project.json
 /.task_config.json
 /.agents/
