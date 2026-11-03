@@ -24,7 +24,7 @@ final class Parser
     public const ACTIVE_STATUSES = ['todo', 'in_progress', 'paused', 'blocked', 'review'];
     /** Canonical AI agents for `author`/`assignee`; see reference/AI_AGENTS.md. */
     public const AI_AGENTS = ['gemini-cli', 'codex-cli', 'codex', 'opencode', 'roocode', 'kilocode', 'pi'];
-    /** Canonical LLM models for `model`; see reference/MODELS.md. Overridable via config['models']. */
+    /** Canonical LLM models for participant `@model`; see reference/MODELS.md. Overridable via config['models']. */
     public const MODELS = [
         // OpenAI
         'gpt-5', 'gpt-4.1', 'gpt-4o', 'o3', 'o4-mini',
@@ -45,6 +45,8 @@ final class Parser
         // Others
         'deepseek-r1', 'deepseek-flash', 'qwen-3',
     ];
+    /** Canonical thinking levels for participant `model~level`; see reference/MODELS.md. Overridable via config['thinking_levels']. */
+    public const THINKING_LEVELS = ['off', 'low', 'medium', 'high', 'max'];
     public const PARTICIPANT_LISTS = ['consultants', 'informed'];
     public const PARTICIPANT_FIELDS = ['consultants', 'reviewer', 'approver', 'informed'];
 

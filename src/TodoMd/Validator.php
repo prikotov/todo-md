@@ -20,7 +20,7 @@ final class Validator
 
     /**
      * @param array<string, array{kind: string, status: string, file?: string}> $idIndex
-     * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
      * @return array{errors: list<string>, warnings: list<string>}
      */
     public static function validateFile(string $file, array $idIndex, array $config = []): array
@@ -462,7 +462,7 @@ final class Validator
     /**
      * Load the project config from <root>/.todo-md.php (missing file → defaults).
      *
-     * @return array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool}
+     * @return array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool}
      */
     public static function loadConfig(string $root): array
     {
@@ -472,11 +472,11 @@ final class Validator
     /**
      * Load and normalise a config file. Missing or malformed file → safe defaults.
      *
-     * @return array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool}
+     * @return array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool}
      */
     public static function loadConfigFile(string $file): array
     {
-        $config = ['roles' => [], 'agents' => [], 'models' => [], 'strict' => false];
+        $config = ['roles' => [], 'agents' => [], 'models' => [], 'thinking_levels' => [], 'strict' => false];
         if (!is_file($file)) {
             return $config;
         }
@@ -495,6 +495,9 @@ final class Validator
         if (isset($loaded['models']) && is_array($loaded['models'])) {
             $config['models'] = array_values(array_filter($loaded['models'], 'is_string'));
         }
+        if (isset($loaded['thinking_levels']) && is_array($loaded['thinking_levels'])) {
+            $config['thinking_levels'] = array_values(array_filter($loaded['thinking_levels'], 'is_string'));
+        }
         if (isset($loaded['strict']) && is_bool($loaded['strict'])) {
             $config['strict'] = $loaded['strict'];
         }
@@ -508,7 +511,7 @@ final class Validator
      * Allow an empty assignee before work starts or when cancelled, and require
      * one for statuses that represent actual or completed work.
      *
-     * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
      * @param list<string> $errors
      * @param list<string> $warnings
      */
@@ -541,9 +544,9 @@ final class Validator
      * Validate an actor against the canonical `<роль> (<агент>)` format and,
      * when lists are available, the known roles, agents and models.
      *
-     * Format: `<роль> (<агент>[@<модель>])` — the model part is optional.
+     * Format: `<роль> (<агент>[@<модель>[~<thinking>]])` — model and thinking parts are optional.
      *
-     * @param array{roles: list<string>, agents: list<string>, models: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
      * @param list<string> $errors
      * @param list<string> $warnings
      */
@@ -557,14 +560,15 @@ final class Validator
             return;
         }
 
-        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_-]*))?\)\s*$/u', $value, $m)) {
-            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>[@<модель>])` with a lowercase agent id and optional model, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@gpt-4o)` — got `$value`");
+        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_-]*)(?:~([a-z]+))?)?\)\s*$/u', $value, $m)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])` with a lowercase agent id and optional model/thinking, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@gpt-4o~high)` — got `$value`");
             return;
         }
 
-        $role  = trim($m[1]);
-        $agent = $m[2];
-        $model = $m[3] ?? '';
+        $role     = trim($m[1]);
+        $agent    = $m[2];
+        $model    = $m[3] ?? '';
+        $thinking = $m[4] ?? '';
 
         $agents = !empty($config['agents']) ? $config['agents'] : Parser::AI_AGENTS;
         if (!in_array($agent, $agents, true)) {
@@ -575,6 +579,13 @@ final class Validator
             $models = !empty($config['models']) ? $config['models'] : Parser::MODELS;
             if (!in_array($model, $models, true)) {
                 self::actorIssue($errors, $warnings, $strict, "`$field` model `$model` is not a known model: " . implode(', ', $models));
+            }
+        }
+
+        if ($thinking !== '') {
+            $levels = !empty($config['thinking_levels']) ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
+            if (!in_array($thinking, $levels, true)) {
+                self::actorIssue($errors, $warnings, $strict, "`$field` thinking level `$thinking` is not a known level: " . implode(', ', $levels));
             }
         }
 

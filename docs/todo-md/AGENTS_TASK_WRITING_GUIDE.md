@@ -47,8 +47,8 @@ cost_plan:  # integer, токены; пусто, если нет оценки
 cost_fact:  # integer, токены; пусто, если факт ещё неизвестен
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет эпика
-author: <роль> (<агент>[@<модель>])  # формат: Роль (агент); модель опциональна; см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md)
-assignee:  # исполнитель задачи, формат: Роль (агент[@модель]); см. [STATUSES.md](./reference/STATUSES.md), [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md); может быть пустым для backlog, todo и cancelled
+author: <роль> (<агент>[@<модель>[~<уровень>]])  # формат: Роль (агент); модель и уровень мышления опциональны; см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md)
+assignee:  # исполнитель задачи, формат: Роль (агент[@модель[~уровень]]); см. [STATUSES.md](./reference/STATUSES.md), [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md); может быть пустым для backlog, todo и cancelled
 consultants: []  # консультанты подготовки постановки
 reviewer:  # проверяющий постановку, формат: Роль (агент)
 approver:  # принимающий постановку, формат: Роль (агент)
@@ -71,7 +71,7 @@ status: <статус>
 - **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](./reference/PRIORITIES.md)
 - **Стоимость в токенах — `cost_plan`, `cost_fact`**: плановый и фактический расход токенов. Поля опциональные. См. [COST.md](./reference/COST.md)
 - **Даты жизненного цикла — `due`, `started`, `completed`**: плановый срок и фактические даты начала/завершения. Поля опциональные. См. [DATES.md](./reference/DATES.md)
-- **LLM-модели участников**: модель в составе `<роль> (<агент>[@<модель>])`. Опционально. См. [MODELS.md](./reference/MODELS.md)
+- **LLM-модели участников**: модель и уровень мышления в составе `<роль> (<агент>[@<модель>[~<уровень>]])`. Опционально. См. [MODELS.md](./reference/MODELS.md)
 ### Роли и агенты
 
 Поля `author` и `assignee` используют формат `<роль> (<агент>)`:
@@ -86,16 +86,16 @@ status: <статус>
 - **Агент** — исполнитель задачи (AI-агент или человек). Примеры: `codex`, `pi`, `gemini-cli`, `opencode`.
   - Базовый список агентов см. в [AI_AGENTS.md](./reference/AI_AGENTS.md).
   - Проект может расширить или переопределить список через `.todo-md.php` — см. [CONFIG.md](./reference/CONFIG.md).
-- **Модель** — опциональная часть участника через `@`: LLM-модель, на которой участник выполнял работу.
-  - Модель закреплена за ролью в конфиге проекта (профиль роли); в задаче фиксируется срез «кто на чём работал».
-  - Источник истины — окружение харнесса агента (например, `PI_MODEL` у pi) или профиль роли, не самоописание модели.
-  - Канонический список и правила — [MODELS.md](./reference/MODELS.md); проект может расширить список через `.todo-md.php` (`models`) — см. [CONFIG.md](./reference/CONFIG.md).
+- **Модель и уровень мышления** — опциональная часть участника через `@` и `~`: LLM-модель и уровень reasoning/thinking, на которых участник выполнял работу.
+  - Модель и уровень закреплены за ролью в конфиге проекта (профиль роли); в задаче фиксируется срез «кто, на чём и на каком уровне мышления работал».
+  - Источник истины — окружение харнесса агента (например, `PI_MODEL`, `PI_REASONING_LEVEL` у pi) или профиль роли, не самоописание модели.
+  - Канонический список и правила — [MODELS.md](./reference/MODELS.md); проект может расширить списки через `.todo-md.php` (`models`, `thinking_levels`) — см. [CONFIG.md](./reference/CONFIG.md).
 
 Примеры значений:
 - `Бэкендер (codex-cli)`
 - `Продакт (pi)`
-- `Бэкендер (pi@glm-5.3-flash)`
-- `Ревьюер (pi@huihui-ai:pi-100k)`
+- `Бэкендер (pi@glm-5.3-flash~max)`
+- `Ревьюер (pi@huihui-ai:pi-100k~medium)`
 
 ---
 
@@ -228,8 +228,8 @@ ID должен быть уникальным.
    - `due`, `started`, `completed`, `cancelled`: опциональные метки жизненного цикла; формат — дата `YYYY-MM-DD` либо `YYYY-MM-DD HH:MM:SS (unix_ts)`, проставляет CLI; см. [DATES.md](./reference/DATES.md)
    - `branch`: имя выбранной ветки реализации; ветку только для постановки не указывать
    - `pr`: (пусто при создании)
-   - `author`: заполнить при создании; рекомендуется указать модель: `Роль (агент[@модель])`, см. [MODELS.md](./reference/MODELS.md)
-   - `assignee`: оставить пустым до начала работы; для `in_progress`, `paused`, `blocked`, `review` и `done` указать исполнителя с моделью из профиля роли
+   - `author`: заполнить при создании; рекомендуется указать модель и уровень: `Роль (агент[@модель[~уровень]])`, см. [MODELS.md](./reference/MODELS.md)
+   - `assignee`: оставить пустым до начала работы; для `in_progress`, `paused`, `blocked`, `review` и `done` указать исполнителя с моделью и уровнем из профиля роли
    - Остальные поля: `created`, `status` и т.д.
 
 1. **Шаг 1 — написать простое описание (Human Brief)**

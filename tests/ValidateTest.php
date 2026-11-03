@@ -324,7 +324,52 @@ test('validate: bad model format in actor fails in strict mode', function (): vo
 
     [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
     expectEquals(1, $code, 'uppercase model should fail format check');
-    expectContains('`assignee` must use format `<роль> (<агент>[@<модель>])`', $out, 'bad actor format error');
+    expectContains('`assignee` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])`', $out, 'bad actor format error');
+});
+
+test('validate: actor with model and thinking level passes', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-actor-thinking.todo.md' => Fixture::taskFile('TASK-actor-thinking', 'Actor thinking', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~max)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "actor with model+thinking should pass\n$out");
+});
+
+test('validate: unknown thinking level is a warning by default', function (): void {
+    $content = Fixture::taskFile('TASK-actor-thinking-unknown', 'Unknown thinking', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~ultra)']);
+    $root    = Fixture::board(['todo/TASK-actor-thinking-unknown.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, 'unknown thinking level should be a warning by default');
+    expectContains('`assignee` thinking level `ultra` is not a known level', $out, 'unknown thinking warning');
+});
+
+test('validate: unknown thinking level fails in strict mode', function (): void {
+    $content = Fixture::taskFile('TASK-actor-thinking-strict', 'Strict thinking', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~ultra)']);
+    $root    = Fixture::board(['todo/TASK-actor-thinking-strict.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'unknown thinking level should fail in strict mode');
+    expectContains('error: `assignee` thinking level `ultra` is not a known level', $out, 'unknown thinking strict error');
+});
+
+test('validate: thinking without model fails format', function (): void {
+    $content = Fixture::taskFile('TASK-actor-thinking-only', 'Thinking only', ['assignee' => 'Бэкендер (pi~high)']);
+    $root    = Fixture::board(['todo/TASK-actor-thinking-only.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'thinking without model should fail format check');
+    expectContains('must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])`', $out, 'thinking without model error');
+});
+
+test('validate: ollama tag with thinking level passes', function (): void {
+    $content = Fixture::taskFile('TASK-actor-ollama-thinking', 'Ollama thinking', ['assignee' => 'Ревьюер (pi@huihui-ai:pi-100k~medium)']);
+    $root    = Fixture::board(['todo/TASK-actor-ollama-thinking.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, 'ollama tag with thinking should pass format check');
+    expectContains('`assignee` model `huihui-ai:pi-100k` is not a known model', $out, 'unknown model warning (canonical list)');
+    expectNotContains('thinking level', $out, 'medium is a canonical level');
 });
 
 test('validate: --config models overrides canonical list', function (): void {

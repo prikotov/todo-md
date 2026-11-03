@@ -1347,19 +1347,23 @@ let typeChartInst = null;
 })();
 
 // ── Who does the work (assignee / role / agent / model) for done tasks ──
-// Actor format: <роль> (<агент>[@<модель>]) — model part is optional.
+// Actor format: <роль> (<агент>[@<модель>[~<thinking>]]) — model/thinking parts are optional.
 function actorParts(v) {
   if (!v) return null;
   const m = String(v).match(/^(.+?)\s*\(([^)]+)\)\s*$/);
   if (!m) return null;
   const at = m[2].indexOf("@");
-  return at === -1
-    ? { role: m[1].trim(), agent: m[2].trim(), model: null }
-    : { role: m[1].trim(), agent: m[2].slice(0, at).trim(), model: m[2].slice(at + 1).trim() || null };
+  if (at === -1) return { role: m[1].trim(), agent: m[2].trim(), model: null, thinking: null };
+  const raw = m[2].slice(at + 1).trim();
+  const tilde = raw.indexOf("~");
+  return tilde === -1
+    ? { role: m[1].trim(), agent: m[2].slice(0, at).trim(), model: raw || null, thinking: null }
+    : { role: m[1].trim(), agent: m[2].slice(0, at).trim(), model: raw.slice(0, tilde) || null, thinking: raw.slice(tilde + 1) || null };
 }
 const roleOf = v => { const p = actorParts(v); return p ? p.role : null; };
 const agentOf = v => { const p = actorParts(v); return p ? p.agent : null; };
-const modelOf = v => { const p = actorParts(v); return p ? p.model : null; };
+const modelOf = v => { const p = actorParts(v); return p ? (p.model ? (p.thinking ? p.model + "~" + p.thinking : p.model) : null) : null; };
+const thinkingOf = v => { const p = actorParts(v); return p ? p.thinking : null; };
 const whoDimEl = document.getElementById("whoDim");
 let whoChartInst = null;
 (function () {
@@ -1399,7 +1403,7 @@ let whoChartInst = null;
 // ── Executor models (done tasks, top-12 + "остальные") ──
 const MODEL_PROVIDER_COLOR = { openai:"#10a37f", anthropic:"#d97757", google:"#4285f4", meta:"#0668e1", mistral:"#fa520f", zhipu:"#3b6ce8", kimi:"#16b5a6", mimo:"#f59e0b", other:"#64748b" };
 function providerOf(model) {
-  const id = String(model);
+  const id = String(model).split("~")[0];
   if (/^(gpt-|o[134](-|$))/.test(id)) return "openai";
   if (id.startsWith("claude-")) return "anthropic";
   if (id.startsWith("gemini-")) return "google";
