@@ -20,7 +20,7 @@ final class Validator
 
     /**
      * @param array<string, array{kind: string, status: string, file?: string}> $idIndex
-     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
      * @return array{errors: list<string>, warnings: list<string>}
      */
     public static function validateFile(string $file, array $idIndex, array $config = []): array
@@ -462,7 +462,7 @@ final class Validator
     /**
      * Load the project config from <root>/.todo-md.php (missing file → defaults).
      *
-     * @return array{roles: list<string>, agents: list<string>, strict: bool}
+     * @return array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool}
      */
     public static function loadConfig(string $root): array
     {
@@ -472,11 +472,11 @@ final class Validator
     /**
      * Load and normalise a config file. Missing or malformed file → safe defaults.
      *
-     * @return array{roles: list<string>, agents: list<string>, strict: bool}
+     * @return array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool}
      */
     public static function loadConfigFile(string $file): array
     {
-        $config = ['roles' => [], 'agents' => [], 'strict' => false];
+        $config = ['roles' => [], 'agents' => [], 'models' => [], 'thinking_levels' => [], 'strict' => false];
         if (!is_file($file)) {
             return $config;
         }
@@ -492,6 +492,12 @@ final class Validator
         if (isset($loaded['agents']) && is_array($loaded['agents'])) {
             $config['agents'] = array_values(array_filter($loaded['agents'], 'is_string'));
         }
+        if (isset($loaded['models']) && is_array($loaded['models'])) {
+            $config['models'] = array_values(array_filter($loaded['models'], 'is_string'));
+        }
+        if (isset($loaded['thinking_levels']) && is_array($loaded['thinking_levels'])) {
+            $config['thinking_levels'] = array_values(array_filter($loaded['thinking_levels'], 'is_string'));
+        }
         if (isset($loaded['strict']) && is_bool($loaded['strict'])) {
             $config['strict'] = $loaded['strict'];
         }
@@ -505,7 +511,7 @@ final class Validator
      * Allow an empty assignee before work starts or when cancelled, and require
      * one for statuses that represent actual or completed work.
      *
-     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
      * @param list<string> $errors
      * @param list<string> $warnings
      */
@@ -536,9 +542,11 @@ final class Validator
 
     /**
      * Validate an actor against the canonical `<роль> (<агент>)` format and,
-     * when lists are available, the known roles and agents.
+     * when lists are available, the known roles, agents and models.
      *
-     * @param array{roles: list<string>, agents: list<string>, strict: bool} $config
+     * Format: `<роль> (<агент>[@<модель>[~<thinking>]])` — model and thinking parts are optional.
+     *
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
      * @param list<string> $errors
      * @param list<string> $warnings
      */
@@ -552,17 +560,44 @@ final class Validator
             return;
         }
 
-        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)\)\s*$/u', $value, $m)) {
-            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>)` with a lowercase agent id, e.g. `Бэкендер (codex-cli)` — got `$value`");
+        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_~-]*(?:~[a-z]+)*))?\)\s*$/u', $value, $m)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])` with a lowercase agent id and optional model/thinking, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@glm-5.3-flash~high)` — got `$value`");
             return;
         }
 
-        $role  = trim($m[1]);
-        $agent = $m[2];
+        $role     = trim($m[1]);
+        $agent    = $m[2];
+        $spec     = $m[3] ?? '';
+        // Model ids change too often for a package-level canonical list: models are
+        // validated against config['models'] only, when the project defines one.
+        // Without a project list only the format is checked.
+        $models   = $config['models'] ?? [];
+        $levels   = !empty($config['thinking_levels']) ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
+
+        // Split "model[~thinking]" by meaning, not by syntax: a trailing ~suffix is a
+        // thinking level only when it names a known level; otherwise the whole token
+        // is a model id (tildes are allowed inside model ids). If the prefix is a
+        // known model, an unknown suffix is reported as a mistyped thinking level.
+        $model    = $spec;
+        $thinking = '';
+        if ($spec !== '' && preg_match('#~([a-z]+)$#D', $spec, $tm)) {
+            $prefix = substr($spec, 0, -strlen($tm[0]));
+            if (in_array($tm[1], $levels, true)) {
+                $model    = $prefix;
+                $thinking = $tm[1];
+            } elseif (in_array($prefix, $models, true)) {
+                self::actorIssue($errors, $warnings, $strict, "`$field` thinking level `{$tm[1]}` is not a known level: " . implode(', ', $levels));
+                $model = $prefix;
+            }
+        }
 
         $agents = !empty($config['agents']) ? $config['agents'] : Parser::AI_AGENTS;
         if (!in_array($agent, $agents, true)) {
             self::actorIssue($errors, $warnings, $strict, "`$field` agent `$agent` is not a known agent: " . implode(', ', $agents));
+        }
+
+        if ($model !== '' && $models !== [] && !in_array($model, $models, true)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` model `$model` is not in the project models list: " . implode(', ', $models));
         }
 
         if (!empty($config['roles']) && !in_array($role, $config['roles'], true)) {

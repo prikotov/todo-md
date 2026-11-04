@@ -11,11 +11,11 @@ complexity: <C0|C1|C2|C3|C4|C5>  # см. [COMPLEXITY.md](../reference/COMPLEXITY
 priority: <P0|P1|P2|P3>  # см. [PRIORITIES.md](../reference/PRIORITIES.md)
 cost_plan:  # суммарная плановая стоимость задач эпика в токенах, integer; см. [COST.md](../reference/COST.md)
 cost_fact:  # суммарная фактическая стоимость задач эпика в токенах, integer; заполняется по завершении
-author: <роль> (<агент>)  # формат: Роль (агент); см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [CONFIG.md](../reference/CONFIG.md)
-assignee:  # исполнитель эпика, формат: Роль (агент); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md); может быть пустым для backlog, todo и cancelled
+author: <роль> (<агент>[@<модель>[~<уровень>]])  # формат: Роль (агент); модель и уровень мышления опциональны; см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [MODELS.md](../reference/MODELS.md), [CONFIG.md](../reference/CONFIG.md)
+assignee:  # исполнитель эпика, формат: Роль (агент[@модель[~уровень]]); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [MODELS.md](../reference/MODELS.md); может быть пустым для backlog, todo и cancelled
 consultants: []  # консультанты подготовки постановки; см. [PARTICIPANTS.md](../reference/PARTICIPANTS.md)
-reviewer:  # проверяющий постановку, формат: Роль (агент)
-approver:  # принимающий постановку, формат: Роль (агент)
+reviewer:  # проверяющий постановку, формат: Роль (агент[@модель[~уровень]])
+approver:  # принимающий постановку, формат: Роль (агент[@модель[~уровень]])
 informed: []  # оповещаемые участники подготовки постановки
 status: <todo|backlog|in_progress|paused|blocked|review|done|cancelled>  # см. [STATUSES.md](../reference/STATUSES.md)
 pr: <ссылка на PR>  # пусто при создании
@@ -156,8 +156,8 @@ flowchart LR
 
 ## История изменений (Change History)
 <!-- AI:
-Формат автора — «Роль (агент)»; см. ROLES.md, AI_AGENTS.md, CONFIG.md. Добавляйте по строке на каждое изменение.
+Формат автора — «Роль (агент[@модель[~уровень]])»; см. ROLES.md, AI_AGENTS.md, MODELS.md, CONFIG.md. Добавляйте по строке на каждое изменение.
 -->
-| Дата | Автор (роль) | Изменение |
+| Дата | Автор | Изменение |
 | :--- | :--- | :--- |
-| YYYY-MM-DD HH:MM:SS (unix_ts) | <роль> (<агент>) | Создание эпика |
+| YYYY-MM-DD HH:MM:SS (unix_ts) | <роль> (<агент>[@<модель>[~<уровень>]]) | Создание эпика |

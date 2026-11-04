@@ -930,6 +930,10 @@ function dashboardRenderHtml(array $tasks, string $title, ?string $base = null):
         <div class="panel-head"><h2>Кто делает <span class="muted">(done)</span></h2><select id="whoDim" class="board-sort"></select></div>
         <div class="chart-box tall"><canvas id="whoChart"></canvas></div>
       </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Модели исполнителей <span class="muted">(done)</span></h2></div>
+        <div class="chart-box tall"><canvas id="modelChart"></canvas></div>
+      </div>
     </div>
   </section>
   <section class="tab-pane hidden" id="pane-gantt">
@@ -1342,22 +1346,36 @@ let typeChartInst = null;
   build();
 })();
 
-// ── Who does the work (assignee / role / agent) for done tasks ──
-const _knownAgents = new Set(), _knownRoles = new Set();
-for (const t of TASKS) {
-  if (!t.assignee) continue;
-  const m = String(t.assignee).match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-  if (m) { _knownRoles.add(m[1].trim()); _knownAgents.add(m[2].trim()); }
+// ── Who does the work (assignee / role / agent / model) for done tasks ──
+// Actor format: <роль> (<агент>[@<модель>[~<thinking>]]) — model/thinking parts are optional.
+// A trailing ~suffix counts as thinking only if it is a known level; otherwise the
+// whole token after @ is a model id (tildes are allowed inside model ids).
+const THINKING_LEVELS = new Set(["off", "minimal", "low", "medium", "high", "max"]);
+function actorParts(v) {
+  if (!v) return null;
+  const m = String(v).match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (!m) return null;
+  const at = m[2].indexOf("@");
+  if (at === -1) return { role: m[1].trim(), agent: m[2].trim(), model: null, thinking: null };
+  const raw = m[2].slice(at + 1).trim();
+  const role = m[1].trim(), agent = m[2].slice(0, at).trim();
+  const tm = raw.match(/~([a-z]+)$/);
+  if (tm && THINKING_LEVELS.has(tm[1])) {
+    return { role, agent, model: raw.slice(0, -tm[0].length) || null, thinking: tm[1] };
+  }
+  return { role, agent, model: raw || null, thinking: null };
 }
-const roleOf = v => { if (!v) return null; const s = String(v); const m = s.match(/^(.+?)\s*\(([^)]+)\)\s*$/); if (m) return m[1].trim() || null; const k = s.trim(); return _knownAgents.has(k) ? null : k; };
-const agentOf = v => { if (!v) return null; const s = String(v); const m = s.match(/^(.+?)\s*\(([^)]+)\)\s*$/); if (m) return m[2].trim(); const k = s.trim(); return _knownRoles.has(k) ? null : k; };
+const roleOf = v => { const p = actorParts(v); return p ? p.role : null; };
+const agentOf = v => { const p = actorParts(v); return p ? p.agent : null; };
+const modelOf = v => { const p = actorParts(v); return p ? (p.model ? (p.thinking ? p.model + "~" + p.thinking : p.model) : null) : null; };
+const thinkingOf = v => { const p = actorParts(v); return p ? p.thinking : null; };
 const whoDimEl = document.getElementById("whoDim");
 let whoChartInst = null;
 (function () {
   if (!whoDimEl) return;
   const sel = document.getElementById("whoChart");
   if (!sel) return;
-  [["role","По роли"],["agent","По агенту"],["assignee","По исполнителю"]].forEach(([v,l]) => { const o=document.createElement("option"); o.value=v; o.textContent=l; whoDimEl.appendChild(o); });
+  [["role","По роли"],["agent","По агенту"],["model","По модели"],["assignee","По исполнителю"]].forEach(([v,l]) => { const o=document.createElement("option"); o.value=v; o.textContent=l; whoDimEl.appendChild(o); });
   whoDimEl.value = "role";
   const TOP = 12;
   function build() {
@@ -1368,6 +1386,7 @@ let whoChartInst = null;
       let key;
       if (dim === "role") key = roleOf(t.assignee) || "(без роли)";
       else if (dim === "agent") key = agentOf(t.assignee) || "(без агента)";
+      else if (dim === "model") key = modelOf(t.assignee) || "(без модели)";
       else key = t.assignee || "(без исполнителя)";
       m[key] = (m[key]||0)+1;
     }
@@ -1384,6 +1403,39 @@ let whoChartInst = null;
   }
   whoDimEl.addEventListener("change", build);
   build();
+})();
+
+// ── Executor models (done tasks, top-12 + "остальные") ──
+const MODEL_PROVIDER_COLOR = { openai:"#10a37f", anthropic:"#d97757", google:"#4285f4", meta:"#0668e1", mistral:"#fa520f", zhipu:"#3b6ce8", kimi:"#16b5a6", mimo:"#f59e0b", other:"#64748b" };
+function providerOf(model) {
+  const id = String(model).split("~")[0];
+  if (/^(gpt-|o[134](-|$))/.test(id)) return "openai";
+  if (id.startsWith("claude-")) return "anthropic";
+  if (id.startsWith("gemini-")) return "google";
+  if (id.startsWith("llama-")) return "meta";
+  if (id.startsWith("mistral-")) return "mistral";
+  if (id.startsWith("glm-")) return "zhipu";
+  if (/^(kimi-|k\d)/.test(id)) return "kimi";
+  if (id.startsWith("mimo-")) return "mimo";
+  return "other";
+}
+let modelChartInst = null;
+(function () {
+  const sel = document.getElementById("modelChart");
+  if (!sel) return;
+  const TOP = 12;
+  const m = {};
+  for (const t of TASKS) {
+    if (t.kind === "EPIC" || t.status !== "done") continue;
+    const key = modelOf(t.assignee) || "(без модели)";
+    m[key] = (m[key]||0)+1;
+  }
+  const entries = Object.entries(m).sort((a,b)=>b[1]-a[1] || String(a[0]).localeCompare(String(b[0]),"ru"));
+  let labels, data;
+  if (entries.length <= TOP) { labels = entries.map(e=>e[0]); data = entries.map(e=>e[1]); }
+  else { const top = entries.slice(0, TOP); labels = top.map(e=>e[0]).concat(["остальные"]); data = top.map(e=>e[1]).concat([entries.slice(TOP).reduce((s,e)=>s+e[1],0)]); }
+  const colors = labels.map((l,i) => l === "остальные" || l === "(без модели)" ? "#cbd5e1" : MODEL_PROVIDER_COLOR[providerOf(l)] || PALETTE[i % PALETTE.length]);
+  modelChartInst = new Chart(sel, { type:"bar", data:{ labels, datasets:[{ label:"Done", data, backgroundColor: colors, borderRadius:3 }] }, options:{ indexAxis:"y", maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true, ticks:{precision:0}} } } });
 })();
 
 function esc(s){ return String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
@@ -1717,6 +1769,15 @@ return [
     // Канонические агенты (lowercase-идентификатор в скобках). Пусто/отсутствует —
     // используется пакетный список из reference/AI_AGENTS.md.
     // 'agents' => ['codex-cli', 'codex', 'pi', 'kilocode'],
+
+    // LLM-модели проекта для моделей в составе участников (см. reference/MODELS.md).
+    // Модели выходят часто — пакетного списка нет. Задайте свой список, чтобы включить
+    // проверку моделей по нему (без списка проверяется только формат):
+    // 'models' => ['glm-5.3-flash', 'k3.1-pro', 'huihui-ai:pi-100k'],
+
+    // Словарь уровней мышления для моделей в составе участников (см. reference/MODELS.md).
+    // По умолчанию — объединение словарей pi и codex-cli (off/minimal/low/medium/high/max).
+    // 'thinking_levels' => ['off', 'minimal', 'low', 'medium', 'high', 'max'],
 
     // Считать нарушения формата и справочников участников ошибками (аналог --strict).
     'strict' => false,

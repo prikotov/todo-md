@@ -274,3 +274,143 @@ test('validate: --config validates roles and agents', function (): void {
     expectContains('`author` agent `codex-cli` is not a known agent', $out, 'config agent check');
     expectContains('`author` role `Бэкендер` is not in the project roles list', $out, 'config role check');
 });
+
+test('validate: actor without model still passes', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-actor-nomodel.todo.md' => Fixture::taskFile('TASK-actor-nomodel', 'No model', ['assignee' => 'Бэкендер (pi)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "actor without model should pass\n$out");
+});
+
+test('validate: actor with canonical model passes', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-actor-model.todo.md' => Fixture::taskFile('TASK-actor-model', 'Actor model', ['assignee' => 'Бэкендер (pi@glm-5.3-flash)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "actor with canonical model should pass\n$out");
+});
+
+test('validate: actor with any well-formed model passes without project list', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-actor-model.todo.md'   => Fixture::taskFile('TASK-actor-model', 'Actor model', ['assignee' => 'Бэкендер (pi@glm-5.3-flash)']),
+        'todo/TASK-actor-custom.todo.md'  => Fixture::taskFile('TASK-actor-custom', 'Custom model', ['assignee' => 'Бэкендер (pi@my-custom-model)']),
+        'todo/TASK-actor-ollama.todo.md'  => Fixture::taskFile('TASK-actor-ollama', 'Ollama tag', ['assignee' => 'Ревьюер (pi@huihui-ai:pi-100k)']),
+        'todo/TASK-actor-tilde.todo.md'   => Fixture::taskFile('TASK-actor-tilde', 'Tilde model', ['assignee' => 'Бэкендер (pi@local~model)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "without project models list only format is checked\n$out");
+    expectNotContains('warning:', $out, 'no warnings without project list');
+    expectNotContains('error:', $out, 'no errors without project list');
+});
+
+test('validate: config models list enables model validation (strict fails on unknown)', function (): void {
+    $content = Fixture::taskFile('TASK-actor-strict-model', 'Strict model', ['assignee' => 'Бэкендер (pi@gpt-999)']);
+    $root    = Fixture::board(['todo/TASK-actor-strict-model.todo.md' => $content]);
+    $configFile = $root . '/.todo-md.php';
+    file_put_contents($configFile, '<?php declare(strict_types=1); return ["models" => ["glm-5.3-flash"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict', '--config=' . $configFile]);
+    expectEquals(1, $code, 'model outside project list should fail in strict mode');
+    expectContains('error: `assignee` model `gpt-999` is not in the project models list', $out, 'unknown model strict error');
+});
+
+test('validate: bad model format in actor fails in strict mode', function (): void {
+    $content = Fixture::taskFile('TASK-actor-bad-model', 'Bad model', ['assignee' => 'Бэкендер (pi@GPT-4o)']);
+    $root    = Fixture::board(['todo/TASK-actor-bad-model.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'uppercase model should fail format check');
+    expectContains('`assignee` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])`', $out, 'bad actor format error');
+});
+
+test('validate: actor with model and thinking level passes', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-actor-thinking.todo.md' => Fixture::taskFile('TASK-actor-thinking', 'Actor thinking', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~max)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "actor with model+thinking should pass\n$out");
+});
+
+test('validate: unknown thinking level is a warning when project models list is set', function (): void {
+    $content = Fixture::taskFile('TASK-actor-thinking-unknown', 'Unknown thinking', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~ultra)']);
+    $root    = Fixture::board(['todo/TASK-actor-thinking-unknown.todo.md' => $content]);
+    $configFile = $root . '/.todo-md.php';
+    file_put_contents($configFile, '<?php declare(strict_types=1); return ["models" => ["glm-5.3-flash"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--config=' . $configFile]);
+    expectEquals(0, $code, 'unknown thinking level should be a warning by default');
+    expectContains('`assignee` thinking level `ultra` is not a known level', $out, 'unknown thinking warning');
+});
+
+test('validate: unknown thinking level fails in strict mode', function (): void {
+    $content = Fixture::taskFile('TASK-actor-thinking-strict', 'Strict thinking', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~ultra)']);
+    $root    = Fixture::board(['todo/TASK-actor-thinking-strict.todo.md' => $content]);
+    $configFile = $root . '/.todo-md.php';
+    file_put_contents($configFile, '<?php declare(strict_types=1); return ["models" => ["glm-5.3-flash"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict', '--config=' . $configFile]);
+    expectEquals(1, $code, 'unknown thinking level should fail in strict mode');
+    expectContains('error: `assignee` thinking level `ultra` is not a known level', $out, 'unknown thinking strict error');
+});
+
+test('validate: thinking levels of different harnesses are recognized', function (): void {
+    $root = Fixture::board([
+        // pi-словарь:
+        'todo/TASK-level-pi.todo.md'    => Fixture::taskFile('TASK-level-pi', 'Pi level', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~max)']),
+        // codex-cli-словарь (minimal отсутствует в pi):
+        'todo/TASK-level-codex.todo.md' => Fixture::taskFile('TASK-level-codex', 'Codex level', ['author' => 'Аналитик (codex-cli@gpt-5~minimal)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "harness vocabularies pi and codex-cli should both be recognized\n$out");
+});
+
+test('validate: thinking without model fails format', function (): void {
+    $content = Fixture::taskFile('TASK-actor-thinking-only', 'Thinking only', ['assignee' => 'Бэкендер (pi~high)']);
+    $root    = Fixture::board(['todo/TASK-actor-thinking-only.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(1, $code, 'thinking without model should fail format check');
+    expectContains('must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])`', $out, 'thinking without model error');
+});
+
+test('validate: ollama tag with thinking level passes', function (): void {
+    $content = Fixture::taskFile('TASK-actor-ollama-thinking', 'Ollama thinking', ['assignee' => 'Ревьюер (pi@huihui-ai:pi-100k~medium)']);
+    $root    = Fixture::board(['todo/TASK-actor-ollama-thinking.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, "ollama tag with thinking should pass without complaints\n$out");
+    expectNotContains('thinking level', $out, 'medium is a canonical level');
+});
+
+test('validate: tilde inside model id is not mistaken for thinking level', function (): void {
+    $content = Fixture::taskFile('TASK-actor-tilde-model', 'Tilde model', ['assignee' => 'Бэкендер (pi@local~model)']);
+    $root    = Fixture::board(['todo/TASK-actor-tilde-model.todo.md' => $content]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, "tilde inside model id should pass format check without complaints\n$out");
+    expectNotContains('thinking level', $out, 'no thinking complaint');
+});
+
+test('validate: unknown suffix after listed model is reported as bad thinking level', function (): void {
+    $content = Fixture::taskFile('TASK-actor-typos-level', 'Typo level', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~hight)']);
+    $root    = Fixture::board(['todo/TASK-actor-typos-level.todo.md' => $content]);
+    $configFile = $root . '/.todo-md.php';
+    file_put_contents($configFile, '<?php declare(strict_types=1); return ["models" => ["glm-5.3-flash"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--config=' . $configFile]);
+    expectEquals(0, $code, 'mistyped thinking level should be a warning by default');
+    expectContains('`assignee` thinking level `hight` is not a known level', $out, 'typo level warning');
+    expectNotContains('is not in the project models list', $out, 'listed model prefix is not reported as unknown model');
+});
+
+test('validate: --config models enables list validation', function (): void {
+    $content = Fixture::taskFile('TASK-model-config', 'Model config', ['assignee' => 'Бэкендер (pi@levsha-mega)']);
+    $root    = Fixture::board(['todo/TASK-model-config.todo.md' => $content]);
+    $configFile = $root . '/.todo-md.php';
+    file_put_contents($configFile, '<?php declare(strict_types=1); return ["models" => ["levsha-mega"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict', '--config=' . $configFile]);
+    expectEquals(0, $code, "listed model should pass strict validation\n$out");
+    expectNotContains('is not in the project models list', $out, 'no list complaints for listed model');
+});
