@@ -568,7 +568,10 @@ final class Validator
         $role     = trim($m[1]);
         $agent    = $m[2];
         $spec     = $m[3] ?? '';
-        $models   = !empty($config['models']) ? $config['models'] : Parser::MODELS;
+        // Model ids change too often for a package-level canonical list: models are
+        // validated against config['models'] only, when the project defines one.
+        // Without a project list only the format is checked.
+        $models   = $config['models'] ?? [];
         $levels   = !empty($config['thinking_levels']) ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
 
         // Split "model[~thinking]" by meaning, not by syntax: a trailing ~suffix is a
@@ -593,8 +596,8 @@ final class Validator
             self::actorIssue($errors, $warnings, $strict, "`$field` agent `$agent` is not a known agent: " . implode(', ', $agents));
         }
 
-        if ($model !== '' && !in_array($model, $models, true)) {
-            self::actorIssue($errors, $warnings, $strict, "`$field` model `$model` is not a known model: " . implode(', ', $models));
+        if ($model !== '' && $models !== [] && !in_array($model, $models, true)) {
+            self::actorIssue($errors, $warnings, $strict, "`$field` model `$model` is not in the project models list: " . implode(', ', $models));
         }
 
         if (!empty($config['roles']) && !in_array($role, $config['roles'], true)) {
