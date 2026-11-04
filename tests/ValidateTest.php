@@ -354,6 +354,17 @@ test('validate: unknown thinking level fails in strict mode', function (): void 
     expectContains('error: `assignee` thinking level `ultra` is not a known level', $out, 'unknown thinking strict error');
 });
 
+test('validate: thinking levels of different harnesses are recognized', function (): void {
+    $root = Fixture::board([
+        // pi-словарь:
+        'todo/TASK-level-pi.todo.md'    => Fixture::taskFile('TASK-level-pi', 'Pi level', ['assignee' => 'Бэкендер (pi@glm-5.3-flash~max)']),
+        // codex-cli-словарь (minimal отсутствует в pi):
+        'todo/TASK-level-codex.todo.md' => Fixture::taskFile('TASK-level-codex', 'Codex level', ['author' => 'Аналитик (codex-cli@gpt-5~minimal)']),
+    ]);
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root, '--strict']);
+    expectEquals(0, $code, "harness vocabularies pi and codex-cli should both be recognized\n$out");
+});
+
 test('validate: thinking without model fails format', function (): void {
     $content = Fixture::taskFile('TASK-actor-thinking-only', 'Thinking only', ['assignee' => 'Бэкендер (pi~high)']);
     $root    = Fixture::board(['todo/TASK-actor-thinking-only.todo.md' => $content]);

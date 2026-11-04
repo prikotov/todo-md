@@ -24,8 +24,10 @@ final class Parser
     public const ACTIVE_STATUSES = ['todo', 'in_progress', 'paused', 'blocked', 'review'];
     /** Canonical AI agents for `author`/`assignee`; see reference/AI_AGENTS.md. */
     public const AI_AGENTS = ['gemini-cli', 'codex-cli', 'codex', 'opencode', 'roocode', 'kilocode', 'pi'];
-    /** Canonical thinking levels for participant `model~level`; see reference/MODELS.md. Overridable via config['thinking_levels']. */
-    public const THINKING_LEVELS = ['off', 'low', 'medium', 'high', 'max'];
+    /** Recognition dictionary for the `~level` suffix, union across major harnesses
+     * (pi: off/low/medium/high/max; codex-cli: minimal/low/medium/high; etc.).
+     * Levels are free-form words; projects can replace the dictionary via config['thinking_levels']. */
+    public const THINKING_LEVELS = ['off', 'minimal', 'low', 'medium', 'high', 'max'];
     public const PARTICIPANT_LISTS = ['consultants', 'informed'];
     public const PARTICIPANT_FIELDS = ['consultants', 'reviewer', 'approver', 'informed'];
 

@@ -1350,7 +1350,7 @@ let typeChartInst = null;
 // Actor format: <роль> (<агент>[@<модель>[~<thinking>]]) — model/thinking parts are optional.
 // A trailing ~suffix counts as thinking only if it is a known level; otherwise the
 // whole token after @ is a model id (tildes are allowed inside model ids).
-const THINKING_LEVELS = new Set(["off", "low", "medium", "high", "max"]);
+const THINKING_LEVELS = new Set(["off", "minimal", "low", "medium", "high", "max"]);
 function actorParts(v) {
   if (!v) return null;
   const m = String(v).match(/^(.+?)\s*\(([^)]+)\)\s*$/);
@@ -1774,6 +1774,10 @@ return [
     // Модели выходят часто — пакетного списка нет. Задайте свой список, чтобы включить
     // проверку моделей по нему (без списка проверяется только формат):
     // 'models' => ['glm-5.3-flash', 'k3.1-pro', 'huihui-ai:pi-100k'],
+
+    // Словарь уровней мышления для моделей в составе участников (см. reference/MODELS.md).
+    // По умолчанию — объединение словарей pi и codex-cli (off/minimal/low/medium/high/max).
+    // 'thinking_levels' => ['off', 'minimal', 'low', 'medium', 'high', 'max'],
 
     // Считать нарушения формата и справочников участников ошибками (аналог --strict).
     'strict' => false,

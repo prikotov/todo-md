@@ -95,6 +95,7 @@ status: <статус>
 - `Бэкендер (codex-cli)`
 - `Продакт (pi)`
 - `Бэкендер (pi@glm-5.3-flash~max)`
+- `Аналитик (codex-cli@gpt-5~minimal)`
 - `Ревьюер (pi@huihui-ai:pi-100k~medium)`
 
 ---
