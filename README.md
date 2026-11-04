@@ -71,7 +71,7 @@ composer require --dev prikotov/todo-md
 php vendor/bin/todo-md init
 ```
 
-Создаёт структуру папок (`todo/`, `todo/backlog/`, `todo/done/`, `todo/cancelled/`) и копирует документацию в `docs/todo-md/`. Правила для AI-агентов копируются отдельно из [`todo/AGENTS.md`](todo/AGENTS.md) пакета в `todo/AGENTS.md` потребителя (либо по `--agents-path`). Существующие файлы не перезаписываются.
+Создаёт структуру папок (`todo/`, `todo/backlog/`, `todo/done/`, `todo/cancelled/`) и копирует документацию в `docs/todo-md/`. Правила для AI-агентов копируются отдельно из [`todo/AGENTS.md`](todo/AGENTS.md) пакета в `todo/AGENTS.md` потребителя (либо по `--agents-path`). Опциональный конфиг валидатора `.todo-md.php` создаётся по безопасному шаблону-заготовке. Существующие файлы не перезаписываются; флаг `--no-config` не создаёт и не перезаписывает `.todo-md.php`, а `--force` перезаписывает существующие файлы свежими копиями из пакета — включая `.todo-md.php`, поэтому после него сверьте свой конфиг (`git diff`).
 
 ### Валидация задач
 
