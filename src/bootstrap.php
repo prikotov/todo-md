@@ -1604,11 +1604,18 @@ HTML;
 // ── Command: init ───────────────────────────────────────────────────────────
 
 /**
+ * Scaffolds a todo/ kanban board in the target project.
+ *
+ * Usage:
+ *   todo-md init [target-dir] [--docs-path=<path>] [--agents-path=<path>] [--force] [--no-config]
+ *   --no-config — skip .todo-md.php copying entirely
+ *
  * @param list<string> $args
  */
 function cli_init(array $args): void
 {
     $force      = false;
+    $noConfig   = false;
     $targetArg  = null;
     $docsPath   = null;
     $agentsPath = null;
@@ -1621,6 +1628,8 @@ function cli_init(array $args): void
 
         if ($arg === '--force') {
             $force = true;
+        } elseif ($arg === '--no-config') {
+            $noConfig = true;
         } elseif (str_starts_with($arg, '--docs-path=')) {
             $docsPath = substr($arg, strlen('--docs-path='));
         } elseif (str_starts_with($arg, '--agents-path=')) {
@@ -1784,7 +1793,10 @@ return [
 ];
 PHP;
 
-    if (file_exists($configTarget)) {
+    if ($noConfig) {
+        echo '  Skip     .todo-md.php (--no-config)' . PHP_EOL;
+        $skipped++;
+    } elseif (file_exists($configTarget)) {
         if ($force) {
             file_put_contents($configTarget, $configContent);
             echo "  Updated  .todo-md.php" . PHP_EOL;
@@ -1858,12 +1870,13 @@ function initHelp(): string
 todo-md init — initialise a todo/ kanban board in the current project.
 
 Usage:
-  php vendor/bin/todo-md init [target-dir] [--docs-path=<path>] [--agents-path=<path>] [--force]
+  php vendor/bin/todo-md init [target-dir] [--docs-path=<path>] [--agents-path=<path>] [--force] [--no-config]
 
   target-dir    — project root (default: current working directory).
   --docs-path   — relative path where docs will be copied (default: docs/todo-md).
   --agents-path — relative path where AGENTS.md will be copied (default: todo/AGENTS.md).
   --force       — overwrite existing files with fresh copies from the package.
+  --no-config   — skip .todo-md.php copying entirely.
 
 TXT;
 }
