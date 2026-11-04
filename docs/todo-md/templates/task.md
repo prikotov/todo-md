@@ -16,8 +16,8 @@ epic: <EPIC-ID>  # plain ID эпика; пусто, если нет эпика
 author: <роль> (<агент>[@<модель>[~<уровень>]])  # формат: Роль (агент); модель и уровень мышления опциональны; см. [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [MODELS.md](../reference/MODELS.md), [CONFIG.md](../reference/CONFIG.md)
 assignee:  # исполнитель задачи, формат: Роль (агент[@модель[~уровень]]); см. [STATUSES.md](../reference/STATUSES.md), [ROLES.md](../reference/ROLES.md), [AI_AGENTS.md](../reference/AI_AGENTS.md), [MODELS.md](../reference/MODELS.md); может быть пустым для backlog, todo и cancelled
 consultants: []  # консультанты подготовки постановки; см. [PARTICIPANTS.md](../reference/PARTICIPANTS.md)
-reviewer:  # проверяющий постановку, формат: Роль (агент)
-approver:  # принимающий постановку, формат: Роль (агент)
+reviewer:  # проверяющий постановку, формат: Роль (агент[@модель[~уровень]])
+approver:  # принимающий постановку, формат: Роль (агент[@модель[~уровень]])
 informed: []  # оповещаемые участники подготовки постановки
 branch:  # ветка реализации; пусто до её выбора
 pr: <ссылка на PR>  # пусто при создании
@@ -150,8 +150,8 @@ php vendor/bin/todo-md validate todo/<ID>.todo.md     # точечная про�
 
 ## История изменений (Change History)
 <!-- AI:
-Формат автора — «Роль (агент)»; см. ROLES.md, AI_AGENTS.md, CONFIG.md. Добавляйте по строке на каждое изменение.
+Формат автора — «Роль (агент[@модель[~уровень]])»; см. ROLES.md, AI_AGENTS.md, MODELS.md, CONFIG.md. Добавляйте по строке на каждое изменение.
 -->
 | Дата | Автор | Изменение |
 | :--- | :--- | :--- |
-| YYYY-MM-DD HH:MM:SS (unix_ts) | <роль> (<агент>) | Создание задачи |
+| YYYY-MM-DD HH:MM:SS (unix_ts) | <роль> (<агент>[@<модель>[~<уровень>]]) | Создание задачи |

@@ -50,8 +50,8 @@ epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет 
 author: <роль> (<агент>[@<модель>[~<уровень>]])  # формат: Роль (агент); модель и уровень мышления опциональны; см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md)
 assignee:  # исполнитель задачи, формат: Роль (агент[@модель[~уровень]]); см. [STATUSES.md](./reference/STATUSES.md), [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md); может быть пустым для backlog, todo и cancelled
 consultants: []  # консультанты подготовки постановки
-reviewer:  # проверяющий постановку, формат: Роль (агент)
-approver:  # принимающий постановку, формат: Роль (агент)
+reviewer:  # проверяющий постановку, формат: Роль (агент[@модель[~уровень]])
+approver:  # принимающий постановку, формат: Роль (агент[@модель[~уровень]])
 informed: []  # оповещаемые участники подготовки постановки
 branch:  # ветка реализации; пусто до её выбора
 pr:  # пусто при создании
