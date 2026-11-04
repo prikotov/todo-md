@@ -561,7 +561,7 @@ final class Validator
         }
 
         if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)(?:@([a-z0-9][a-z0-9.:_~-]*(?:~[a-z]+)*))?\)\s*$/u', $value, $m)) {
-            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])` with a lowercase agent id and optional model/thinking, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@gpt-4o~high)` — got `$value`");
+            self::actorIssue($errors, $warnings, $strict, "`$field` must use format `<роль> (<агент>[@<модель>[~<уровень_мышления>]])` with a lowercase agent id and optional model/thinking, e.g. `Бэкендер (codex-cli)` or `Бэкендер (pi@glm-5.3-flash~high)` — got `$value`");
             return;
         }
 
