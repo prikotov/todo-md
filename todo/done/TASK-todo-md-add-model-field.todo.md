@@ -4,13 +4,13 @@ type: feat
 created: 2026-07-29
 due:
 started: 2026-11-03 12:47:27 (1793710047)
-completed:
+completed: 2026-11-04 04:29:18 (1793766558)
 cancelled:
 value: V2
 complexity: C2
 priority: P1
 cost_plan:
-status: review
+status: done
 depends_on:
 epic:
 author: Продакт (pi)
@@ -109,7 +109,7 @@ php vendor/bin/todo-md dashboard todo/ -o /tmp/dashboard.html
 
 ## 8. Источники (Sources)
 *Ссылки на документацию, RFC, связанные задачи.*
-- [ ] [CONFIG.md](../docs/todo-md/reference/CONFIG.md)
+- [ ] [CONFIG.md](../../docs/todo-md/reference/CONFIG.md)
 
 ## 9. Комментарии (Comments)
 *Дополнительная информация, примечания, важные нюансы.*
@@ -120,7 +120,7 @@ php vendor/bin/todo-md dashboard todo/ -o /tmp/dashboard.html
 
 ## История изменений (Change History)
 | Дата | Автор | Изменение |
-*Формат автора: Роль (агент[@модель[~уровень]]); см. [ROLES.md](../docs/todo-md/reference/ROLES.md), [AI_AGENTS.md](../docs/todo-md/reference/AI_AGENTS.md), [MODELS.md](../docs/todo-md/reference/MODELS.md), [CONFIG.md](../docs/todo-md/reference/CONFIG.md)*
+*Формат автора: Роль (агент[@модель[~уровень]]); см. [ROLES.md](../../docs/todo-md/reference/ROLES.md), [AI_AGENTS.md](../../docs/todo-md/reference/AI_AGENTS.md), [MODELS.md](../../docs/todo-md/reference/MODELS.md), [CONFIG.md](../../docs/todo-md/reference/CONFIG.md)*
 | 2026-07-29 10:00:00 (1785294000) | Продакт (pi) | Создание задачи |
 | 2026-11-03 20:15:58 (1793711758) | Бэкендер (pi@glm-5.3-flash~high) | Реализация поля model: Parser::MODELS, Validator::validateModel, экспорт, панель дашборда, MODELS.md, обновление CONFIG.md и гайда, тесты |
 | 2026-11-04 04:42:27 (1793742147) | Бэкендер (pi@glm-5.3-flash~high) | Исправить model: gpt-4o → glm-5.3-flash (по PI_MODEL); добавить Zhipu GLM в канонический список; правило «источник истины — env харнесса» в гайд |
