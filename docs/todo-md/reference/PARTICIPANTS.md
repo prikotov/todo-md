@@ -22,8 +22,8 @@ package: prikotov/todo-md
 ## Запись
 
 ```yaml
-consultants: ["Архитектор (pi)", "Тестировщик (codex)"]
-reviewer: Аналитик (pi)
+consultants: ["Архитектор (pi@glm-5.3-flash~high)", "Тестировщик (codex@gpt-5~low)"]
+reviewer: Аналитик (pi@k3.1-pro~low)
 approver: Тимлид (pi)
 informed: []
 ```
@@ -32,8 +32,8 @@ informed: []
 
 ```yaml
 consultants:
-  - Архитектор (pi)
-  - Тестировщик (codex)
+  - Архитектор (pi@glm-5.3-flash~high)
+  - Тестировщик (codex@gpt-5~low)
 reviewer:
 approver:
 informed: []
@@ -67,4 +67,5 @@ php vendor/bin/todo-md validate TASK-example --strict
 
 - [Роли](ROLES.md)
 - [AI-агенты](AI_AGENTS.md)
+- [LLM-модели участников](MODELS.md)
 - [Конфигурация проверки](CONFIG.md)
