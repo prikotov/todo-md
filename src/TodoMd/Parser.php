@@ -23,7 +23,10 @@ final class Parser
     public const STATUSES     = ['todo', 'backlog', 'in_progress', 'paused', 'blocked', 'review', 'done', 'cancelled'];
     public const ACTIVE_STATUSES = ['todo', 'in_progress', 'paused', 'blocked', 'review'];
     /** Canonical AI agents for `author`/`assignee`; see reference/AI_AGENTS.md. */
-    public const AI_AGENTS = ['gemini-cli', 'codex-cli', 'codex', 'opencode', 'roocode', 'kilocode', 'pi'];
+    public const AI_AGENTS = [
+        'gemini-cli', 'codex-cli', 'codex', 'opencode', 'roocode', 'kilocode', 'kilo', 'pi',
+        'omp', 'zcode', 'bb', 'kimi',
+    ];
     /** Recognition dictionary for the `~level` suffix, union across major harnesses
      * (pi: off/low/medium/high/max; codex-cli: minimal/low/medium/high; etc.).
      * Levels are free-form words; projects can replace the dictionary via config['thinking_levels']. */
