@@ -13,14 +13,14 @@ cost_fact:
 depends_on: 
 epic: 
 author: Разработчик (pi@mimo-v2.6-flash~high)
-assignee: 
+assignee: Разработчик (pi@mimo-v2.6-flash~high)
 consultants: []
 reviewer: 
 approver: 
 informed: []
 branch: task/create-start-env-model
-pr: 
-status: todo
+pr: https://github.com/prikotov/todo-md/pull/43
+status: review
 ---
 
 # TASK-cli-env-model-autofill: Автозаполнение модели и уровня мышления в create/start
@@ -101,4 +101,5 @@ php vendor/bin/todo-md validate todo/<ID>.todo.md     # точечная про�
 | Дата | Автор | Изменение |
 | :--- | :--- | :--- |
 | 2026-11-11 12:52:46 (1794401566) | Разработчик (pi@mimo-v2.6-flash~high) | Создание задачи |
-| 2026-11-11 12:58:00 (1794401880) | Разработчик (pi@mimo-v2.6-flash~high) | Реализовано: `Board::withEnvModel` + обогащение в `create`/`start`, флаг `--no-model`, 8 тестов, документация; `make check` — 110/110 |
+| 2026-11-11 12:55:00 (1794401700) | Разработчик (pi@mimo-v2.6-flash~high) | Реализовано: `Board::withEnvModel` + обогащение в `create`/`start`, флаг `--no-model`, 8 тестов, документация; `make check` — 110/110 |
+| 2026-11-11 12:57:02 (1794401822) | Разработчик (pi@mimo-v2.6-flash~high) | PR #43 создан, status → review |
