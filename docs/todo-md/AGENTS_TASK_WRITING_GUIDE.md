@@ -47,7 +47,7 @@ cost_plan:  # integer, токены; пусто, если нет оценки
 cost_fact:  # integer, токены; пусто, если факт ещё неизвестен
 depends_on: <TASK-ID|EPIC-ID[, ...]>  # plain IDs через запятую; пусто, если нет зависимостей
 epic: <EPIC-ID>  # plain ID без md-ссылки; пусто, если нет эпика
-author: <роль> (<агент>[@<модель>[~<уровень>]])  # формат: Роль (агент); модель и уровень мышления опциональны; передаются ключами create/start --model/--thinking; см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md)
+author: <роль> (<агент>[@<модель>[~<уровень>]])  # формат: Роль (агент); модель и уровень мышления опциональны; см. [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md)
 assignee:  # исполнитель задачи, формат: Роль (агент[@модель[~уровень]]); см. [STATUSES.md](./reference/STATUSES.md), [ROLES.md](./reference/ROLES.md), [AI_AGENTS.md](./reference/AI_AGENTS.md), [MODELS.md](./reference/MODELS.md); может быть пустым для backlog, todo и cancelled
 consultants: []  # консультанты подготовки постановки
 reviewer:  # проверяющий постановку, формат: Роль (агент[@модель[~уровень]])
@@ -71,7 +71,7 @@ status: <статус>
 - **Приоритет (P) — `priority`**: определяется на основе Ценности и Сложности, обозначает очередность выполнения. См. [PRIORITIES.md](./reference/PRIORITIES.md)
 - **Стоимость в токенах — `cost_plan`, `cost_fact`**: плановый и фактический расход токенов. Поля опциональные. См. [COST.md](./reference/COST.md)
 - **Даты жизненного цикла — `due`, `started`, `completed`**: плановый срок и фактические даты начала/завершения. Поля опциональные. См. [DATES.md](./reference/DATES.md)
-- **LLM-модели участников**: модель и уровень мышления в составе `<роль> (<агент>[@<модель>[~<уровень>]])`. Опционально; в `create`/`start` передаются ключами `--model` / `--thinking`. См. [MODELS.md](./reference/MODELS.md)
+- **LLM-модели участников**: модель и уровень мышления в составе `<роль> (<агент>[@<модель>[~<уровень>]])`. Опционально. См. [MODELS.md](./reference/MODELS.md)
 ### Роли и агенты
 
 Поля `author` и `assignee` используют формат `<роль> (<агент>)`:
@@ -88,8 +88,8 @@ status: <статус>
   - Проект может расширить или переопределить список через `.todo-md.php` — см. [CONFIG.md](./reference/CONFIG.md).
 - **Модель и уровень мышления** — опциональная часть участника через `@` и `~`: LLM-модель и уровень reasoning/thinking, на которых участник выполнял работу.
   - Модель и уровень закреплены за ролью в конфиге проекта (профиль роли); в задаче фиксируется срез «кто, на чём и на каком уровне мышления работал».
-  - Источник истины — окружение харнесса агента (например, `PI_MODEL`, `PI_REASONING_LEVEL` у pi) или профиль роли, не самоописание модели; значение передаётся в CLI ключами `--model` / `--thinking` (см. «Модель в CLI»).
-  - Правила и примеры — [MODELS.md](./reference/MODELS.md) (в т.ч. раздел «Модель в CLI»); проект может включить проверку моделей по своему списку через `.todo-md.php` (`models`, `thinking_levels`) — см. [CONFIG.md](./reference/CONFIG.md).
+  - Источник истины — окружение харнесса агента (например, `PI_MODEL`, `PI_REASONING_LEVEL` у pi) или профиль роли, не самоописание модели.
+  - Правила и примеры — [MODELS.md](./reference/MODELS.md); проект может включить проверку моделей по своему списку через `.todo-md.php` (`models`, `thinking_levels`) — см. [CONFIG.md](./reference/CONFIG.md).
 
 Примеры значений:
 - `Бэкендер (codex-cli)`

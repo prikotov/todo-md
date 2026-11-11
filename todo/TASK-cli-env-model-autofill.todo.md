@@ -72,7 +72,7 @@ status: review
 - [x] Применить в `create` (author + история) и `transition` (assignee), прокинуть `no_model`.
 - [x] CLI-ключи `--model` / `--thinking` в `create`/`start` + help.
 - [x] Тесты: обогащение ключами, только модель, env игнорируется, конфликт модели, `--thinking` без `--model`, невалидные значения, не-pi агент, `start`.
-- [x] Документация: MODELS.md («Модель в CLI»), гайд, шаблоны, README, CHANGELOG, `todo/AGENTS.md`.
+- [x] Документация: README («Команды смены состояния»), гайд, шаблоны, CHANGELOG, `todo/AGENTS.md`; описание CLI в справочник MODELS.md не выносится.
 
 ## 5. Критерии приёмки (Definition of Done)
 - [x] `todo-md create ... --author="Роль (pi)" --model=glm-5.3-flash --thinking=high` → `author: Роль (pi@glm-5.3-flash~high)`; env в тесте задан — и игнорируется.
