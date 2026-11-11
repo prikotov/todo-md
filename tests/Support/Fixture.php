@@ -239,11 +239,16 @@ class Fixture
     /**
      * Run a package bin script and capture output.
      *
+     * PI_MODEL / PI_REASONING_LEVEL are stripped from the child environment by
+     * default so ambient harness vars cannot leak into a test; pass them via
+     * $env to prove the CLI ignores them (model comes from --model keys only).
+     *
      * @param list<string> $args
      * @param ?string $cwd Working directory for the subprocess.
+     * @param array<string, string|null> $env Env overrides; a null value unsets the var.
      * @return array{int, string, string}  [exitCode, stdout, stderr]
      */
-    public static function runBin(string $bin, array $args = [], ?string $cwd = null): array
+    public static function runBin(string $bin, array $args = [], ?string $cwd = null, array $env = []): array
     {
         $script = self::pkgRoot() . "/bin/$bin";
         $cmd    = array_merge(['php', $script], $args);
@@ -253,7 +258,17 @@ class Fixture
             2 => ['pipe', 'w'],
         ];
 
-        $proc = proc_open($cmd, $descriptors, $pipes, $cwd);
+        $childEnv = getenv();
+        unset($childEnv['PI_MODEL'], $childEnv['PI_REASONING_LEVEL']);
+        foreach ($env as $key => $value) {
+            if ($value === null) {
+                unset($childEnv[$key]);
+            } else {
+                $childEnv[$key] = $value;
+            }
+        }
+
+        $proc = proc_open($cmd, $descriptors, $pipes, $cwd, $childEnv);
         if (!is_resource($proc)) {
             throw new TestFailure("failed to start bin/$bin");
         }

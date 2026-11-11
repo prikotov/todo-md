@@ -90,3 +90,108 @@ test('create: custom metadata applied', function (): void {
     expectEquals('C4', frontMatterField($file, 'complexity'), 'complexity');
     expectEquals('P0', frontMatterField($file, 'priority'), 'priority');
 });
+
+// ── Model via explicit --model / --thinking keys ────────────────────────────
+
+test('create: --model and --thinking enrich a bare author', function (): void {
+    $root = Fixture::board([]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-model', '--author=Тест (pi)', '--root=' . $root, '--type=feat',
+        '--model=glm-5.3-flash', '--thinking=high',
+    ]);
+    expectEquals(0, $code, "create should succeed\n$err");
+    $file = "$root/todo/TASK-key-model.todo.md";
+    expectEquals('Тест (pi@glm-5.3-flash~high)', frontMatterField($file, 'author'), 'author enriched');
+    expectContains('Тест (pi@glm-5.3-flash~high)', (string) file_get_contents($file), 'change history uses enriched author');
+});
+
+test('create: --model without --thinking appends the model only', function (): void {
+    $root = Fixture::board([]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-model-only', '--author=Тест (pi)', '--root=' . $root, '--type=feat',
+        '--model=glm-5.3-flash',
+    ]);
+    expectEquals(0, $code, "create should succeed\n$err");
+    expectEquals('Тест (pi@glm-5.3-flash)', frontMatterField("$root/todo/TASK-key-model-only.todo.md", 'author'), 'model without level');
+});
+
+test('create: without keys the author is untouched even with harness env set', function (): void {
+    $root = Fixture::board([]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-raw', '--author=Тест (pi)', '--root=' . $root, '--type=feat',
+    ], null, ['PI_MODEL' => 'glm-5.3-flash', 'PI_REASONING_LEVEL' => 'high']);
+    expectEquals(0, $code, "create should succeed\n$err");
+    expectEquals('Тест (pi)', frontMatterField("$root/todo/TASK-key-raw.todo.md", 'author'), 'env must be ignored');
+});
+
+test('create: --model is rejected when the author already carries a model', function (): void {
+    $root = Fixture::board([]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-conflict', '--author=Тест (pi@k3.1-pro~low)', '--root=' . $root, '--type=feat',
+        '--model=glm-5.3-flash',
+    ]);
+    expectEquals(1, $code, 'conflicting --model should fail');
+    expectContains('already carries a model', $err, 'conflict message');
+});
+
+test('create: --thinking without --model fails', function (): void {
+    $root = Fixture::board([]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-level-only', '--author=Тест (pi)', '--root=' . $root, '--type=feat',
+        '--thinking=high',
+    ]);
+    expectEquals(1, $code, '--thinking without --model should fail');
+    expectContains('--thinking requires --model', $err, 'message');
+});
+
+test('create: malformed --model fails', function (): void {
+    $root = Fixture::board([]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-bad-model', '--author=Тест (pi)', '--root=' . $root, '--type=feat',
+        '--model=GLM 5.3',
+    ]);
+    expectEquals(1, $code, 'malformed --model should fail');
+    expectContains('--model must be a lowercase id', $err, 'message');
+});
+
+test('create: --model outside the project models list fails', function (): void {
+    $root = Fixture::board([]);
+    file_put_contents($root . '/.todo-md.php', '<?php declare(strict_types=1); return ["models" => ["glm-5.3-flash"]];');
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-unknown-model', '--author=Тест (pi)', '--root=' . $root, '--type=feat',
+        '--model=k3.1-pro',
+    ]);
+    expectEquals(1, $code, 'unknown model should fail');
+    expectContains('not in the project models list', $err, 'message');
+});
+
+test('create: --thinking outside the project thinking_levels fails', function (): void {
+    $root = Fixture::board([]);
+    file_put_contents($root . '/.todo-md.php', '<?php declare(strict_types=1); return ["thinking_levels" => ["low", "medium"]];');
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-bad-level', '--author=Тест (pi)', '--root=' . $root, '--type=feat',
+        '--model=glm-5.3-flash', '--thinking=ultra',
+    ]);
+    expectEquals(1, $code, 'unknown level should fail');
+    expectContains('--thinking must be one of', $err, 'message');
+});
+
+test('create: keys work for non-pi agents too', function (): void {
+    $root = Fixture::board([]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-codex', '--author=Тест (codex-cli)', '--root=' . $root, '--type=feat',
+        '--model=gpt-5', '--thinking=minimal',
+    ]);
+    expectEquals(0, $code, "create should succeed\n$err");
+    expectEquals('Тест (codex-cli@gpt-5~minimal)', frontMatterField("$root/todo/TASK-key-codex.todo.md", 'author'), 'any agent works');
+});
+
+test('create: malformed participant with keys fails', function (): void {
+    $root = Fixture::board([]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'create', 'TASK-key-bad-participant', '--author=Тест', '--root=' . $root, '--type=feat',
+        '--model=glm-5.3-flash',
+    ]);
+    expectEquals(1, $code, 'bare role without agent should fail with keys');
+    expectContains('expected `Роль (агент)`', $err, 'message');
+});

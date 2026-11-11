@@ -108,6 +108,8 @@ function cli_transition(array $args, string $status, string $verb): void
             exit(1);
         }
         $transitionOpts['assignee'] = $assignee;
+        $transitionOpts['model']    = $parsed['opts']['model'] ?? null;
+        $transitionOpts['thinking'] = $parsed['opts']['thinking'] ?? null;
     }
 
     try {
@@ -135,6 +137,9 @@ rolled back.
 
 Options:
   --assignee=<role>  Assignee role (required for 'start').
+  --model=<id>       Model for the assignee (e.g. glm-5.3-flash); appends
+                     `@модель` to `Роль (агент)`.
+  --thinking=<lvl>   Thinking level after --model (e.g. high); requires --model.
   --help             Show this help.
 
 TXT;
@@ -180,6 +185,8 @@ function cli_create(array $args): void
             'status'     => $parsed['opts']['status'] ?? null,
             'epic'       => $parsed['opts']['epic'] ?? null,
             'depends_on' => $parsed['opts']['depends-on'] ?? null,
+            'model'      => $parsed['opts']['model'] ?? null,
+            'thinking'   => $parsed['opts']['thinking'] ?? null,
         ]);
         echo $msg . PHP_EOL;
         exit(0);
@@ -211,6 +218,9 @@ Options:
   --status=<status>    Initial status (default: todo).
   --epic=<EPIC-ID>     Epic this task belongs to.
   --depends-on=<ids>   Comma-separated plain IDs.
+  --model=<id>         Model for the author (e.g. glm-5.3-flash); appends
+                       `@модель` to `Роль (агент)`.
+  --thinking=<lvl>     Thinking level after --model (e.g. high); requires --model.
   --help               Show this help.
 
 TXT;
