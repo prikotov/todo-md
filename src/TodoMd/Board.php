@@ -119,66 +119,106 @@ final class Board
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    //  Participant model enrichment (harness env)
+    //  Participant model (explicit CLI keys)
     // ══════════════════════════════════════════════════════════════════════
 
     /**
-     * Env vars exposing the session model and thinking level, keyed by agent id.
-     * Only pi exports them today; participants of other agents are left as
-     * written — their harnesses have no stable equivalent (see MODELS.md).
+     * Append `@model[~level]` to a participant from the explicit `--model` /
+     * `--thinking` options.
      *
-     * @var array<string, array{string, string}>
-     */
-    private const HARNESS_ENV_MODEL = [
-        'pi' => ['PI_MODEL', 'PI_REASONING_LEVEL'],
-    ];
-
-    /**
-     * Append `@model[~level]` from the harness environment to a bare
-     * `Роль (агент)` participant.
+     * The CLI never reads the harness environment: values arrive as keys, so
+     * the recording works for any agent and does not depend on PI_MODEL /
+     * PI_REASONING_LEVEL being set (see MODELS.md).
      *
-     * Returns the participant unchanged when it already carries a model, when
-     * the agent has no known env vars, when the env values fail the id format,
-     * or when the project config (`models` / `thinking_levels`) forbids them —
-     * enrichment must never break validation.
+     * Rules: no keys → untouched; a bare `Роль (агент)` gets the model; an
+     * existing model rejects `--model` but accepts `--thinking`; anything else
+     * (malformed participant, bad id, value outside the project `models` /
+     * `thinking_levels` lists) is an error — explicit input must not degrade
+     * silently.
+     *
+     * @param array{model?: string|null, thinking?: string|null} $opts
+     * @throws BoardException
      */
-    public static function withEnvModel(string $participant, string $root): string
+    public static function withModel(string $participant, string $root, array $opts): string
     {
+        $model       = trim((string) ($opts['model'] ?? ''));
+        $thinking    = trim((string) ($opts['thinking'] ?? ''));
         $participant = trim($participant);
-        if ($participant === '') {
-            return $participant;
-        }
-        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)\)$/u', $participant, $m)) {
-            // not a bare `Роль (агент)` — already has a model or is malformed
-            return $participant;
-        }
 
-        $vars = self::HARNESS_ENV_MODEL[$m[2]] ?? null;
-        if ($vars === null) {
-            return $participant;
-        }
-
-        $model = getenv($vars[0]);
-        if (!is_string($model) || $model === '' || !preg_match('/^[a-z0-9][a-z0-9.:_~-]*$/', $model)) {
+        if ($model === '' && $thinking === '') {
             return $participant;
         }
 
         $config = Validator::loadConfig($root);
-        if ($config['models'] !== [] && !in_array($model, $config['models'], true)) {
-            return $participant;
-        }
+        $levels = $config['thinking_levels'] !== [] ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
 
-        $enriched = "{$m[1]} ({$m[2]}@$model";
-
-        $level = getenv($vars[1]);
-        if (is_string($level) && $level !== '') {
-            $levels = $config['thinking_levels'] !== [] ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
-            if (preg_match('/^[a-z]+$/', $level) && in_array($level, $levels, true)) {
-                $enriched .= '~' . $level;
+        // `Роль (агент@модель)` — the model is already there.
+        if (preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)@([^)]+)\)$/u', $participant, $m)) {
+            if ($model !== '') {
+                throw new BoardException(
+                    "participant `$participant` already carries a model — drop --model or remove the model from the participant",
+                );
             }
+            $spec = $m[3];
+            if (preg_match('/~([a-z]+)$/D', $spec, $tm) && in_array($tm[1], $levels, true)) {
+                throw new BoardException(
+                    "participant `$participant` already carries a thinking level — drop --thinking or remove `~{$tm[1]}` from the participant",
+                );
+            }
+            self::assertThinking($thinking, $levels);
+
+            return "{$m[1]} ({$m[2]}@$spec~$thinking)";
         }
 
-        return $enriched . ')';
+        // `Роль (агент)` — bare participant, append the model.
+        if (preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)\)$/u', $participant, $m)) {
+            if ($model === '') {
+                throw new BoardException("--thinking requires --model — `$participant` has no model to attach the level to");
+            }
+            self::assertModel($model, $config, $levels);
+            self::assertThinking($thinking, $levels);
+
+            $enriched = "{$m[1]} ({$m[2]}@$model";
+            if ($thinking !== '') {
+                $enriched .= '~' . $thinking;
+            }
+
+            return $enriched . ')';
+        }
+
+        throw new BoardException(
+            "cannot apply --model/--thinking to `$participant` — expected `Роль (агент)` or `Роль (агент@модель)`",
+        );
+    }
+
+    /**
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
+     * @param list<string> $levels
+     */
+    private static function assertModel(string $model, array $config, array $levels): void
+    {
+        if (!preg_match('/^[a-z0-9][a-z0-9.:_~-]*$/', $model)) {
+            throw new BoardException("--model must be a lowercase id like `glm-5.3-flash` — got `$model`");
+        }
+        if (preg_match('/~([a-z]+)$/D', $model, $tm) && in_array($tm[1], $levels, true)) {
+            throw new BoardException("--model must not carry a thinking level — pass `~{$tm[1]}` as --thinking");
+        }
+        if ($config['models'] !== [] && !in_array($model, $config['models'], true)) {
+            throw new BoardException('--model `' . $model . '` is not in the project models list: ' . implode(', ', $config['models']));
+        }
+    }
+
+    /**
+     * @param list<string> $levels
+     */
+    private static function assertThinking(string $thinking, array $levels): void
+    {
+        if ($thinking === '') {
+            return;
+        }
+        if (!preg_match('/^[a-z]+$/', $thinking) || !in_array($thinking, $levels, true)) {
+            throw new BoardException('--thinking must be one of: ' . implode(', ', $levels) . " — got `$thinking`");
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -441,10 +481,7 @@ final class Board
         }
 
         if (($opts['assignee'] ?? null) !== null) {
-            $assignee = (string) $opts['assignee'];
-            if (!($opts['no_model'] ?? false)) {
-                $assignee = self::withEnvModel($assignee, $root);
-            }
+            $assignee = self::withModel((string) $opts['assignee'], $root, $opts);
             $newContent = self::setFieldInContent($newContent, 'assignee', $assignee);
         }
 
@@ -502,7 +539,7 @@ final class Board
      * @param array{
      *   type?: string, title?: string, value?: string, complexity?: string,
      *   priority?: string, author?: string, status?: string, epic?: string,
-     *   depends_on?: string, no_model?: bool
+     *   depends_on?: string, model?: string|null, thinking?: string|null
      * } $opts
      * @return string success message
      * @throws BoardException
@@ -530,9 +567,7 @@ final class Board
 
         $title = $opts['title'] ?? self::defaultTitle($id);
 
-        if (!($opts['no_model'] ?? false)) {
-            $opts['author'] = self::withEnvModel($opts['author'] ?? 'Исполнитель (pi)', $root);
-        }
+        $opts['author'] = self::withModel($opts['author'] ?? 'Исполнитель (pi)', $root, $opts);
 
         $isEpic = $kind === 'epic';
         $type   = $isEpic ? 'epic' : ($opts['type'] ?? null);
