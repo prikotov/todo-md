@@ -264,3 +264,27 @@ test('set: status cannot be combined with other fields', function (): void {
     expectFileMissing("$root/todo/done/TASK-set-mix.todo.md", 'not in done/');
     expectEquals(null, frontMatterField("$root/todo/TASK-set-mix.todo.md", 'branch'), 'nothing applied');
 });
+
+// ── Model enrichment on start ───────────────────────────────────────────────
+
+test('transition: start enriches assignee from pi env', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-tr-env.todo.md' => Fixture::taskFile('TASK-tr-env', 'Env'),
+    ]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'start', 'TASK-tr-env', '--assignee=Тест (pi)', '--root=' . $root,
+    ], null, ['PI_MODEL' => 'glm-5.3-flash', 'PI_REASONING_LEVEL' => 'max']);
+    expectEquals(0, $code, "start should succeed\n$err");
+    expectEquals('Тест (pi@glm-5.3-flash~max)', frontMatterField("$root/todo/TASK-tr-env.todo.md", 'assignee'), 'assignee enriched');
+});
+
+test('transition: start --no-model keeps the assignee as written', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-tr-env-raw.todo.md' => Fixture::taskFile('TASK-tr-env-raw', 'Env raw'),
+    ]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'start', 'TASK-tr-env-raw', '--assignee=Тест (pi)', '--root=' . $root, '--no-model',
+    ], null, ['PI_MODEL' => 'glm-5.3-flash', 'PI_REASONING_LEVEL' => 'max']);
+    expectEquals(0, $code, "start should succeed\n$err");
+    expectEquals('Тест (pi)', frontMatterField("$root/todo/TASK-tr-env-raw.todo.md", 'assignee'), 'raw assignee');
+});
