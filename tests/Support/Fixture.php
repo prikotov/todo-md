@@ -239,9 +239,9 @@ class Fixture
     /**
      * Run a package bin script and capture output.
      *
-     * The harness model env vars (PI_MODEL / PI_REASONING_LEVEL) are stripped
-     * from the child environment by default so tests stay hermetic; pass them
-     * back via $env to exercise model enrichment.
+     * PI_MODEL / PI_REASONING_LEVEL are stripped from the child environment by
+     * default so ambient harness vars cannot leak into a test; pass them via
+     * $env to prove the CLI ignores them (model comes from --model keys only).
      *
      * @param list<string> $args
      * @param ?string $cwd Working directory for the subprocess.

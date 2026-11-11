@@ -265,26 +265,39 @@ test('set: status cannot be combined with other fields', function (): void {
     expectEquals(null, frontMatterField("$root/todo/TASK-set-mix.todo.md", 'branch'), 'nothing applied');
 });
 
-// ── Model enrichment on start ───────────────────────────────────────────────
+// ── Model via explicit --model / --thinking keys on start ───────────────────
 
-test('transition: start enriches assignee from pi env', function (): void {
+test('transition: start --model/--thinking enrich the assignee', function (): void {
     $root = Fixture::board([
-        'todo/TASK-tr-env.todo.md' => Fixture::taskFile('TASK-tr-env', 'Env'),
+        'todo/TASK-tr-key.todo.md' => Fixture::taskFile('TASK-tr-key', 'Key'),
     ]);
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'start', 'TASK-tr-env', '--assignee=Тест (pi)', '--root=' . $root,
-    ], null, ['PI_MODEL' => 'glm-5.3-flash', 'PI_REASONING_LEVEL' => 'max']);
+        'start', 'TASK-tr-key', '--assignee=Тест (pi)', '--root=' . $root,
+        '--model=glm-5.3-flash', '--thinking=max',
+    ]);
     expectEquals(0, $code, "start should succeed\n$err");
-    expectEquals('Тест (pi@glm-5.3-flash~max)', frontMatterField("$root/todo/TASK-tr-env.todo.md", 'assignee'), 'assignee enriched');
+    expectEquals('Тест (pi@glm-5.3-flash~max)', frontMatterField("$root/todo/TASK-tr-key.todo.md", 'assignee'), 'assignee enriched');
 });
 
-test('transition: start --no-model keeps the assignee as written', function (): void {
+test('transition: start without keys keeps the assignee even with harness env set', function (): void {
     $root = Fixture::board([
-        'todo/TASK-tr-env-raw.todo.md' => Fixture::taskFile('TASK-tr-env-raw', 'Env raw'),
+        'todo/TASK-tr-key-raw.todo.md' => Fixture::taskFile('TASK-tr-key-raw', 'Key raw'),
     ]);
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'start', 'TASK-tr-env-raw', '--assignee=Тест (pi)', '--root=' . $root, '--no-model',
+        'start', 'TASK-tr-key-raw', '--assignee=Тест (pi)', '--root=' . $root,
     ], null, ['PI_MODEL' => 'glm-5.3-flash', 'PI_REASONING_LEVEL' => 'max']);
     expectEquals(0, $code, "start should succeed\n$err");
-    expectEquals('Тест (pi)', frontMatterField("$root/todo/TASK-tr-env-raw.todo.md", 'assignee'), 'raw assignee');
+    expectEquals('Тест (pi)', frontMatterField("$root/todo/TASK-tr-key-raw.todo.md", 'assignee'), 'env must be ignored');
+});
+
+test('transition: start --thinking without --model fails', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-tr-key-level.todo.md' => Fixture::taskFile('TASK-tr-key-level', 'Key level'),
+    ]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'start', 'TASK-tr-key-level', '--assignee=Тест (pi)', '--root=' . $root, '--thinking=high',
+    ]);
+    expectEquals(1, $code, '--thinking without --model should fail');
+    expectContains('--thinking requires --model', $err, 'message');
+    expectEquals('todo', frontMatterField("$root/todo/TASK-tr-key-level.todo.md", 'status'), 'failed start must not change status');
 });
