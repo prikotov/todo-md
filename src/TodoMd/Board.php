@@ -118,6 +118,69 @@ final class Board
         return date('Y-m-d');
     }
 
+    // ══════════════════════════════════════════════════════════════════════
+    //  Participant model enrichment (harness env)
+    // ══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Env vars exposing the session model and thinking level, keyed by agent id.
+     * Only pi exports them today; participants of other agents are left as
+     * written — their harnesses have no stable equivalent (see MODELS.md).
+     *
+     * @var array<string, array{string, string}>
+     */
+    private const HARNESS_ENV_MODEL = [
+        'pi' => ['PI_MODEL', 'PI_REASONING_LEVEL'],
+    ];
+
+    /**
+     * Append `@model[~level]` from the harness environment to a bare
+     * `Роль (агент)` participant.
+     *
+     * Returns the participant unchanged when it already carries a model, when
+     * the agent has no known env vars, when the env values fail the id format,
+     * or when the project config (`models` / `thinking_levels`) forbids them —
+     * enrichment must never break validation.
+     */
+    public static function withEnvModel(string $participant, string $root): string
+    {
+        $participant = trim($participant);
+        if ($participant === '') {
+            return $participant;
+        }
+        if (!preg_match('/^(.+) \(([a-z0-9][a-z0-9_-]*)\)$/u', $participant, $m)) {
+            // not a bare `Роль (агент)` — already has a model or is malformed
+            return $participant;
+        }
+
+        $vars = self::HARNESS_ENV_MODEL[$m[2]] ?? null;
+        if ($vars === null) {
+            return $participant;
+        }
+
+        $model = getenv($vars[0]);
+        if (!is_string($model) || $model === '' || !preg_match('/^[a-z0-9][a-z0-9.:_~-]*$/', $model)) {
+            return $participant;
+        }
+
+        $config = Validator::loadConfig($root);
+        if ($config['models'] !== [] && !in_array($model, $config['models'], true)) {
+            return $participant;
+        }
+
+        $enriched = "{$m[1]} ({$m[2]}@$model";
+
+        $level = getenv($vars[1]);
+        if (is_string($level) && $level !== '') {
+            $levels = $config['thinking_levels'] !== [] ? $config['thinking_levels'] : Parser::THINKING_LEVELS;
+            if (preg_match('/^[a-z]+$/', $level) && in_array($level, $levels, true)) {
+                $enriched .= '~' . $level;
+            }
+        }
+
+        return $enriched . ')';
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     //  Front matter manipulation (line-surgical, preserves formatting)
     // ══════════════════════════════════════════════════════════════════════════
@@ -378,7 +441,11 @@ final class Board
         }
 
         if (($opts['assignee'] ?? null) !== null) {
-            $newContent = self::setFieldInContent($newContent, 'assignee', $opts['assignee']);
+            $assignee = (string) $opts['assignee'];
+            if (!($opts['no_model'] ?? false)) {
+                $assignee = self::withEnvModel($assignee, $root);
+            }
+            $newContent = self::setFieldInContent($newContent, 'assignee', $assignee);
         }
 
         // ── Compute new path ─────────────────────────────────────────────────
@@ -435,7 +502,7 @@ final class Board
      * @param array{
      *   type?: string, title?: string, value?: string, complexity?: string,
      *   priority?: string, author?: string, status?: string, epic?: string,
-     *   depends_on?: string
+     *   depends_on?: string, no_model?: bool
      * } $opts
      * @return string success message
      * @throws BoardException
@@ -462,6 +529,10 @@ final class Board
         }
 
         $title = $opts['title'] ?? self::defaultTitle($id);
+
+        if (!($opts['no_model'] ?? false)) {
+            $opts['author'] = self::withEnvModel($opts['author'] ?? 'Исполнитель (pi)', $root);
+        }
 
         $isEpic = $kind === 'epic';
         $type   = $isEpic ? 'epic' : ($opts['type'] ?? null);
