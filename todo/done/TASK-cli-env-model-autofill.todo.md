@@ -3,7 +3,7 @@ type: feat
 created: 2026-11-11 12:52:46 (1794401566)
 due: 
 started: 
-completed: 
+completed: 2026-11-11 15:28:42 (1794410922)
 cancelled: 
 value: V3
 complexity: C1
@@ -20,7 +20,7 @@ approver:
 informed: []
 branch: task/create-start-env-model
 pr: https://github.com/prikotov/todo-md/pull/43
-status: review
+status: done
 ---
 
 # TASK-cli-env-model-autofill: Автозаполнение модели и уровня мышления в create/start
@@ -91,8 +91,8 @@ php vendor/bin/todo-md validate todo/<ID>.todo.md     # точечная про�
 - Нет: значения приходят явно ключом, поэтому проект со списком `models` получает понятную ошибку на несовпадение вместо тихой потери данных; следствие задокументировано в MODELS.md.
 
 ## 8. Источники (Sources)
-- [x] [MODELS.md — формат участника и env-источник истины](../docs/todo-md/reference/MODELS.md)
-- [x] [CONFIG.md — списки `models`/`thinking_levels`](../docs/todo-md/reference/CONFIG.md)
+- [x] [MODELS.md — формат участника и env-источник истины](../../docs/todo-md/reference/MODELS.md)
+- [x] [CONFIG.md — списки `models`/`thinking_levels`](../../docs/todo-md/reference/CONFIG.md)
 
 ## 9. Комментарии (Comments)
 Скоуп просьбы: CLI-часть (create/start). Валидаторное предупреждение «модель не указана» сознательно не делается — старое наследие задач дало бы волну ложных срабатываний.
@@ -104,3 +104,4 @@ php vendor/bin/todo-md validate todo/<ID>.todo.md     # точечная про�
 | 2026-11-11 12:55:00 (1794401700) | Разработчик (pi@mimo-v2.6-flash~high) | Реализовано: `Board::withEnvModel` + обогащение в `create`/`start`, флаг `--no-model`, 8 тестов, документация; `make check` — 110/110 |
 | 2026-11-11 12:57:02 (1794401822) | Разработчик (pi@mimo-v2.6-flash~high) | PR #43 создан, status → review |
 | 2026-11-11 13:15:00 (1794402900) | Разработчик (pi@mimo-v2.6-flash~high) | Ревью: не просить агента выставлять PI_MODEL/PI_REASONING_LEVEL — модель и уровень передаются ключами `--model`/`--thinking`, чтение env из CLI убрано, ошибки вместо тихой подмены; тесты и документация переписаны |
+| 2026-11-11 15:28:42 (1794410922) | Разработчик (pi@mimo-v2.6-flash~high) | PR #43 смержен, status → done; релиз v0.4.0 выпущен (PR #44, tag v0.4.0) |
