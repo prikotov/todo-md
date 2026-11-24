@@ -279,26 +279,6 @@ final class Board
     }
 
     /**
-     * True when raw content starts with a closed front-matter block.
-     */
-    private static function hasFrontMatter(string $content): bool
-    {
-        $lines = preg_split('/\r\n|\r|\n/', $content);
-        if ($lines === false || $lines === [] || trim($lines[0]) !== '---') {
-            return false;
-        }
-
-        $count = count($lines);
-        for ($i = 1; $i < $count; $i++) {
-            if (trim($lines[$i]) === '---') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Read a front-matter field value from raw content (null if absent).
      */
     public static function getFieldFromContent(string $content, string $field): ?string
@@ -655,13 +635,6 @@ final class Board
         $content    = file_get_contents($file) ?: '';
         $newContent = self::setFieldInContent($content, $field, $value);
         if ($newContent === $content) {
-            if (self::hasFrontMatter($content)) {
-                // The field already carries this value — nothing to write,
-                // the call still succeeds (idempotent set).
-                $rel = Parser::makeRelativePath($file, $root);
-
-                return "set $id.$field = $value (unchanged) ($rel)";
-            }
             throw new BoardException("could not set field (no front matter?): $field");
         }
 
@@ -710,33 +683,16 @@ final class Board
         }
 
         $content = file_get_contents($file) ?: '';
-        if (!self::hasFrontMatter($content)) {
-            throw new BoardException('could not set field (no front matter?): ' . array_key_first($fields));
-        }
 
-        // Apply every assignment in memory before touching the disk
-        // (all-or-nothing). An assignment that leaves the value as-is is
-        // not an error — it is reported in the result message.
+        // Apply every assignment in memory; abort before touching the disk
+        // if any of them fails (all-or-nothing).
         $newContent = $content;
-        $unchanged  = [];
         foreach ($fields as $field => $value) {
-            $updated = self::setFieldInContent($newContent, $field, $value);
+            $updated    = self::setFieldInContent($newContent, $field, $value);
             if ($updated === $newContent) {
-                $unchanged[] = $field;
-                continue;
+                throw new BoardException("could not set field (no front matter?): $field");
             }
             $newContent = $updated;
-        }
-
-        $applied = [];
-        foreach ($fields as $field => $value) {
-            $applied[] = "$field = $value";
-        }
-
-        $rel = Parser::makeRelativePath($file, $root);
-
-        if ($newContent === $content) {
-            return 'set ' . $id . ': ' . implode(', ', $applied) . " (unchanged) ($rel)";
         }
 
         $snapshot = [$file => $content];
@@ -752,110 +708,13 @@ final class Board
             );
         }
 
-        $note = $unchanged === [] ? '' : ' (unchanged: ' . implode(', ', $unchanged) . ')';
-
-        return 'set ' . $id . ': ' . implode(', ', $applied) . "$note ($rel)";
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    //  Change history
-    // ══════════════════════════════════════════════════════════════════════
-
-    /**
-     * Append a row to the «История изменений (Change History)» table of a
-     * task/epic. The date comes from the CLI clock in the lifecycle format
-     * (`YYYY-MM-DD HH:MM:SS (unix_ts)`); the participant is built from the
-     * explicit `role` opt with `withModel` — same rules as create/start.
-     *
-     * The row is inserted after the last table row of the section; the
-     * file's newline style and trailing-newline state are preserved. After
-     * the write the file is validated; on failure the previous content is
-     * restored.
-     *
-     * @param array{role?: string|null, model?: string|null, thinking?: string|null} $opts
-     * @return string the added table row
-     * @throws BoardException
-     */
-    public static function appendHistory(string $root, string $id, string $change, array $opts = []): string
-    {
-        $file = Parser::findFileById($root, $id);
-        if ($file === null) {
-            throw new BoardException("task not found: $id");
+        $rel     = Parser::makeRelativePath($file, $root);
+        $applied = [];
+        foreach ($fields as $field => $value) {
+            $applied[] = "$field = $value";
         }
 
-        $content = file_get_contents($file);
-        if ($content === false) {
-            throw new BoardException("cannot read file: $file");
-        }
-
-        $participant = self::withModel((string) ($opts['role'] ?? ''), $root, $opts);
-        $row         = '| ' . self::nowTimestamp() . ' | ' . $participant . ' | ' . $change . ' |';
-
-        $newContent = self::insertHistoryRow($content, $row);
-
-        $snapshot = [$file => $content];
-
-        file_put_contents($file, $newContent);
-
-        $result = Validator::checkOnBoard($root, $file);
-        if ($result['errors'] !== []) {
-            self::rollback($snapshot, null);
-            throw new BoardException(
-                "validation failed after history — rolled back:\n  "
-                . implode("\n  ", $result['errors']),
-            );
-        }
-
-        return $row;
-    }
-
-    /**
-     * Insert a history row after the last table row of the
-     * «История изменений (Change History)» section (same heading anchor as
-     * the validator). Throws when the section or its table is missing.
-     */
-    private static function insertHistoryRow(string $content, string $row): string
-    {
-        $lines = preg_split('/\r\n|\r|\n/', $content);
-        if ($lines === false) {
-            throw new BoardException('cannot split file content into lines');
-        }
-
-        $count        = count($lines);
-        $sectionStart = null;
-        for ($i = 0; $i < $count; $i++) {
-            if (preg_match('/^##\s+.*Change History/i', $lines[$i])) {
-                $sectionStart = $i;
-                break;
-            }
-        }
-        if ($sectionStart === null) {
-            throw new BoardException('change history section not found — expected a `## … Change History` heading');
-        }
-
-        $sectionEnd = $count;
-        for ($i = $sectionStart + 1; $i < $count; $i++) {
-            if (preg_match('/^##\s+/', $lines[$i])) {
-                $sectionEnd = $i;
-                break;
-            }
-        }
-
-        $lastRow = null;
-        for ($i = $sectionStart + 1; $i < $sectionEnd; $i++) {
-            if (str_starts_with(trim($lines[$i]), '|')) {
-                $lastRow = $i;
-            }
-        }
-        if ($lastRow === null) {
-            throw new BoardException('change history table not found — no `|` rows under the section heading');
-        }
-
-        array_splice($lines, $lastRow + 1, 0, $row);
-
-        $eol = str_contains($content, "\r\n") ? "\r\n" : "\n";
-
-        return implode($eol, $lines);
+        return 'set ' . $id . ': ' . implode(', ', $applied) . " ($rel)";
     }
 
     // ══════════════════════════════════════════════════════════════════════════

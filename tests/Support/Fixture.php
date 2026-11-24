@@ -47,14 +47,6 @@ function expectContains(string $needle, string $haystack, string $message): void
     }
 }
 
-function expectMatches(string $pattern, string $subject, string $message): void
-{
-    if (preg_match($pattern, $subject) !== 1) {
-        $snippet = strlen($subject) > 200 ? substr($subject, 0, 200) . '…' : $subject;
-        throw new TestFailure("$message\n        pattern: $pattern\n        subject: $snippet");
-    }
-}
-
 function expectNotContains(string $needle, string $haystack, string $message): void
 {
     if (str_contains($haystack, $needle)) {
