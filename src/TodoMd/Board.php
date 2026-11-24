@@ -757,6 +757,107 @@ final class Board
         return 'set ' . $id . ': ' . implode(', ', $applied) . "$note ($rel)";
     }
 
+    // ══════════════════════════════════════════════════════════════════════
+    //  Change history
+    // ══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Append a row to the «История изменений (Change History)» table of a
+     * task/epic. The date comes from the CLI clock in the lifecycle format
+     * (`YYYY-MM-DD HH:MM:SS (unix_ts)`); the participant is built from the
+     * explicit `role` opt with `withModel` — same rules as create/start.
+     *
+     * The row is inserted after the last table row of the section; the
+     * file's newline style and trailing-newline state are preserved. After
+     * the write the file is validated; on failure the previous content is
+     * restored.
+     *
+     * @param array{role?: string|null, model?: string|null, thinking?: string|null} $opts
+     * @return string the added table row
+     * @throws BoardException
+     */
+    public static function appendHistory(string $root, string $id, string $change, array $opts = []): string
+    {
+        $file = Parser::findFileById($root, $id);
+        if ($file === null) {
+            throw new BoardException("task not found: $id");
+        }
+
+        $content = file_get_contents($file);
+        if ($content === false) {
+            throw new BoardException("cannot read file: $file");
+        }
+
+        $participant = self::withModel((string) ($opts['role'] ?? ''), $root, $opts);
+        $row         = '| ' . self::nowTimestamp() . ' | ' . $participant . ' | ' . $change . ' |';
+
+        $newContent = self::insertHistoryRow($content, $row);
+
+        $snapshot = [$file => $content];
+
+        file_put_contents($file, $newContent);
+
+        $result = Validator::checkOnBoard($root, $file);
+        if ($result['errors'] !== []) {
+            self::rollback($snapshot, null);
+            throw new BoardException(
+                "validation failed after history — rolled back:\n  "
+                . implode("\n  ", $result['errors']),
+            );
+        }
+
+        return $row;
+    }
+
+    /**
+     * Insert a history row after the last table row of the
+     * «История изменений (Change History)» section (same heading anchor as
+     * the validator). Throws when the section or its table is missing.
+     */
+    private static function insertHistoryRow(string $content, string $row): string
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $content);
+        if ($lines === false) {
+            throw new BoardException('cannot split file content into lines');
+        }
+
+        $count        = count($lines);
+        $sectionStart = null;
+        for ($i = 0; $i < $count; $i++) {
+            if (preg_match('/^##\s+.*Change History/i', $lines[$i])) {
+                $sectionStart = $i;
+                break;
+            }
+        }
+        if ($sectionStart === null) {
+            throw new BoardException('change history section not found — expected a `## … Change History` heading');
+        }
+
+        $sectionEnd = $count;
+        for ($i = $sectionStart + 1; $i < $count; $i++) {
+            if (preg_match('/^##\s+/', $lines[$i])) {
+                $sectionEnd = $i;
+                break;
+            }
+        }
+
+        $lastRow = null;
+        for ($i = $sectionStart + 1; $i < $sectionEnd; $i++) {
+            if (str_starts_with(trim($lines[$i]), '|')) {
+                $lastRow = $i;
+            }
+        }
+        if ($lastRow === null) {
+            throw new BoardException('change history table not found — no `|` rows under the section heading');
+        }
+
+        array_splice($lines, $lastRow + 1, 0, $row);
+
+        $eol = str_contains($content, "\r\n") ? "\r\n" : "\n";
+
+        return implode($eol, $lines);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     //  Skeleton rendering
     // ══════════════════════════════════════════════════════════════════════════
