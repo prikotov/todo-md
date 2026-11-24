@@ -3,7 +3,7 @@ type: fix
 created: 2026-11-24 02:44:06 (1795488246)
 due: 
 started: 2026-11-24 03:38:55 (1795491535)
-completed: 
+completed: 2026-11-24 12:17:17 (1795497437)
 cancelled: 
 value: V2
 complexity: C1
@@ -19,8 +19,8 @@ reviewer:
 approver: 
 informed: []
 branch: task/cli-assignee-and-set-fixes
-pr: 
-status: in_progress
+pr: https://github.com/prikotov/todo-md/pull/50
+status: done
 ---
 
 # TASK-cli-assignee-and-set-fixes: Переходы с --assignee игнорируют исполнителя, а set с тем же значением падает
@@ -91,7 +91,7 @@ php bin/todo-md validate todo --strict
 
 ## 8. Источники (Sources)
 - Воспроизведение обоих случаев на `master` 2026-11-24 — команды и вывод в разделе 0.
-- [TASK-todo-md-cli-fixes](done/TASK-todo-md-cli-fixes.todo.md) — прецедент: молчаливое игнорирование аргументов CLI заменяется явным поведением.
+- [TASK-todo-md-cli-fixes](TASK-todo-md-cli-fixes.todo.md) — прецедент: молчаливое игнорирование аргументов CLI заменяется явным поведением.
 
 ## 9. Комментарии (Comments)
 - Задача поставлена из проекта-потребителя `stocks2`: из-за первого дефекта исполнитель в его задачах вписывался руками.
@@ -101,3 +101,4 @@ php bin/todo-md validate todo --strict
 | :--- | :--- | :--- |
 | 2026-11-24 02:44:06 (1795488246) | Тимлид (pi@glm-5.4~high) | Создание задачи |
 | 2026-11-24 10:39:15 (1795491555) | Разработчик (pi@glm-5.3-flash~max) | Взята в работу — ветка task/cli-assignee-and-set-fixes, тесты и исправление cli_transition / setField / setFields |
+| 2026-11-24 12:17:17 (1795497437) | Разработчик (pi@glm-5.3-flash~max) | Реализовано и закрыто — повторно на ревью, PR #50 (make check зелёный, 123 теста) |
