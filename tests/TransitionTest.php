@@ -69,6 +69,93 @@ test('transition: review sets review status', function (): void {
     expectEquals('review', frontMatterField("$root/todo/TASK-tr-rev.todo.md", 'status'), 'status review');
 });
 
+// ── Assignee on non-start transitions ───────────────────────────────────────
+
+test('transition: done with --assignee records assignee with model', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-as-done.todo.md' => Fixture::taskFile('TASK-as-done', 'Done', ['assignee' => '']),
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'done', 'TASK-as-done', '--assignee=Разработчик (pi)', '--model=glm-5.4', '--thinking=high', '--root=' . $root,
+    ]);
+    expectEquals(0, $code, "done with --assignee should succeed\n$err");
+    expectEquals(
+        'Разработчик (pi@glm-5.4~high)',
+        frontMatterField("$root/todo/done/TASK-as-done.todo.md", 'assignee'),
+        'assignee recorded on done',
+    );
+});
+
+test('transition: review with --assignee replaces previous assignee', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-as-rev.todo.md' => Fixture::taskFile('TASK-as-rev', 'Rev', [
+            'assignee' => 'Разработчик (pi@glm-5.4~high)',
+        ]),
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'review', 'TASK-as-rev', '--assignee=Аналитик (pi)', '--root=' . $root,
+    ]);
+    expectEquals(0, $code, "review with --assignee should succeed\n$err");
+    expectEquals(
+        'Аналитик (pi)',
+        frontMatterField("$root/todo/TASK-as-rev.todo.md", 'assignee'),
+        'assignee replaced',
+    );
+});
+
+test('transition: review without --assignee keeps assignee untouched', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-as-keep.todo.md' => Fixture::taskFile('TASK-as-keep', 'Keep', [
+            'assignee' => 'Разработчик (pi)',
+        ]),
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['review', 'TASK-as-keep', '--root=' . $root]);
+    expectEquals(0, $code, "review should succeed\n$err");
+    expectEquals(
+        'Разработчик (pi)',
+        frontMatterField("$root/todo/TASK-as-keep.todo.md", 'assignee'),
+        'assignee untouched',
+    );
+});
+
+test('transition: cancel and backlog record --assignee', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-as-cxl.todo.md' => Fixture::taskFile('TASK-as-cxl', 'Cxl'),
+        'todo/TASK-as-bl.todo.md'  => Fixture::taskFile('TASK-as-bl', 'Bl'),
+    ]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'cancel', 'TASK-as-cxl', '--assignee=Тимлид (pi)', '--root=' . $root,
+    ]);
+    expectEquals(0, $code, "cancel with --assignee should succeed\n$err");
+    expectEquals(
+        'Тимлид (pi)',
+        frontMatterField("$root/todo/cancelled/TASK-as-cxl.todo.md", 'assignee'),
+        'assignee recorded on cancel',
+    );
+
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'backlog', 'TASK-as-bl', '--assignee=Аналитик (pi)', '--root=' . $root,
+    ]);
+    expectEquals(0, $code, "backlog with --assignee should succeed\n$err");
+    expectEquals(
+        'Аналитик (pi)',
+        frontMatterField("$root/todo/backlog/TASK-as-bl.todo.md", 'assignee'),
+        'assignee recorded on backlog',
+    );
+});
+
+test('transition: failed assignee recording aborts the transition', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-as-fail.todo.md' => Fixture::taskFile('TASK-as-fail', 'Fail'),
+    ]);
+    [$code, , $err] = Fixture::runBin('todo-md', [
+        'review', 'TASK-as-fail', '--assignee=Test (pi)', '--thinking=high', '--root=' . $root,
+    ]);
+    expectEquals(1, $code, 'assignee recording failure must fail the command');
+    expectContains('--thinking requires --model', $err, 'withModel error surfaced');
+    expectEquals('todo', frontMatterField("$root/todo/TASK-as-fail.todo.md", 'status'), 'status unchanged');
+});
+
 test('transition: reverse move done → start brings back to todo/', function (): void {
     $root = Fixture::board([
         'todo/TASK-tr-rev2.todo.md' => Fixture::taskFile('TASK-tr-rev2', 'Rev2'),
@@ -237,6 +324,47 @@ test('set: multiple assignments applied in one call', function (): void {
     expectEquals(0, $code, "multi-assignment set should succeed\n$err");
     expectEquals('fix/multi', frontMatterField("$root/todo/TASK-set-multi.todo.md", 'branch'), 'branch set');
     expectEquals('https://github.com/test/repo/pull/7', frontMatterField("$root/todo/TASK-set-multi.todo.md", 'pr'), 'pr set');
+});
+
+test('set: same value succeeds without touching the file', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-set-same.todo.md' => Fixture::taskFile('TASK-set-same', 'Same'),
+    ]);
+    $file   = "$root/todo/TASK-set-same.todo.md";
+    $before = file_get_contents($file);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'set', 'TASK-set-same', 'pr=https://github.com/test/repo/pull/1', '--root=' . $root,
+    ]);
+    expectEquals(0, $code, "idempotent set should succeed\n$err");
+    expectContains('unchanged', $out, 'output notes the unchanged value');
+    expectEquals($before, file_get_contents($file), 'file untouched');
+});
+
+test('set: unchanged value among changed ones is reported, file updated', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-set-mixed.todo.md' => Fixture::taskFile('TASK-set-mixed', 'Mixed'),
+    ]);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'set', 'TASK-set-mixed', 'priority=P2', 'branch=fix/mixed', '--root=' . $root,
+    ]);
+    expectEquals(0, $code, "mixed set should succeed\n$err");
+    expectContains('unchanged: priority', $out, 'unchanged field reported');
+    expectEquals('fix/mixed', frontMatterField("$root/todo/TASK-set-mixed.todo.md", 'branch'), 'changed field applied');
+    expectEquals('P2', frontMatterField("$root/todo/TASK-set-mixed.todo.md", 'priority'), 'unchanged field intact');
+});
+
+test('set: all assignments unchanged is a successful no-op', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-set-noop.todo.md' => Fixture::taskFile('TASK-set-noop', 'Noop'),
+    ]);
+    $file   = "$root/todo/TASK-set-noop.todo.md";
+    $before = file_get_contents($file);
+    [$code, $out, $err] = Fixture::runBin('todo-md', [
+        'set', 'TASK-set-noop', 'branch=', 'pr=https://github.com/test/repo/pull/1', '--root=' . $root,
+    ]);
+    expectEquals(0, $code, "all-unchanged set should succeed\n$err");
+    expectContains('(unchanged)', $out, 'output notes nothing changed');
+    expectEquals($before, file_get_contents($file), 'file untouched');
 });
 
 test('set: non-assignment argument is an error, nothing applied', function (): void {
