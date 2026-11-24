@@ -279,6 +279,26 @@ final class Board
     }
 
     /**
+     * True when raw content starts with a closed front-matter block.
+     */
+    private static function hasFrontMatter(string $content): bool
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $content);
+        if ($lines === false || $lines === [] || trim($lines[0]) !== '---') {
+            return false;
+        }
+
+        $count = count($lines);
+        for ($i = 1; $i < $count; $i++) {
+            if (trim($lines[$i]) === '---') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Read a front-matter field value from raw content (null if absent).
      */
     public static function getFieldFromContent(string $content, string $field): ?string
@@ -635,6 +655,13 @@ final class Board
         $content    = file_get_contents($file) ?: '';
         $newContent = self::setFieldInContent($content, $field, $value);
         if ($newContent === $content) {
+            if (self::hasFrontMatter($content)) {
+                // The field already carries this value — nothing to write,
+                // the call still succeeds (idempotent set).
+                $rel = Parser::makeRelativePath($file, $root);
+
+                return "set $id.$field = $value (unchanged) ($rel)";
+            }
             throw new BoardException("could not set field (no front matter?): $field");
         }
 
@@ -683,16 +710,33 @@ final class Board
         }
 
         $content = file_get_contents($file) ?: '';
+        if (!self::hasFrontMatter($content)) {
+            throw new BoardException('could not set field (no front matter?): ' . array_key_first($fields));
+        }
 
-        // Apply every assignment in memory; abort before touching the disk
-        // if any of them fails (all-or-nothing).
+        // Apply every assignment in memory before touching the disk
+        // (all-or-nothing). An assignment that leaves the value as-is is
+        // not an error — it is reported in the result message.
         $newContent = $content;
+        $unchanged  = [];
         foreach ($fields as $field => $value) {
-            $updated    = self::setFieldInContent($newContent, $field, $value);
+            $updated = self::setFieldInContent($newContent, $field, $value);
             if ($updated === $newContent) {
-                throw new BoardException("could not set field (no front matter?): $field");
+                $unchanged[] = $field;
+                continue;
             }
             $newContent = $updated;
+        }
+
+        $applied = [];
+        foreach ($fields as $field => $value) {
+            $applied[] = "$field = $value";
+        }
+
+        $rel = Parser::makeRelativePath($file, $root);
+
+        if ($newContent === $content) {
+            return 'set ' . $id . ': ' . implode(', ', $applied) . " (unchanged) ($rel)";
         }
 
         $snapshot = [$file => $content];
@@ -708,13 +752,9 @@ final class Board
             );
         }
 
-        $rel     = Parser::makeRelativePath($file, $root);
-        $applied = [];
-        foreach ($fields as $field => $value) {
-            $applied[] = "$field = $value";
-        }
+        $note = $unchanged === [] ? '' : ' (unchanged: ' . implode(', ', $unchanged) . ')';
 
-        return 'set ' . $id . ': ' . implode(', ', $applied) . " ($rel)";
+        return 'set ' . $id . ': ' . implode(', ', $applied) . "$note ($rel)";
     }
 
     // ══════════════════════════════════════════════════════════════════════════
