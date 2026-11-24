@@ -23,6 +23,13 @@
 - **Локально:** `make check` — lint + валидация + тесты (то же, что в CI).
 - **CI** запускается автоматически при пуше/PR (`.github/workflows/ci.yml` → `make check`).
 
+## Merge policy (обязательно для AI-агентов)
+
+- **Агент не мержит PR.** Merge делает владелец после ревью и апрува — в UI или `gh pr merge`; для агента это запрещено.
+- **Прямые пуши в `master` запрещены** и заблокированы ruleset на GitHub (`master: PR-only`): deletion, non-fast-forward, обязательный PR и CI-чек `validate`. Любые правки `master` — только через ветку `task/*` и PR, см. [Ветки](vendor/prikotov/git-workflow/docs/git-workflow/branches.md).
+- **Не обходить защиту ветки.** Если GitHub отклонил пуш или merge — остановиться и сообщить владельцу; не пытаться обойти через API, `--admin`, правку ruleset или смену default branch.
+- **Завершение задачи — в ветке задачи:** финальный `chore(todo)`-коммит (перенос `todo/ → done/` целиком через `git add -A todo/`, поле `pr=`, строка «Истории изменений») делается в той же ветке `task/*` и попадает в `master` тем же PR.
+
 ---
 
 ## Принципы работы с кодом
