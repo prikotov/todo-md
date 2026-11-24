@@ -341,10 +341,20 @@ function cli_history(array $args): void
         exit(1);
     }
 
-    $role = $parsed['opts']['role'] ?? null;
+    $role  = $parsed['opts']['role'] ?? null;
+    $agent = $parsed['opts']['agent'] ?? null;
     if ($role === null || trim($role) === '') {
-        fwrite(STDERR, "Error: --role=<участник> is required (format `Роль (агент)`, e.g. \"Разработчик (pi)\").\n");
+        fwrite(STDERR, "Error: --role=<роль> is required (e.g. \"Разработчик\").\n");
         echo historyHelp();
+        exit(1);
+    }
+    if ($agent === null || trim($agent) === '') {
+        fwrite(STDERR, "Error: --agent=<агент> is required (e.g. pi, codex-cli).\n");
+        echo historyHelp();
+        exit(1);
+    }
+    if (!preg_match('/^[a-z0-9][a-z0-9_-]*$/', trim($agent))) {
+        fwrite(STDERR, "Error: --agent must be a lowercase id like `pi` or `codex-cli` — got `$agent`.\n");
         exit(1);
     }
 
@@ -365,7 +375,8 @@ function cli_history(array $args): void
     try {
         $root = Board::resolveRoot($parsed['opts']['root'] ?? (getcwd() ?: '.'));
         echo Board::appendHistory($root, $id, $change, [
-            'role'     => $role,
+            'role'     => trim($role),
+            'agent'    => trim($agent),
             'model'    => $parsed['opts']['model'] ?? null,
             'thinking' => $parsed['opts']['thinking'] ?? null,
         ]) . PHP_EOL;
@@ -382,7 +393,7 @@ function historyHelp(): string
 todo-md history — append a row to the «История изменений (Change History)» table.
 
 Usage:
-  php vendor/bin/todo-md history <ID> "<изменение>" --role=<участник> [options]
+  php vendor/bin/todo-md history <ID> "<изменение>" --role=<роль> --agent=<агент> [options]
 
 The date is set by the CLI clock in the DATES.md lifecycle format
 (`YYYY-MM-DD HH:MM:SS (unix_ts)`); the row is added after the last row of
@@ -391,11 +402,10 @@ failure the previous content is restored. The change text must not
 contain `|` or line breaks.
 
 Options:
-  --role=<участник>  Participant to record (required), format
-                     `Роль (агент)` or `Роль (агент@модель)`,
-                     e.g. "Разработчик (pi)".
+  --role=<роль>      Role of the participant (required), e.g. "Разработчик".
+  --agent=<агент>    Tool id of the participant (required), e.g. pi, codex-cli.
   --model=<id>       Model for the participant (e.g. glm-5.3-flash); appends
-                     `@модель` — same rules as create/start.
+                     `@модель`.
   --thinking=<lvl>   Thinking level after --model (e.g. high); requires --model.
   --help             Show this help.
 

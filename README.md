@@ -124,14 +124,14 @@ php vendor/bin/todo-md set TASK-foo branch=task/foo
 php vendor/bin/todo-md set TASK-foo pr=https://github.com/...
 
 # Строка в «Истории изменений» — дату ставит CLI
-php vendor/bin/todo-md history TASK-foo "Правка постановки" --role="Разработчик (pi)" --model=glm-5.3-flash --thinking=high
+php vendor/bin/todo-md history TASK-foo "Правка постановки" --role="Разработчик" --agent=pi --model=glm-5.3-flash --thinking=high
 ```
 
 При ошибке валидации все изменения откатываются (in-memory rollback). Опция `--root=<путь>` задаёт корень проекта (по умолчанию — текущая директория).
 
 Модель и уровень мышления участника передаются явными ключами: `create --model=glm-5.3-flash --thinking=high` и `start --model=... --thinking=...` дописывают `@модель~уровень` к `Роль (агент)` в `author`/`assignee`. CLI не читает переменные окружения — значение берите из источника истины (окружение вашего харнесса или профиль роли) и передавайте ключом; работает для любого агента. Уже указанная модель не перезаписывается, невалидный ввод и значения вне списков `models`/`thinking_levels` конфига проекта дают понятную ошибку. Формат участника и правила записи модели — [MODELS.md](docs/todo-md/reference/MODELS.md); флаги команд — `todo-md create --help` и `todo-md start --help`.
 
-Строку в «Истории изменений» задачи/эпика добавляет команда `history`: дату ставит CLI (lifecycle-формат `YYYY-MM-DD HH:MM:SS (unix_ts)`), участник — ключ `--role="Роль (агент)"` с теми же `--model`/`--thinking`; строка вставляется после последней строки таблицы, после записи файл валидируется (при ошибке — откат). Текст с `|` или переводом строки, неизвестный ID и отсутствие раздела истории — ошибки без изменения файла. Детали — [AGENTS_TASK_WRITING_GUIDE.md](docs/todo-md/AGENTS_TASK_WRITING_GUIDE.md) и `todo-md history --help`.
+Строку в «Истории изменений» задачи/эпика добавляет команда `history`: дату ставит CLI (lifecycle-формат `YYYY-MM-DD HH:MM:SS (unix_ts)`), участник — ключи `--role` (роль) и `--agent` (инструмент), модель и уровень — `--model`/`--thinking`; строка вставляется после последней строки таблицы, после записи файл валидируется (при ошибке — откат). Текст с `|` или переводом строки, неизвестный ID и отсутствие раздела истории — ошибки без изменения файла. Детали — [AGENTS_TASK_WRITING_GUIDE.md](docs/todo-md/AGENTS_TASK_WRITING_GUIDE.md) и `todo-md history --help`.
 
 ---
 

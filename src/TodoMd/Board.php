@@ -772,7 +772,7 @@ final class Board
      * the write the file is validated; on failure the previous content is
      * restored.
      *
-     * @param array{role?: string|null, model?: string|null, thinking?: string|null} $opts
+     * @param array{role?: string|null, agent?: string|null, model?: string|null, thinking?: string|null} $opts
      * @return string the added table row
      * @throws BoardException
      */
@@ -788,7 +788,13 @@ final class Board
             throw new BoardException("cannot read file: $file");
         }
 
-        $participant = self::withModel((string) ($opts['role'] ?? ''), $root, $opts);
+        $role  = trim((string) ($opts['role'] ?? ''));
+        $agent = trim((string) ($opts['agent'] ?? ''));
+        if ($role === '' || $agent === '') {
+            throw new BoardException('both role and agent are required to record a history participant');
+        }
+
+        $participant = self::withModel("{$role} ({$agent})", $root, $opts);
         $row         = '| ' . self::nowTimestamp() . ' | ' . $participant . ' | ' . $change . ' |';
 
         $newContent = self::insertHistoryRow($content, $row);

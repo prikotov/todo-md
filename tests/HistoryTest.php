@@ -46,7 +46,7 @@ test('history: appends row after the last table row', function (): void {
 
     [$code, $out, $err] = Fixture::runBin('todo-md', [
         'history', 'TASK-hist-app', 'Постановка уточнена',
-        '--role=Разработчик (pi)', '--model=glm-5.3-flash', '--thinking=high', '--root=' . $root,
+        '--role=Разработчик', '--agent=pi', '--model=glm-5.3-flash', '--thinking=high', '--root=' . $root,
     ]);
     expectEquals(0, $code, "history should succeed\n$err");
 
@@ -77,13 +77,13 @@ test('history: role with model is kept as-is, thinking requires model', function
         'todo/TASK-hist-m1.todo.md' => Fixture::taskFile('TASK-hist-m1', 'M1'),
     ]);
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-m1', 'Правка постановки', '--role=Аналитик (pi@glm-5.4)', '--root=' . $root,
+        'history', 'TASK-hist-m1', 'Правка постановки', '--role=Аналитик', '--agent=pi', '--model=glm-5.4', '--root=' . $root,
     ]);
     expectEquals(0, $code, "existing model must be accepted\n$err");
     expectContains('Аналитик (pi@glm-5.4)', lastHistoryRow("$root/todo/TASK-hist-m1.todo.md"), 'participant intact');
 
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-m1', 'Ещё правка', '--role=Аналитик (pi)', '--thinking=high', '--root=' . $root,
+        'history', 'TASK-hist-m1', 'Ещё правка', '--role=Аналитик', '--agent=pi', '--thinking=high', '--root=' . $root,
     ]);
     expectEquals(1, $code, 'thinking without model must fail');
     expectContains('--thinking requires --model', $err, 'withModel error surfaced');
@@ -91,7 +91,7 @@ test('history: role with model is kept as-is, thinking requires model', function
 
 // ── Input validation ─────────────────────────────────────────────────────────
 
-test('history: --role is required', function (): void {
+test('history: --role and --agent are required', function (): void {
     $root = Fixture::board([
         'todo/TASK-hist-r1.todo.md' => Fixture::taskFile('TASK-hist-r1', 'R1'),
     ]);
@@ -101,6 +101,16 @@ test('history: --role is required', function (): void {
     [$code, , $err] = Fixture::runBin('todo-md', ['history', 'TASK-hist-r1', 'Правка', '--root=' . $root]);
     expectEquals(1, $code, 'missing --role must fail');
     expectContains('--role', $err, 'role error');
+    expectEquals($before, file_get_contents($file), 'file untouched');
+
+    [$code, , $err] = Fixture::runBin('todo-md', ['history', 'TASK-hist-r1', 'Правка', '--role=Разработчик', '--root=' . $root]);
+    expectEquals(1, $code, 'missing --agent must fail');
+    expectContains('--agent', $err, 'agent error');
+    expectEquals($before, file_get_contents($file), 'file untouched');
+
+    [$code, , $err] = Fixture::runBin('todo-md', ['history', 'TASK-hist-r1', 'Правка', '--role=Разработчик', '--agent=GitHub Copilot', '--root=' . $root]);
+    expectEquals(1, $code, 'malformed agent id must fail');
+    expectContains('lowercase id', $err, 'agent format error');
     expectEquals($before, file_get_contents($file), 'file untouched');
 });
 
@@ -112,7 +122,7 @@ test('history: pipe character in text is an error', function (): void {
     $before = file_get_contents($file);
 
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-p1', 'a | b', '--role=Test (pi)', '--root=' . $root,
+        'history', 'TASK-hist-p1', 'a | b', '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
     expectEquals(1, $code, 'pipe in text must fail');
     expectContains('|', $err, 'pipe error');
@@ -127,28 +137,31 @@ test('history: line breaks in text are an error', function (): void {
     $before = file_get_contents($file);
 
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-nl', "two\nlines", '--role=Test (pi)', '--root=' . $root,
+        'history', 'TASK-hist-nl', "two\nlines", '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
     expectEquals(1, $code, 'newline in text must fail');
     expectContains('line break', $err, 'newline error');
     expectEquals($before, file_get_contents($file), 'file untouched');
 
     [$code] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-nl', "two\rlines", '--role=Test (pi)', '--root=' . $root,
+        'history', 'TASK-hist-nl', "two\rlines", '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
     expectEquals(1, $code, 'carriage return in text must fail');
     expectEquals($before, file_get_contents($file), 'file untouched');
 });
 
-test('history: empty text and empty role are errors', function (): void {
+test('history: empty text, role or agent are errors', function (): void {
     $root = Fixture::board([
         'todo/TASK-hist-e1.todo.md' => Fixture::taskFile('TASK-hist-e1', 'E1'),
     ]);
-    [$code] = Fixture::runBin('todo-md', ['history', 'TASK-hist-e1', '   ', '--role=Test (pi)', '--root=' . $root]);
+    [$code] = Fixture::runBin('todo-md', ['history', 'TASK-hist-e1', '   ', '--role=Test', '--agent=pi', '--root=' . $root]);
     expectEquals(1, $code, 'empty text must fail');
 
-    [$code] = Fixture::runBin('todo-md', ['history', 'TASK-hist-e1', 'Правка', '--role=  ', '--root=' . $root]);
+    [$code] = Fixture::runBin('todo-md', ['history', 'TASK-hist-e1', 'Правка', '--role=  ', '--agent=pi', '--root=' . $root]);
     expectEquals(1, $code, 'empty role must fail');
+
+    [$code] = Fixture::runBin('todo-md', ['history', 'TASK-hist-e1', 'Правка', '--role=Test', '--agent= ', '--root=' . $root]);
+    expectEquals(1, $code, 'empty agent must fail');
 });
 
 // ── Board errors ─────────────────────────────────────────────────────────────
@@ -156,7 +169,7 @@ test('history: empty text and empty role are errors', function (): void {
 test('history: unknown task ID fails', function (): void {
     $root = Fixture::board([]);
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-ghost', 'Правка', '--role=Test (pi)', '--root=' . $root,
+        'history', 'TASK-ghost', 'Правка', '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
     expectEquals(1, $code, 'unknown ID must fail');
     expectContains('not found', $err, 'not-found error');
@@ -170,7 +183,7 @@ test('history: missing change history section is an error', function (): void {
     $before = file_get_contents($file);
 
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-nosec', 'Правка', '--role=Test (pi)', '--root=' . $root,
+        'history', 'TASK-hist-nosec', 'Правка', '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
     expectEquals(1, $code, 'missing history section must fail');
     expectContains('Change History', $err, 'section error');
@@ -186,7 +199,7 @@ test('history: CRLF file keeps the newline style', function (): void {
     $file = "$root/todo/TASK-hist-crlf.todo.md";
 
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-crlf', 'Правка постановки', '--role=Test (pi)', '--root=' . $root,
+        'history', 'TASK-hist-crlf', 'Правка постановки', '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
     expectEquals(0, $code, "CRLF append should succeed\n$err");
 
@@ -204,7 +217,7 @@ test('history: validation failure rolls the file back', function (): void {
     $before = file_get_contents($file);
 
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-rb', 'Правка', '--role=Test (pi)', '--root=' . $root,
+        'history', 'TASK-hist-rb', 'Правка', '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
     expectEquals(1, $code, 'invalid file must fail after write');
     expectContains('rolled back', $err, 'rollback error');
@@ -221,7 +234,7 @@ test('history: appends after the last row, not at section end', function (): voi
     $file = "$root/todo/TASK-hist-pos.todo.md";
 
     [$code, , $err] = Fixture::runBin('todo-md', [
-        'history', 'TASK-hist-pos', 'Вторая правка', '--role=Test (pi)', '--root=' . $root,
+        'history', 'TASK-hist-pos', 'Вторая правка', '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
     expectEquals(0, $code, "append should succeed\n$err");
 
