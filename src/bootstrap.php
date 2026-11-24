@@ -107,10 +107,14 @@ function cli_transition(array $args, string $status, string $verb): void
             echo transitionHelp($verb, $status);
             exit(1);
         }
-        $transitionOpts['assignee'] = $assignee;
-        $transitionOpts['model']    = $parsed['opts']['model'] ?? null;
-        $transitionOpts['thinking'] = $parsed['opts']['thinking'] ?? null;
     }
+
+    // Every transition may (re-)record the assignee; --model/--thinking are
+    // applied to it by Board::transition the same way as in 'start'. Without
+    // --assignee the assignee field is left untouched.
+    $transitionOpts['assignee'] = $parsed['opts']['assignee'] ?? null;
+    $transitionOpts['model']    = $parsed['opts']['model'] ?? null;
+    $transitionOpts['thinking'] = $parsed['opts']['thinking'] ?? null;
 
     try {
         $root = Board::resolveRoot($parsed['opts']['root'] ?? (getcwd() ?: '.'));
@@ -136,7 +140,8 @@ referencing files), and validates. On validation failure all changes are
 rolled back.
 
 Options:
-  --assignee=<role>  Assignee role (required for 'start').
+  --assignee=<role>  Assignee role (required for 'start'); on any other
+                     transition re-records the assignee when given.
   --model=<id>       Model for the assignee (e.g. glm-5.3-flash); appends
                      `@модель` to `Роль (агент)`.
   --thinking=<lvl>   Thinking level after --model (e.g. high); requires --model.
