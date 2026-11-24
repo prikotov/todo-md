@@ -32,6 +32,7 @@ try {
         'cancel'       => cli_transition($args, 'cancelled', 'cancel'),
         'backlog'      => cli_transition($args, 'backlog', 'backlog'),
         'set'          => cli_set($args),
+        'history'      => cli_history($args),
         'validate'     => cli_validate($args),
         'export-jsonl' => cli_export_jsonl($args),
         'dashboard'    => cli_dashboard($args),

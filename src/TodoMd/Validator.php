@@ -52,7 +52,7 @@ final class Validator
         self::validateDependencies($frontMatter, $idIndex, $errors, $warnings);
         self::validateTitle($body, $id, $errors);
         self::validateSections($body, $kind, $errors);
-        self::validateChangeHistory($body, $errors);
+        self::validateChangeHistory($body, $errors, $warnings, $config);
         self::validateFolderStatus($file, $frontMatter['status'] ?? '', $errors);
         self::validateMarkdownLinks($file, $body, $errors);
         self::validateNoTemplatePlaceholders($content, $errors);
@@ -239,9 +239,17 @@ final class Validator
     }
 
     /**
+     * Validate the change history table: dates in the lifecycle format and
+     * the author column against the participant rule. The author column is
+     * an append-only log: old rows cannot be rewritten by design, so a
+     * non-conforming cell is always a warning — even in strict mode —
+     * unlike curable front-matter actor fields.
+     *
      * @param list<string> $errors
+     * @param list<string> $warnings
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
      */
-    private static function validateChangeHistory(string $body, array &$errors): void
+    private static function validateChangeHistory(string $body, array &$errors, array &$warnings, array $config = []): void
     {
         if (!preg_match('/^##\s+.*Change History/im', $body, $m, PREG_OFFSET_CAPTURE)) {
             return;
@@ -272,6 +280,15 @@ final class Validator
             $date = $cells[0] ?? '';
             if ($date !== '') {
                 self::validateDate('change history date', $date, $errors);
+            }
+
+            $author = $cells[1] ?? '';
+            if ($author !== '') {
+                // Append-only log: the full participant rule with warning
+                // severity — strict mode never escalates it to an error.
+                $logConfig      = $config;
+                $logConfig['strict'] = false;
+                self::validateActor('change history author', $author, $logConfig, $errors, $warnings);
             }
         }
     }
