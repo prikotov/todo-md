@@ -68,6 +68,7 @@ Commands:
   cancel        Move task/epic to cancelled (cancelled/)
   backlog       Move task/epic to backlog (backlog/)
   set           Edit a front-matter field
+  history       Append a row to the change history table
   validate      Validate task and epic files
   export-jsonl  Export metadata as JSON Lines
   dashboard     Render HTML dashboard from JSONL
@@ -312,6 +313,90 @@ TXT;
 }
 
 // ── Command: validate ───────────────────────────────────────────────────────
+
+/**
+ * @param list<string> $args
+ */
+function cli_history(array $args): void
+{
+    $parsed = cliParseArgs($args);
+
+    if (isset($parsed['flags']['help']) || isset($parsed['flags']['h'])) {
+        echo historyHelp();
+        exit(0);
+    }
+
+    $id     = $parsed['values'][0] ?? null;
+    $change = $parsed['values'][1] ?? null;
+
+    if ($id === null || $change === null) {
+        fwrite(STDERR, "Error: usage: todo-md history <ID> \"<изменение>\" --role=<участник> [options]\n");
+        echo historyHelp();
+        exit(1);
+    }
+
+    if (count($parsed['values']) > 2) {
+        fwrite(STDERR, "Error: quote the change text — got extra arguments: "
+            . implode(' ', array_slice($parsed['values'], 2)) . "\n");
+        exit(1);
+    }
+
+    $role  = $parsed['opts']['role'] ?? null;
+    $agent = $parsed['opts']['agent'] ?? null;
+    if ($role === null || trim($role) === '') {
+        fwrite(STDERR, "Error: --role=<роль> is required (e.g. \"Разработчик\").\n");
+        echo historyHelp();
+        exit(1);
+    }
+    if ($agent === null || trim($agent) === '') {
+        fwrite(STDERR, "Error: --agent=<агент> is required (e.g. pi, codex-cli).\n");
+        echo historyHelp();
+        exit(1);
+    }
+    if (!preg_match('/^[a-z0-9][a-z0-9_-]*$/', trim($agent))) {
+        fwrite(STDERR, "Error: --agent must be a lowercase id like `pi` or `codex-cli` — got `$agent`.\n");
+        exit(1);
+    }
+
+    try {
+        $root = Board::resolveRoot($parsed['opts']['root'] ?? (getcwd() ?: '.'));
+        echo Board::appendHistory($root, $id, $change, [
+            'role'     => trim($role),
+            'agent'    => trim($agent),
+            'model'    => $parsed['opts']['model'] ?? null,
+            'thinking' => $parsed['opts']['thinking'] ?? null,
+        ]) . PHP_EOL;
+        exit(0);
+    } catch (BoardException $e) {
+        fwrite(STDERR, 'Error: ' . $e->getMessage() . PHP_EOL);
+        exit(1);
+    }
+}
+
+function historyHelp(): string
+{
+    return <<<'TXT'
+todo-md history — append a row to the «История изменений (Change History)» table.
+
+Usage:
+  php vendor/bin/todo-md history <ID> "<изменение>" --role=<роль> --agent=<агент> [options]
+
+The date is set by the CLI clock in the DATES.md lifecycle format
+(`YYYY-MM-DD HH:MM:SS (unix_ts)`); the row is added after the last row of
+the change history table. The file is validated before the write — an
+invalid file is left unchanged. The change text must not
+contain `|` or line breaks.
+
+Options:
+  --role=<роль>      Role of the participant (required), e.g. "Разработчик".
+  --agent=<агент>    Tool id of the participant (required), e.g. pi, codex-cli.
+  --model=<id>       Model for the participant (e.g. glm-5.3-flash); appends
+                     `@модель`.
+  --thinking=<lvl>   Thinking level after --model (e.g. high); requires --model.
+  --help             Show this help.
+
+TXT;
+}
 
 /**
  * @param list<string> $args

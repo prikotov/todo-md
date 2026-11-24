@@ -757,6 +757,120 @@ final class Board
         return 'set ' . $id . ': ' . implode(', ', $applied) . "$note ($rel)";
     }
 
+    // ══════════════════════════════════════════════════════════════════════
+    //  Change history
+    // ══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Append a row to the «История изменений (Change History)» table of a
+     * task/epic. The date comes from the CLI clock in the lifecycle format
+     * (`YYYY-MM-DD HH:MM:SS (unix_ts)`); the participant is built from the
+     * explicit `role` opt with `withModel` — same rules as create/start.
+     *
+     * The row is inserted after the last table row of the section; the
+     * file's newline style and trailing-newline state are preserved. The
+     * file is validated BEFORE the write: a broken file is never modified,
+     * so there is nothing to roll back. The added row itself is valid by
+     * construction (CLI date, withModel participant, pipe-free text).
+     *
+     * @param array{role?: string|null, agent?: string|null, model?: string|null, thinking?: string|null} $opts
+     * @return string the added table row
+     * @throws BoardException
+     */
+    public static function appendHistory(string $root, string $id, string $change, array $opts = []): string
+    {
+        $file = Parser::findFileById($root, $id);
+        if ($file === null) {
+            throw new BoardException("task not found: $id");
+        }
+
+        $content = file_get_contents($file);
+        if ($content === false) {
+            throw new BoardException("cannot read file: $file");
+        }
+
+        $change = trim($change);
+        if ($change === '') {
+            throw new BoardException('history change text must not be empty');
+        }
+        if (str_contains($change, '|')) {
+            throw new BoardException('history change text must not contain `|`');
+        }
+        if (str_contains($change, "\n") || str_contains($change, "\r")) {
+            throw new BoardException('history change text must not contain a line break');
+        }
+
+        $role  = trim((string) ($opts['role'] ?? ''));
+        $agent = trim((string) ($opts['agent'] ?? ''));
+        if ($role === '' || $agent === '') {
+            throw new BoardException('both role and agent are required to record a history participant');
+        }
+
+        $pre = Validator::checkOnBoard($root, $file);
+        if ($pre['errors'] !== []) {
+            throw new BoardException(
+                "file has validation errors — fix them before appending history:\n  "
+                . implode("\n  ", $pre['errors']),
+            );
+        }
+
+        $participant = self::withModel("{$role} ({$agent})", $root, $opts);
+        $row         = '| ' . self::nowTimestamp() . ' | ' . $participant . ' | ' . $change . ' |';
+
+        file_put_contents($file, self::insertHistoryRow($content, $row));
+
+        return $row;
+    }
+
+    /**
+     * Insert a history row after the last table row of the
+     * «История изменений (Change History)» section (same heading anchor as
+     * the validator). Throws when the section or its table is missing.
+     */
+    private static function insertHistoryRow(string $content, string $row): string
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $content);
+        if ($lines === false) {
+            throw new BoardException('cannot split file content into lines');
+        }
+
+        $count        = count($lines);
+        $sectionStart = null;
+        for ($i = 0; $i < $count; $i++) {
+            if (preg_match('/^##\s+.*Change History/i', $lines[$i])) {
+                $sectionStart = $i;
+                break;
+            }
+        }
+        if ($sectionStart === null) {
+            throw new BoardException('change history section not found — expected a `## … Change History` heading');
+        }
+
+        $sectionEnd = $count;
+        for ($i = $sectionStart + 1; $i < $count; $i++) {
+            if (preg_match('/^##\s+/', $lines[$i])) {
+                $sectionEnd = $i;
+                break;
+            }
+        }
+
+        $lastRow = null;
+        for ($i = $sectionStart + 1; $i < $sectionEnd; $i++) {
+            if (str_starts_with(trim($lines[$i]), '|')) {
+                $lastRow = $i;
+            }
+        }
+        if ($lastRow === null) {
+            throw new BoardException('change history table not found — no `|` rows under the section heading');
+        }
+
+        array_splice($lines, $lastRow + 1, 0, $row);
+
+        $eol = str_contains($content, "\r\n") ? "\r\n" : "\n";
+
+        return implode($eol, $lines);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     //  Skeleton rendering
     // ══════════════════════════════════════════════════════════════════════════
