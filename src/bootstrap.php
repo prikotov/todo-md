@@ -358,20 +358,6 @@ function cli_history(array $args): void
         exit(1);
     }
 
-    $change = trim($change);
-    if ($change === '') {
-        fwrite(STDERR, "Error: change text must not be empty.\n");
-        exit(1);
-    }
-    if (str_contains($change, '|')) {
-        fwrite(STDERR, "Error: change text must not contain `|`.\n");
-        exit(1);
-    }
-    if (str_contains($change, "\n") || str_contains($change, "\r")) {
-        fwrite(STDERR, "Error: change text must not contain a line break.\n");
-        exit(1);
-    }
-
     try {
         $root = Board::resolveRoot($parsed['opts']['root'] ?? (getcwd() ?: '.'));
         echo Board::appendHistory($root, $id, $change, [
@@ -397,8 +383,8 @@ Usage:
 
 The date is set by the CLI clock in the DATES.md lifecycle format
 (`YYYY-MM-DD HH:MM:SS (unix_ts)`); the row is added after the last row of
-the change history table. The file is validated after the write — on
-failure the previous content is restored. The change text must not
+the change history table. The file is validated before the write — an
+invalid file is left unchanged. The change text must not
 contain `|` or line breaks.
 
 Options:

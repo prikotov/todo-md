@@ -768,9 +768,10 @@ final class Board
      * explicit `role` opt with `withModel` — same rules as create/start.
      *
      * The row is inserted after the last table row of the section; the
-     * file's newline style and trailing-newline state are preserved. After
-     * the write the file is validated; on failure the previous content is
-     * restored.
+     * file's newline style and trailing-newline state are preserved. The
+     * file is validated BEFORE the write: a broken file is never modified,
+     * so there is nothing to roll back. The added row itself is valid by
+     * construction (CLI date, withModel participant, pipe-free text).
      *
      * @param array{role?: string|null, agent?: string|null, model?: string|null, thinking?: string|null} $opts
      * @return string the added table row
@@ -788,29 +789,35 @@ final class Board
             throw new BoardException("cannot read file: $file");
         }
 
+        $change = trim($change);
+        if ($change === '') {
+            throw new BoardException('history change text must not be empty');
+        }
+        if (str_contains($change, '|')) {
+            throw new BoardException('history change text must not contain `|`');
+        }
+        if (str_contains($change, "\n") || str_contains($change, "\r")) {
+            throw new BoardException('history change text must not contain a line break');
+        }
+
         $role  = trim((string) ($opts['role'] ?? ''));
         $agent = trim((string) ($opts['agent'] ?? ''));
         if ($role === '' || $agent === '') {
             throw new BoardException('both role and agent are required to record a history participant');
         }
 
+        $pre = Validator::checkOnBoard($root, $file);
+        if ($pre['errors'] !== []) {
+            throw new BoardException(
+                "file has validation errors — fix them before appending history:\n  "
+                . implode("\n  ", $pre['errors']),
+            );
+        }
+
         $participant = self::withModel("{$role} ({$agent})", $root, $opts);
         $row         = '| ' . self::nowTimestamp() . ' | ' . $participant . ' | ' . $change . ' |';
 
-        $newContent = self::insertHistoryRow($content, $row);
-
-        $snapshot = [$file => $content];
-
-        file_put_contents($file, $newContent);
-
-        $result = Validator::checkOnBoard($root, $file);
-        if ($result['errors'] !== []) {
-            self::rollback($snapshot, null);
-            throw new BoardException(
-                "validation failed after history — rolled back:\n  "
-                . implode("\n  ", $result['errors']),
-            );
-        }
+        file_put_contents($file, self::insertHistoryRow($content, $row));
 
         return $row;
     }

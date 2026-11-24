@@ -210,7 +210,7 @@ test('history: CRLF file keeps the newline style', function (): void {
     expectEquals(true, str_ends_with($after, "\r\n"), 'trailing newline preserved');
 });
 
-test('history: validation failure rolls the file back', function (): void {
+test('history: invalid file is rejected without changes', function (): void {
     $task   = str_replace('value: V2', 'value: V9', Fixture::taskFile('TASK-hist-rb', 'RB'));
     $root   = Fixture::board(['todo/TASK-hist-rb.todo.md' => $task]);
     $file   = "$root/todo/TASK-hist-rb.todo.md";
@@ -219,9 +219,9 @@ test('history: validation failure rolls the file back', function (): void {
     [$code, , $err] = Fixture::runBin('todo-md', [
         'history', 'TASK-hist-rb', 'Правка', '--role=Test', '--agent=pi', '--root=' . $root,
     ]);
-    expectEquals(1, $code, 'invalid file must fail after write');
-    expectContains('rolled back', $err, 'rollback error');
-    expectEquals($before, file_get_contents($file), 'file restored');
+    expectEquals(1, $code, 'invalid file must be rejected');
+    expectContains('validation errors', $err, 'pre-validation error');
+    expectEquals($before, file_get_contents($file), 'file untouched');
 });
 
 test('history: appends after the last row, not at section end', function (): void {
