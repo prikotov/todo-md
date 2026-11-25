@@ -377,15 +377,31 @@ final class Parser
     }
 
     /**
-     * Locate the file for a given task/epic ID anywhere under <root>/todo/.
+     * Locate a file for a given task/epic ID anywhere under <root>/todo/.
+     * When several files carry the same ID the first one (sorted) is returned;
+     * use findAllFilesById() to detect that ambiguity.
      *
      * @return ?string absolute path or null if not found
      */
     public static function findFileById(string $root, string $id): ?string
     {
+        $files = self::findAllFilesById($root, $id);
+
+        return $files[0] ?? null;
+    }
+
+    /**
+     * Locate ALL files carrying a given task/epic ID anywhere under
+     * <root>/todo/. A healthy board returns a single path; more than one means
+     * a duplicated ID and callers must refuse to act on it.
+     *
+     * @return list<string> absolute paths, sorted for deterministic order
+     */
+    public static function findAllFilesById(string $root, string $id): array
+    {
         $todoDir = $root . '/todo';
         if (!is_dir($todoDir)) {
-            return null;
+            return [];
         }
 
         $expected = $id . '.todo.md';
@@ -393,13 +409,71 @@ final class Parser
             new \RecursiveDirectoryIterator($todoDir, \RecursiveDirectoryIterator::SKIP_DOTS),
         );
 
+        $files = [];
         foreach ($iterator as $item) {
             if ($item->isFile() && $item->getFilename() === $expected) {
-                return $item->getPathname();
+                $files[] = $item->getPathname();
             }
         }
 
-        return null;
+        sort($files, SORT_STRING);
+
+        return $files;
+    }
+
+    /**
+     * Find task/epic IDs carried by more than one file. A duplicate ID means
+     * two contradictory copies of one task: validators and ID commands must
+     * surface it instead of silently picking one file.
+     *
+     * @param list<string> $files absolute paths
+     * @return array<string, list<array{file: string, status: string}>> duplicated ID => its files (sorted), statuses parsed from front matter ('' when unavailable)
+     */
+    public static function findDuplicateIds(array $files): array
+    {
+        $files = array_values(array_unique($files));
+        sort($files, SORT_STRING);
+
+        $byId = [];
+        foreach ($files as $file) {
+            $id = self::fileId($file);
+            if (self::detectKind($id) === null) {
+                continue;
+            }
+
+            $status = '';
+            $content = file_get_contents($file);
+            if ($content !== false) {
+                $parsed = self::parseFrontMatter(self::removeBom($content));
+                if ($parsed['error'] === null) {
+                    $warnings = [];
+                    $frontMatter = self::parseSimpleYaml($parsed['frontMatter'], $warnings);
+                    $status = is_string($frontMatter['status'] ?? null) ? $frontMatter['status'] : '';
+                }
+            }
+
+            $byId[$id][] = ['file' => $file, 'status' => $status];
+        }
+
+        return array_filter($byId, fn (array $entries): bool => count($entries) > 1);
+    }
+
+    /**
+     * One-line listing of a duplicated ID's files with statuses, for error
+     * messages: `todo/a.todo.md (status: todo), todo/b.todo.md (status: done)`.
+     *
+     * @param list<array{file: string, status: string}> $entries
+     */
+    public static function formatDuplicateEntries(array $entries, string $root = ''): string
+    {
+        $parts = [];
+        foreach ($entries as $entry) {
+            $file   = $root !== '' ? self::makeRelativePath($entry['file'], $root) : $entry['file'];
+            $status = $entry['status'] !== '' ? $entry['status'] : 'no status';
+            $parts[] = "$file (status: $status)";
+        }
+
+        return implode(', ', $parts);
     }
 
     // ── Index ────────────────────────────────────────────────────────────────

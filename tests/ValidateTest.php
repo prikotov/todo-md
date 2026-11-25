@@ -501,3 +501,68 @@ test('validate: ID target resolves inside excluded directory', function (): void
     expectEquals(0, $code, "ID resolution must ignore exclude\n$out");
     expectContains('todo/done/TASK-archived.todo.md', $out, 'archived task found by ID');
 });
+
+// ── Duplicate IDs ─────────────────────────────────────────────────────
+
+/** A board whose task ID lives in two files with contradictory statuses. */
+function boardWithDuplicateId(): string
+{
+    return Fixture::board([
+        'todo/TASK-twin-task.todo.md'          => Fixture::taskFile('TASK-twin-task', 'Twin copy'),
+        'todo/done/TASK-twin-task.todo.md'     => Fixture::taskFile('TASK-twin-task', 'Done copy', ['status' => 'done']),
+        'todo/TASK-other-task.todo.md'         => Fixture::taskFile('TASK-other-task', 'Other task'),
+    ]);
+}
+
+test('validate: duplicate task ID is an error with paths and statuses', function (): void {
+    $root = boardWithDuplicateId();
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate'], $root);
+    expectEquals(1, $code, "duplicated ID must fail validation\n$out");
+    expectContains('duplicate task ID `TASK-twin-task`', $out, 'duplicate ID reported');
+    expectContains('todo/TASK-twin-task.todo.md (status: todo)', $out, 'first copy path + status');
+    expectContains('todo/done/TASK-twin-task.todo.md (status: done)', $out, 'second copy path + status');
+    expectContains('1 error(s)', $out, 'duplicate counts as an error in summary');
+});
+
+test('validate: explicit file target still validates and still reports duplicate', function (): void {
+    $root = boardWithDuplicateId();
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', 'todo/done/TASK-twin-task.todo.md'], $root);
+    expectEquals(1, $code, "explicit file target is validated, duplicate still reported\n$out");
+    expectContains('todo/done/TASK-twin-task.todo.md', $out, 'explicit target validated');
+    expectContains('duplicate task ID `TASK-twin-task`', $out, 'duplicate notification mandatory');
+});
+
+test('validate: ID target refuses to resolve on duplicate', function (): void {
+    $root = boardWithDuplicateId();
+
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['validate', 'TASK-twin-task'], $root);
+    expectEquals(1, $code, "ambiguous ID target must fail\n$out$err");
+    expectContains('duplicate task ID `TASK-twin-task`', $err, 'duplicate error on ID target');
+});
+
+test('set: ID command refuses to edit when ID is duplicated', function (): void {
+    $root = boardWithDuplicateId();
+
+    [$code, $out, $err] = Fixture::runBin('todo-md', ['set', 'TASK-twin-task', 'priority=P1'], $root);
+    expectEquals(1, $code, "set by duplicated ID must fail\n$out$err");
+    expectContains('duplicate task ID `TASK-twin-task`', $err, 'refusal message');
+    expectContains('status: todo', $err, 'first copy listed');
+    expectContains('status: done', $err, 'second copy listed');
+    expectNotContains('priority = P1', $out, 'no edit performed');
+    expectEquals('P2', frontMatterField($root . '/todo/TASK-twin-task.todo.md', 'priority'), 'first copy unchanged');
+    expectEquals('P2', frontMatterField($root . '/todo/done/TASK-twin-task.todo.md', 'priority'), 'second copy unchanged');
+});
+
+test('validate: distinct IDs across folders stay clean (no duplicate noise)', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-live-a.todo.md'        => Fixture::taskFile('TASK-live-a', 'Live task'),
+        'todo/done/TASK-done-a.todo.md'   => Fixture::taskFile('TASK-done-a', 'Done task', ['status' => 'done']),
+    ]);
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', $root]);
+    expectEquals(0, $code, "healthy board must pass\n$out");
+    expectContains('2 file(s): 0 error', $out, 'both files validated');
+    expectNotContains('duplicate', $out, 'no duplicate complaints on healthy board');
+});

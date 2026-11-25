@@ -478,13 +478,19 @@ function cli_validate(array $args): void
                 exit(1);
             }
 
-            $file = Parser::findFileById($root, $target);
-            if ($file === null) {
+            $matches = Parser::findAllFilesById($root, $target);
+            if ($matches === []) {
                 fwrite(STDERR, "Error: task/epic not found: $target" . PHP_EOL);
                 exit(1);
             }
+            if (count($matches) > 1) {
+                $entries = Parser::findDuplicateIds($matches)[$target] ?? [];
+                fwrite(STDERR, "Error: duplicate task ID `$target`: "
+                    . Parser::formatDuplicateEntries($entries, $root) . PHP_EOL);
+                exit(1);
+            }
 
-            $files[] = $file;
+            $files[] = $matches[0];
             continue;
         }
 
@@ -520,6 +526,16 @@ function cli_validate(array $args): void
     $errorCount   = 0;
     $warningCount = 0;
     $idIndex      = Parser::buildIdIndex($idFiles);
+
+    // A duplicated ID means two contradictory copies of one task — report it
+    // regardless of the targets (the ID index spans the whole tree) and fail.
+    $duplicates = Parser::findDuplicateIds($idFiles);
+    foreach ($duplicates as $dupId => $entries) {
+        $errorCount++;
+        echo "✗ duplicate task ID `$dupId`" . PHP_EOL;
+        echo '  error: duplicate task ID `' . $dupId . '` — keep one file: '
+            . Parser::formatDuplicateEntries($entries, getcwd() ?: '.') . PHP_EOL;
+    }
 
     foreach ($files as $file) {
         $result   = Validator::validateFile($file, $idIndex, $config);

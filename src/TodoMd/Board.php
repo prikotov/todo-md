@@ -459,6 +459,28 @@ final class Board
     // ══════════════════════════════════════════════════════════════════════════
 
     /**
+     * Resolve the single file for an ID, refusing ambiguous boards: two files
+     * carrying the same ID are contradictory copies of one task, so ID
+     * commands must fail instead of silently editing one of them.
+     *
+     * @return string absolute path
+     * @throws BoardException when the ID is missing or duplicated
+     */
+    private static function requireFileById(string $root, string $id): string
+    {
+        $files = Parser::findAllFilesById($root, $id);
+        if ($files === []) {
+            throw new BoardException("task not found: $id");
+        }
+        if (count($files) > 1) {
+            $entries = Parser::findDuplicateIds($files)[$id] ?? [];
+            throw new BoardException("duplicate task ID `$id`: " . Parser::formatDuplicateEntries($entries, $root));
+        }
+
+        return $files[0];
+    }
+
+    /**
      * Atomically transition a task/epic to a new status.
      *
      * @param array $opts
@@ -471,10 +493,7 @@ final class Board
             throw new BoardException("unknown status: $newStatus");
         }
 
-        $file = Parser::findFileById($root, $id);
-        if ($file === null) {
-            throw new BoardException("task not found: $id");
-        }
+        $file = self::requireFileById($root, $id);
 
         $content   = file_get_contents($file);
         if ($content === false) {
@@ -647,10 +666,7 @@ final class Board
             return self::transition($root, $id, $value, $opts);
         }
 
-        $file = Parser::findFileById($root, $id);
-        if ($file === null) {
-            throw new BoardException("task not found: $id");
-        }
+        $file = self::requireFileById($root, $id);
 
         $content    = file_get_contents($file) ?: '';
         $newContent = self::setFieldInContent($content, $field, $value);
@@ -704,10 +720,7 @@ final class Board
             throw new BoardException('`status` cannot be combined with other fields — set it alone: set ' . $id . ' status=<value>');
         }
 
-        $file = Parser::findFileById($root, $id);
-        if ($file === null) {
-            throw new BoardException("task not found: $id");
-        }
+        $file = self::requireFileById($root, $id);
 
         $content = file_get_contents($file) ?: '';
         if (!self::hasFrontMatter($content)) {
@@ -779,10 +792,7 @@ final class Board
      */
     public static function appendHistory(string $root, string $id, string $change, array $opts = []): string
     {
-        $file = Parser::findFileById($root, $id);
-        if ($file === null) {
-            throw new BoardException("task not found: $id");
-        }
+        $file = self::requireFileById($root, $id);
 
         $content = file_get_contents($file);
         if ($content === false) {
