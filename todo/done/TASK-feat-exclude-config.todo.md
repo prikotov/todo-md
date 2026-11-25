@@ -3,7 +3,7 @@ type: feat
 created: 2026-11-25 01:14:20 (1795569260)
 due: 
 started: 2026-11-25 03:32:28 (1795577548)
-completed: 
+completed: 2026-11-25 03:47:02 (1795578422)
 cancelled: 
 value: V2
 complexity: C2
@@ -19,8 +19,8 @@ reviewer:
 approver: 
 informed: []
 branch: task/feat-exclude-config
-pr: 
-status: in_progress
+pr: https://github.com/prikotov/todo-md/pull/58
+status: done
 ---
 
 # TASK-feat-exclude-config: Ключ exclude в .todo-md.php — исключать каталоги из валидации
@@ -146,3 +146,5 @@ php vendor/bin/todo-md validate TASK-feat-exclude-config   # валидност�
 | :--- | :--- | :--- |
 | 2026-11-25 01:14:20 (1795569260) | Тимлид (pi) | Создание задачи (по запросу владельца из сессии task-orchestrator) |
 | 2026-11-25 03:35:54 (1795577754) | Разработчик (pi@mimo-v2.6-flash~high) | Взята в работу и реализована — Parser::findTodoFiles exclude, cli_validate --exclude, loadConfigFile, 6 fixture-тестов, CONFIG.md |
+| 2026-11-25 03:36:45 (1795577805) | Разработчик (pi@mimo-v2.6-flash~high) | На ревью — PR #58 (make check зелёный, 141 тест, 6 новых fixture-тестов) |
+| 2026-11-25 03:47:02 (1795578422) | Разработчик (pi@mimo-v2.6-flash~high) | Реализовано и закрыто — PR #58, исключение каталогов из валидации (make check зелёный, 141 тест) |
