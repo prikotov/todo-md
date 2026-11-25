@@ -2,7 +2,7 @@
 type: feat
 created: 2026-11-25 04:01:38 (1795579298)
 due: 
-started: 
+started: 2026-11-25 04:25:10 (1795580710)
 completed: 
 cancelled: 
 value: V2
@@ -13,14 +13,14 @@ cost_fact:
 depends_on: 
 epic: 
 author: Тимлид (pi)
-assignee: 
+assignee: Разработчик (pi@mimo-v2.6-flash~high)
 consultants: []
 reviewer: 
 approver: 
 informed: []
-branch: 
+branch: task/validate-duplicate-ids
 pr: 
-status: todo
+status: in_progress
 ---
 
 # TASK-validate-duplicate-ids: Валидатор и ID-команды уведомляют о дубликатах ID задач
@@ -81,15 +81,15 @@ Resolve the duplication (keep one file) before running validate or ID commands.
 ## 3. Требования, MoSCoW (Requirements)
 ### 🔴 Обязательно (Must Have)
 
-- [ ] `validate`: дубликат ID в дереве `todo/` (включая `done/`, `cancelled/`, `backlog/` и подкаталоги) — ошибка, ненулевой exit, сообщение содержит ID и все пути с их `status`.
-- [ ] ID-команды (`set`, `start`, `review`, `done`, `cancel`, `backlog`) при ID с двумя и более файлами — отказ без изменения файлов, то же сообщение.
-- [ ] Явная file-цель (`validate todo/done/TASK-x.todo.md`) работает и при дубликате — файл валидируется, но ошибка дубликата всё равно показывается (уведомление обязательное).
-- [ ] Fixture-тесты: (а) validate с дубликатом — exit 1 и пути в выводе; (б) `set` по дублированному ID — отказ, файлы не изменены; (в) здоровая доска — поведение как раньше.
-- [ ] `make check` — зелёный.
+- [x] `validate`: дубликат ID в дереве `todo/` (включая `done/`, `cancelled/`, `backlog/` и подкаталоги) — ошибка, ненулевой exit, сообщение содержит ID и все пути с их `status`.
+- [x] ID-команды (`set`, `start`, `review`, `done`, `cancel`, `backlog`) при ID с двумя и более файлами — отказ без изменения файлов, то же сообщение.
+- [x] Явная file-цель (`validate todo/done/TASK-x.todo.md`) работает и при дубликате — файл валидируется, но ошибка дубликата всё равно показывается (уведомление обязательное).
+- [x] Fixture-тесты: (а) validate с дубликатом — exit 1 и пути в выводе; (б) `set` по дублированному ID — отказ, файлы не изменены; (в) здоровая доска — поведение как раньше.
+- [x] `make check` — зелёный.
 
 ### 🟡 Желательно (Should Have)
 
-- [ ] `Validator::checkOnBoard()` (post-write проверка переходов) тоже сигнализирует о дубликатах, чтобы отказ перехода объяснялся одинаково во всех точках.
+- [x] `Validator::checkOnBoard()` (post-write проверка переходов) тоже сигнализирует о дубликатах, чтобы отказ перехода объяснялся одинаково во всех точках.
 - [ ] Подсказка в сообщении: «укажите явный путь до разрешения дубликата» — для file-целей переходы по явному пути остаются возможными.
 
 ### ⚫ Не будем делать (Won't Have)
@@ -100,17 +100,17 @@ Resolve the duplication (keep one file) before running validate or ID commands.
 
 ## 4. План реализации (Implementation Plan)
 
-1. [ ] `Parser::findDuplicateIds(array $files)`: группировка путей по `fileId()`; `findFileById()` — детект неоднозначности (все совпадения, не первое).
-2. [ ] `cli_validate()`: проверка дубликатов по `$idFiles` до валидации файлов; вывод ошибки со списком путей и `status`; exit 1.
-3. [ ] ID-команды: единая точка резолвинга ID с отказом при неоднозначности (сообщение как в validate).
-4. [ ] Fixture-тесты (три кейса из Must Have).
-5. [ ] `make check`, Change History, `done`, PR.
+1. [x] `Parser::findDuplicateIds(array $files)`: группировка путей по `fileId()`; `findFileById()` — детект неоднозначности (все совпадения, не первое).
+2. [x] `cli_validate()`: проверка дубликатов по `$idFiles` до валидации файлов; вывод ошибки со списком путей и `status`; exit 1.
+3. [x] ID-команды: единая точка резолвинга ID с отказом при неоднозначности (сообщение как в validate).
+4. [x] Fixture-тесты (три кейса из Must Have).
+5. [x] `make check`, Change History, `done`, PR.
 
 ## 5. Критерии приёмки (Definition of Done)
-- [ ] Fixture-тесты покрывают три кейса Must Have
-- [ ] `make check` — зелёный (lint + валидация + тесты, то же, что в CI)
-- [ ] Сообщение об ошибке содержит ID, все пути и их статусы — агенту достаточно информации для действия без чтения кода
-- [ ] Здоровая доска: fixture-тест подтверждает отсутствие изменений в поведении
+- [x] Fixture-тесты покрывают три кейса Must Have
+- [x] `make check` — зелёный (lint + валидация + тесты, то же, что в CI)
+- [x] Сообщение об ошибке содержит ID, все пути и их статусы — агенту достаточно информации для действия без чтения кода
+- [x] Здоровая доска: fixture-тест подтверждает отсутствие изменений в поведении
 - [ ] Задача в `done`, файл в `todo/done/`, поле `pr` заполнено
 
 ## 6. Самопроверка (Verification)
@@ -138,6 +138,7 @@ php bin/todo-md validate TASK-validate-duplicate-ids  # валидность с�
 
 - Задача заведена по решению владельца (2026-11-25, сессия после релиза v0.6.0): «если есть дубликат да это похоже на ошибку, нужно уведомлять агента».
 - Ключевое требование владельца — уведомление агента: формулировки ошибки и подсказки писать для агента (конкретные пути, следующий шаг), не только для человека.
+- Реализация (2026-11-25): `Parser::findAllFilesById` + `findDuplicateIds` + `formatDuplicateEntries`; `Board::requireFileById` — единая точка резолвинга ID (transition/setField/setFields/appendHistory); дубликаты в `cli_validate` (дерево и ID-цель) и `Validator::checkOnBoard`. Should-пункт «подсказка про явный путь» неприменим: ID-команды не принимают пути — подсказка «keep one file» указывает следующий шаг.
 
 ## История изменений (Change History)
 | Дата | Автор | Изменение |

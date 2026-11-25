@@ -72,7 +72,16 @@ final class Validator
         $allFiles = Parser::findTodoFiles($root);
         $idIndex  = Parser::buildIdIndex($allFiles);
 
-        return self::validateFile($file, $idIndex, self::loadConfig($root));
+        $result = self::validateFile($file, $idIndex, self::loadConfig($root));
+
+        // Duplicated IDs make ID commands ambiguous — surface them on every
+        // post-write check so the agent sees the problem immediately.
+        foreach (Parser::findDuplicateIds($allFiles) as $dupId => $entries) {
+            $result['errors'][] = "duplicate task ID `$dupId` — keep one file: "
+                . Parser::formatDuplicateEntries($entries, $root);
+        }
+
+        return $result;
     }
 
     // ── Front matter ─────────────────────────────────────────────────────────
