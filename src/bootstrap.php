@@ -405,6 +405,7 @@ function cli_validate(array $args): void
 {
     $strict     = false;
     $configPath = null;
+    $cliExclude = [];
     $targets    = [];
 
     foreach ($args as $arg) {
@@ -423,6 +424,13 @@ function cli_validate(array $args): void
             continue;
         }
 
+        if (str_starts_with($arg, '--exclude=')) {
+            foreach (explode(',', substr($arg, strlen('--exclude='))) as $dir) {
+                $cliExclude[] = trim($dir);
+            }
+            continue;
+        }
+
         if (str_starts_with($arg, '-')) {
             fwrite(STDERR, "Error: unknown option: $arg" . PHP_EOL);
             echo validateHelp();
@@ -436,10 +444,29 @@ function cli_validate(array $args): void
         $targets[] = getcwd() ?: '.';
     }
 
+    // The config must be loaded before discovery: its `exclude` key filters
+    // which files directory targets pick up.
+    $config = ['roles' => [], 'agents' => [], 'strict' => false];
+    if ($configPath !== null) {
+        $config = Validator::loadConfigFile($configPath);
+    } else {
+        try {
+            $config = Validator::loadConfig(Board::resolveRoot(getcwd() ?: '.'));
+        } catch (BoardException $e) {
+            // No todo/ directory above cwd — validate without project config.
+        }
+    }
+    if ($strict) {
+        $config['strict'] = true;
+    }
+
+    // CLI exclusions merge with the config ones: the flag extends, not replaces.
+    $exclude = array_merge($config['exclude'] ?? [], $cliExclude);
+
     $files = [];
     foreach ($targets as $target) {
         if (file_exists($target)) {
-            $files = array_merge($files, Parser::findTodoFiles($target));
+            $files = array_merge($files, Parser::findTodoFiles($target, $exclude));
             continue;
         }
 
@@ -474,8 +501,9 @@ function cli_validate(array $args): void
     }
 
     // The ID index must span the whole task tree, not only the explicit
-    // targets: a single-file validate still has to resolve depends_on/epic
-    // references to tasks living in done/, cancelled/ or backlog/.
+    // targets and regardless of exclude: a single-file validate still has to
+    // resolve depends_on/epic references to tasks living in done/, cancelled/
+    // or backlog/.
     // Prefer the tree containing the targets, fall back to cwd, then to the
     // targets themselves (standalone files outside any project).
     $idFiles = $files;
@@ -492,20 +520,6 @@ function cli_validate(array $args): void
     $errorCount   = 0;
     $warningCount = 0;
     $idIndex      = Parser::buildIdIndex($idFiles);
-
-    $config = ['roles' => [], 'agents' => [], 'strict' => false];
-    if ($configPath !== null) {
-        $config = Validator::loadConfigFile($configPath);
-    } else {
-        try {
-            $config = Validator::loadConfig(Board::resolveRoot(getcwd() ?: '.'));
-        } catch (BoardException $e) {
-            // No todo/ directory above cwd — validate without project config.
-        }
-    }
-    if ($strict) {
-        $config['strict'] = true;
-    }
 
     foreach ($files as $file) {
         $result   = Validator::validateFile($file, $idIndex, $config);
@@ -555,6 +569,10 @@ Options:
                   (author, assignee and optional participants; non-zero exit).
   --config=FILE   Project config file (default: <project-root>/.todo-md.php).
                   Lists canonical `roles` and `agents` for actor checks.
+  --exclude=DIR[,DIR...]
+                  Skip these directories (relative to todo/) during recursive
+                  discovery. Merges with the config `exclude` key. Explicit
+                  file and ID targets are always validated.
 
 TXT;
 }

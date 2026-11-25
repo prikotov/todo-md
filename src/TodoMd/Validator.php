@@ -20,7 +20,7 @@ final class Validator
 
     /**
      * @param array<string, array{kind: string, status: string, file?: string}> $idIndex
-     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, exclude: list<string>, strict: bool} $config
      * @return array{errors: list<string>, warnings: list<string>}
      */
     public static function validateFile(string $file, array $idIndex, array $config = []): array
@@ -247,7 +247,7 @@ final class Validator
      *
      * @param list<string> $errors
      * @param list<string> $warnings
-     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, exclude: list<string>, strict: bool} $config
      */
     private static function validateChangeHistory(string $body, array &$errors, array &$warnings, array $config = []): void
     {
@@ -479,7 +479,7 @@ final class Validator
     /**
      * Load the project config from <root>/.todo-md.php (missing file → defaults).
      *
-     * @return array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool}
+     * @return array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, exclude: list<string>, strict: bool}
      */
     public static function loadConfig(string $root): array
     {
@@ -489,11 +489,11 @@ final class Validator
     /**
      * Load and normalise a config file. Missing or malformed file → safe defaults.
      *
-     * @return array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool}
+     * @return array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, exclude: list<string>, strict: bool}
      */
     public static function loadConfigFile(string $file): array
     {
-        $config = ['roles' => [], 'agents' => [], 'models' => [], 'thinking_levels' => [], 'strict' => false];
+        $config = ['roles' => [], 'agents' => [], 'models' => [], 'thinking_levels' => [], 'exclude' => [], 'strict' => false];
         if (!is_file($file)) {
             return $config;
         }
@@ -515,6 +515,9 @@ final class Validator
         if (isset($loaded['thinking_levels']) && is_array($loaded['thinking_levels'])) {
             $config['thinking_levels'] = array_values(array_filter($loaded['thinking_levels'], 'is_string'));
         }
+        if (isset($loaded['exclude']) && is_array($loaded['exclude'])) {
+            $config['exclude'] = array_values(array_filter($loaded['exclude'], 'is_string'));
+        }
         if (isset($loaded['strict']) && is_bool($loaded['strict'])) {
             $config['strict'] = $loaded['strict'];
         }
@@ -528,7 +531,7 @@ final class Validator
      * Allow an empty assignee before work starts or when cancelled, and require
      * one for statuses that represent actual or completed work.
      *
-     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, exclude: list<string>, strict: bool} $config
      * @param list<string> $errors
      * @param list<string> $warnings
      */
@@ -563,7 +566,7 @@ final class Validator
      *
      * Format: `<роль> (<агент>[@<модель>[~<thinking>]])` — model and thinking parts are optional.
      *
-     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, strict: bool} $config
+     * @param array{roles: list<string>, agents: list<string>, models: list<string>, thinking_levels: list<string>, exclude: list<string>, strict: bool} $config
      * @param list<string> $errors
      * @param list<string> $warnings
      */

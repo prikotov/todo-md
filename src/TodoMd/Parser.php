@@ -280,9 +280,17 @@ final class Parser
     // ── File discovery ───────────────────────────────────────────────────────
 
     /**
+     * Recursively collect .todo.md files under a target directory.
+     *
+     * $exclude holds directory paths relative to the todo/ root (for example
+     * `['done', 'cancelled']`); files under them are skipped during recursive
+     * discovery. An explicit file target is always returned regardless of
+     * $exclude — explicit intent beats exclusion.
+     *
+     * @param list<string> $exclude
      * @return list<string>
      */
-    public static function findTodoFiles(string $target): array
+    public static function findTodoFiles(string $target, array $exclude = []): array
     {
         $path = realpath($target);
         if ($path === false) {
@@ -298,6 +306,8 @@ final class Parser
             $searchRoot = $path . '/todo';
         }
 
+        $exclude = self::normaliseExclude($exclude);
+
         $files = [];
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($searchRoot, \RecursiveDirectoryIterator::SKIP_DOTS),
@@ -309,12 +319,61 @@ final class Parser
             }
 
             $file = $item->getPathname();
+            if (self::isExcludedPath($file, $searchRoot, $exclude)) {
+                continue;
+            }
             if (str_ends_with($file, '.todo.md')) {
                 $files[] = $file;
             }
         }
 
         return $files;
+    }
+
+    /**
+     * Normalise exclusion entries: strings only, backslashes and surrounding
+     * slashes stripped, empty entries dropped.
+     *
+     * @param list<string> $exclude
+     * @return list<string>
+     */
+    private static function normaliseExclude(array $exclude): array
+    {
+        $normalised = [];
+        foreach ($exclude as $entry) {
+            if (!is_string($entry)) {
+                continue;
+            }
+            $entry = trim(str_replace('\\', '/', $entry), '/');
+            if ($entry !== '') {
+                $normalised[] = $entry;
+            }
+        }
+
+        return array_values(array_unique($normalised));
+    }
+
+    /**
+     * Whether a file lies under any of the excluded directories. Both the file
+     * path and the entries are compared relative to the search root, so this
+     * works on any OS and at any nesting depth.
+     *
+     * @param list<string> $exclude
+     */
+    private static function isExcludedPath(string $file, string $searchRoot, array $exclude): bool
+    {
+        if ($exclude === []) {
+            return false;
+        }
+
+        $relative = str_replace('\\', '/', substr($file, strlen($searchRoot) + 1));
+        foreach ($exclude as $dir) {
+            if ($relative === $dir || str_starts_with($relative, $dir . '/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

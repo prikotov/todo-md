@@ -2,7 +2,7 @@
 type: feat
 created: 2026-11-25 01:14:20 (1795569260)
 due: 
-started: 
+started: 2026-11-25 03:32:28 (1795577548)
 completed: 
 cancelled: 
 value: V2
@@ -13,14 +13,14 @@ cost_fact:
 depends_on: 
 epic: 
 author: Тимлид (pi)
-assignee: 
+assignee: Разработчик (pi@mimo-v2.6-flash~high)
 consultants: []
 reviewer: 
 approver: 
 informed: []
-branch: 
+branch: task/feat-exclude-config
 pr: 
-status: todo
+status: in_progress
 ---
 
 # TASK-feat-exclude-config: Ключ exclude в .todo-md.php — исключать каталоги из валидации
@@ -81,16 +81,16 @@ return [
 ## 3. Требования, MoSCoW (Requirements)
 ### 🔴 Обязательно (Must Have)
 
-- [ ] Ключ `exclude` в `.todo-md.php`: список относительных путей от `todo/` (например, `['done', 'cancelled']`), исключаемых из рекурсивной валидации на любом уровне вложенности.
-- [ ] Пустой/отсутствующий ключ — поведение идентично текущему (обратная совместимость init-контракта: проекты-потребители не ломаются при обновлении).
-- [ ] Явная file-цель (`validate todo/done/TASK-x.todo.md`) валидируется всегда, даже из исключённого каталога (явное указание важнее exclude).
-- [ ] Fixture-тесты: (а) каталог из exclude не попадает в выборку; (б) без exclude выборка как раньше; (в) file-цель из исключённого каталога валидируется.
-- [ ] `docs/todo-md/reference/CONFIG.md` дополнен ключом; `validateHelp()` обновлён.
-- [ ] `make check` — зелёный.
+- [x] Ключ `exclude` в `.todo-md.php`: список относительных путей от `todo/` (например, `['done', 'cancelled']`), исключаемых из рекурсивной валидации на любом уровне вложенности.
+- [x] Пустой/отсутствующий ключ — поведение идентично текущему (обратная совместимость init-контракта: проекты-потребители не ломаются при обновлении).
+- [x] Явная file-цель (`validate todo/done/TASK-x.todo.md`) валидируется всегда, даже из исключённого каталога (явное указание важнее exclude).
+- [x] Fixture-тесты: (а) каталог из exclude не попадает в выборку; (б) без exclude выборка как раньше; (в) file-цель из исключённого каталога валидируется.
+- [x] `docs/todo-md/reference/CONFIG.md` дополнен ключом; `validateHelp()` обновлён.
+- [x] `make check` — зелёный.
 
 ### 🟡 Желательно (Should Have)
 
-- [ ] CLI-опция `--exclude=dir[,dir]` в `cli_validate` (merge с конфигом) для разового исключения.
+- [x] CLI-опция `--exclude=dir[,dir]` в `cli_validate` (merge с конфигом) для разового исключения.
 - [ ] Поддержка глобов в exclude (например, `release-*`) — если удорожание реализации минимально; иначе отложить.
 
 ### ⚫ Не будем делать (Won't Have)
@@ -101,12 +101,12 @@ return [
 
 ## 4. План реализации (Implementation Plan)
 
-1. [ ] `Parser::findTodoFiles(string $target, array $exclude = [])`: пропуск каталогов при обходе (сравнение `getPathname()` относительно `searchRoot`); BC — параметр по умолчанию пустой.
-2. [ ] `cli_validate()`: чтение `exclude` из конфига + опция `--exclude`; передача в `findTodoFiles`; `validateHelp()` — задокументировать опцию.
-3. [ ] `Validator::loadConfigFile()`: чтение ключа `exclude` (массив строк) — по паттерну `roles`/`agents`.
-4. [ ] Fixture-тесты (три кейса из Must Have).
-5. [ ] `docs/todo-md/reference/CONFIG.md` — документация ключа.
-6. [ ] `make check`,fixture-прогоны, Change History, `done`, PR.
+1. [x] `Parser::findTodoFiles(string $target, array $exclude = [])`: пропуск каталогов при обходе (сравнение `getPathname()` относительно `searchRoot`); BC — параметр по умолчанию пустой.
+2. [x] `cli_validate()`: чтение `exclude` из конфига + опция `--exclude`; передача в `findTodoFiles`; `validateHelp()` — задокументировать опцию.
+3. [x] `Validator::loadConfigFile()`: чтение ключа `exclude` (массив строк) — по паттерну `roles`/`agents`.
+4. [x] Fixture-тесты (три кейса из Must Have).
+5. [x] `docs/todo-md/reference/CONFIG.md` — документация ключа.
+6. [x] `make check`,fixture-прогоны, Change History, `done`, PR.
 
 ## 5. Критерии приёмки (Definition of Done)
 - [ ] Написаны fixture-тесты, покрывающие новые сценарии (три кейса Must Have)
@@ -145,3 +145,4 @@ php vendor/bin/todo-md validate TASK-feat-exclude-config   # валидност�
 | Дата | Автор | Изменение |
 | :--- | :--- | :--- |
 | 2026-11-25 01:14:20 (1795569260) | Тимлид (pi) | Создание задачи (по запросу владельца из сессии task-orchestrator) |
+| 2026-11-25 03:35:54 (1795577754) | Разработчик (pi@mimo-v2.6-flash~high) | Взята в работу и реализована — Parser::findTodoFiles exclude, cli_validate --exclude, loadConfigFile, 6 fixture-тестов, CONFIG.md |

@@ -414,3 +414,90 @@ test('validate: --config models enables list validation', function (): void {
     expectEquals(0, $code, "listed model should pass strict validation\n$out");
     expectNotContains('is not in the project models list', $out, 'no list complaints for listed model');
 });
+
+// ── Exclude (config key and --exclude flag) ───────────────────────────────
+
+/** Archive file with a validation error: if it is picked up, validate fails. */
+function invalidArchivedTask(): string
+{
+    return preg_replace('/^status:.*$/m', '', Fixture::taskFile('TASK-archived', 'Archived', ['status' => 'done']));
+}
+
+test('validate: config exclude key skips archive directories', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-live-one.todo.md'       => Fixture::taskFile('TASK-live-one', 'Live task'),
+        'todo/done/TASK-archived.todo.md'  => invalidArchivedTask(),
+    ]);
+    file_put_contents($root . '/.todo-md.php', '<?php declare(strict_types=1); return ["exclude" => ["done"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate'], $root);
+    expectEquals(0, $code, "excluded archive must not produce errors\n$out");
+    expectContains('todo/TASK-live-one.todo.md', $out, 'live task validated');
+    expectContains('1 file(s): 0 error', $out, 'only the live file is picked up');
+    expectNotContains('TASK-archived', $out, 'archive excluded from discovery');
+});
+
+test('validate: exclude covers nested directories', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-live-two.todo.md'             => Fixture::taskFile('TASK-live-two', 'Live task'),
+        'todo/archive/2024/TASK-archived.todo.md' => invalidArchivedTask(),
+    ]);
+    file_put_contents($root . '/.todo-md.php', '<?php declare(strict_types=1); return ["exclude" => ["archive"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate'], $root);
+    expectEquals(0, $code, "excluded nested archive must not produce errors\n$out");
+    expectContains('1 file(s): 0 error', $out, 'only the live file is picked up');
+    expectNotContains('TASK-archived', $out, 'nested archive excluded');
+});
+
+test('validate: without exclude archive is validated as before', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-live-three.todo.md'    => Fixture::taskFile('TASK-live-three', 'Live task'),
+        'todo/done/TASK-archived.todo.md' => Fixture::taskFile('TASK-archived', 'Archived', ['status' => 'done']),
+    ]);
+    file_put_contents($root . '/.todo-md.php', '<?php declare(strict_types=1); return ["exclude" => []];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate'], $root);
+    expectEquals(0, $code, "empty exclude must keep the previous behaviour\n$out");
+    expectContains('2 file(s): 0 error', $out, 'both live and archived files validated');
+    expectContains('todo/done/TASK-archived.todo.md', $out, 'archive file validated');
+});
+
+test('validate: explicit file target from excluded directory still validates', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-live-four.todo.md'     => Fixture::taskFile('TASK-live-four', 'Live task'),
+        'todo/done/TASK-archived.todo.md' => invalidArchivedTask(),
+    ]);
+    file_put_contents($root . '/.todo-md.php', '<?php declare(strict_types=1); return ["exclude" => ["done"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', 'todo/done/TASK-archived.todo.md'], $root);
+    expectEquals(1, $code, "explicit file target must be validated despite exclude\n$out");
+    expectContains('1 file(s): 3 error', $out, 'archived file picked up by explicit target');
+    expectContains('missing front matter field `status`', $out, 'archived file error reported');
+});
+
+test('validate: --exclude CLI flag filters discovery and merges with config', function (): void {
+    $root = Fixture::board([
+        'todo/TASK-live-five.todo.md'          => Fixture::taskFile('TASK-live-five', 'Live task'),
+        'todo/done/TASK-archived.todo.md'      => invalidArchivedTask(),
+        'todo/cancelled/TASK-dropped.todo.md'  => invalidArchivedTask(),
+    ]);
+    file_put_contents($root . '/.todo-md.php', '<?php declare(strict_types=1); return ["exclude" => ["done"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', '--exclude=cancelled'], $root);
+    expectEquals(0, $code, "config exclude merged with --exclude must skip both archives\n$out");
+    expectContains('1 file(s): 0 error', $out, 'only the live file is picked up');
+    expectNotContains('TASK-archived', $out, 'config exclusion still applied');
+    expectNotContains('TASK-dropped', $out, 'CLI exclusion applied');
+});
+
+test('validate: ID target resolves inside excluded directory', function (): void {
+    $root = Fixture::board([
+        'todo/done/TASK-archived.todo.md' => Fixture::taskFile('TASK-archived', 'Archived', ['status' => 'done']),
+    ]);
+    file_put_contents($root . '/.todo-md.php', '<?php declare(strict_types=1); return ["exclude" => ["done"]];');
+
+    [$code, $out] = Fixture::runBin('todo-md', ['validate', 'TASK-archived'], $root);
+    expectEquals(0, $code, "ID resolution must ignore exclude\n$out");
+    expectContains('todo/done/TASK-archived.todo.md', $out, 'archived task found by ID');
+});
