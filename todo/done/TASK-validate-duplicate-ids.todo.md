@@ -3,7 +3,7 @@ type: feat
 created: 2026-11-25 04:01:38 (1795579298)
 due: 
 started: 2026-11-25 04:25:10 (1795580710)
-completed: 
+completed: 2026-11-25 04:28:32 (1795580912)
 cancelled: 
 value: V2
 complexity: C2
@@ -19,8 +19,8 @@ reviewer:
 approver: 
 informed: []
 branch: task/validate-duplicate-ids
-pr: 
-status: in_progress
+pr: https://github.com/prikotov/todo-md/pull/60
+status: done
 ---
 
 # TASK-validate-duplicate-ids: Валидатор и ID-команды уведомляют о дубликатах ID задач
@@ -144,3 +144,4 @@ php bin/todo-md validate TASK-validate-duplicate-ids  # валидность с�
 | Дата | Автор | Изменение |
 | :--- | :--- | :--- |
 | 2026-11-25 04:01:38 (1795579298) | Тимлид (pi) | Создание задачи |
+| 2026-11-25 04:28:29 (1795580909) | Разработчик (pi@mimo-v2.6-flash~high) | На ревью — PR #60: дубликаты ID как ошибка (make check зелёный, 146 тестов, 6 новых) |
